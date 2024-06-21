@@ -2,11 +2,11 @@
 # AutoGRAMS
 
 
-AutoGRAMS (Autonomous Graphical Agent Modeling Software) is a framework and high level programming language for desgining AI agents and chatbots using a combination of graphical and programming elements.
+AutoGRAMS (Autonomous Graphical Agent Modeling Software) is a framework and high level programming language for designing AI agents and chatbots using a combination of graphical and programming elements.
 
 AutoGRAMS can be installed with:
 
-`pip install .` from the root directory of the cloned github repository
+`pip install .` from the root directory of the cloned [github repository](https://github.com/autograms/autograms)
 
 to visualize graphs, install graphviz with:
 
