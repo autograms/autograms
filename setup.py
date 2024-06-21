@@ -13,4 +13,8 @@ setup(
         "numpy",
         "graphviz"
     ],
+    url='https://github.com/autograms/autograms',
+    classifiers=['Programming Language :: Python :: 3'],
+    python_requires='>=3.6',
+
 )
