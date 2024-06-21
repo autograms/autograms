@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Interactive Graph</title>
+    <style>
+        /* CSS for the dialogue box */
+        .dialogue-box {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin: 10px;
+            font-size: 24px; /* Adjust font size as needed */
+            text-align: left; /* Align text to left */
+            position: fixed; /* Fix position */
+            top: 10px; /* Adjust top position */
+            right: 10px; /* Align to the right */
+            width: calc(50% - 20px); /* Limit width to 50% of the window minus margins */
+            overflow-wrap: break-word; /* Wrap long text */
+            max-height: 90vh; /* Set maximum height to 70% of viewport height */
+            overflow-y: auto; /* Add scrollbar when content overflows */
+        }
+        /* CSS for the graph container */
+        #graph {
+            width: 70%; /* Adjust the width as needed */
+            text-align: left; /* Align the content to the left */
+            margin-right: 2%; /* Add margin to create space between the graph and the transitions */
+        }
+    </style>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script src="https://unpkg.com/@hpcc-js/wasm@0.3.11/dist/index.min.js"></script>
+    <script src="https://unpkg.com/d3-graphviz@3.0.5/build/d3-graphviz.js"></script>
+</head>
+<body>
+    <div style="display: flex; justify-content: space-between;">
+        <div id="graph" style="width: 49%; text-align: center;"></div>
+        <div id="transitions"></div>
+    </div>
+
+    <script>
+        var graphviz = d3.select("#graph").graphviz();
+        var lastClickedNode = null; // Variable to store the last clicked node
+
+
+        (((dotData)))
+        (((nodeData)))
+
+        // Function to attach click event listener to nodes
+        function attachClickListener() {
+            d3.selectAll(".node").each(function() {
+                var node = d3.select(this);
+
+                // Get the node name from the title attribute
+                var nodeName = node.select('title').text();
+
+                // Get the bounding box of the node
+                var bbox = this.getBBox();
+
+                // Add an invisible rectangle behind the node
+                node.insert("rect", ":first-child")
+                    .attr("x", bbox.x)
+                    .attr("y", bbox.y)
+                    .attr("width", bbox.width)
+                    .attr("height", bbox.height)
+                    .style("fill", "none")
+                    .style("pointer-events", "all") // Make it clickable
+                    .on("click", function() {
+                        // Highlight the node when clicked
+                        console.log("Clicked node: " + nodeName);
+                        if (lastClickedNode) {
+                            lastClickedNode.select("polygon,path,circle,ellipse").style("fill", "white"); // Reset color
+                        }
+                        node.select("polygon,path,circle,ellipse").style("fill", "red"); // Change color of current node
+                        lastClickedNode = node; // Update last clicked node
+
+                        // Fetch transitions for the clicked node
+                        displayNode(nodeName);
+                    });
+
+                // Add click event listener to the node
+                node.on("click", function() {
+                    // Highlight the node when clicked
+                    console.log("Clicked node: " + nodeName);
+                    if (lastClickedNode) {
+                        lastClickedNode.select("polygon,path,circle,ellipse").style("fill", "white"); // Reset color
+                    }
+                    node.select("polygon,path,circle,ellipse").style("fill", "red"); // Change color of current node
+                    lastClickedNode = node; // Update last clicked node
+
+                    // Fetch transitions for the clicked node
+                    displayNode(nodeName,nodeInfo);
+                });
+            });
+        }
+        // Function to display node information
+        function displayNode(node_name,nodeInfo) {
+            // Get the node information from the dictionary
+            var nodeStringWithBreaks = nodeInfo[node_name].replace(/\n/g, '<br>');
+
+            // Create a styled <div> element to wrap the node string
+            var dialogueBox = document.createElement('div');
+            dialogueBox.className = 'dialogue-box'; // Add CSS class
+            dialogueBox.innerHTML = nodeStringWithBreaks;
+
+            // Display the node string in the right panel
+            var transitionsDiv = document.getElementById('transitions');
+            transitionsDiv.innerHTML = ''; // Clear existing content
+            transitionsDiv.appendChild(dialogueBox);
+}
+
+
+        function fetchDotString(dotData) {
+            // Render the graph using the received DOT string
+            graphviz.attributer(attributer).renderDot(dotData.dot_string);
+
+            // Add click event listener to nodes after rendering is complete
+            graphviz.on('end', attachClickListener);
+        }
+        const scale = 0.8;
+
+        function attributer(datum, index, nodes) {
+            var selection = d3.select(this);
+            if (datum.tag == "svg") {
+                datum.attributes = {
+                    ...datum.attributes,
+                    width: '100%',
+                    height: '100%',
+                };
+                // svg is constructed by hpcc-js/wasm, which uses pt instead of px, so need to convert
+                const px2pt = 3 / 4;
+
+                // get graph dimensions in px. These can be grabbed from the viewBox of the svg
+                // that hpcc-js/wasm generates
+                const graphWidth = datum.attributes.viewBox.split(' ')[2] / px2pt;
+                const graphHeight = datum.attributes.viewBox.split(' ')[3] / px2pt;
+
+                // new viewBox width and height
+                const w = graphWidth / scale;
+                const h = graphHeight / scale;
+
+                // new viewBox origin to keep the graph centered
+                const x = -(w - graphWidth) / 2;
+                const y = -(h - graphHeight) / 2;
+
+                const viewBox = `${x * px2pt} ${y * px2pt} ${w * px2pt} ${h * px2pt}`;
+                selection.attr('viewBox', viewBox);
+                datum.attributes.viewBox = viewBox;
+            }
+        }
+                // Call the function to fetch the DOT string from the Flask backend
+        // Call the function to fetch the DOT string from the Flask backend
+        
+
+        fetchDotString(dotData);
+    </script>
+</body>
+</html>

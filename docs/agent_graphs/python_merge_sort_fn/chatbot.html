@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Interactive Graph</title>
+    <style>
+        /* CSS for the dialogue box */
+        .dialogue-box {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin: 10px;
+            font-size: 24px; /* Adjust font size as needed */
+            text-align: left; /* Align text to left */
+            position: fixed; /* Fix position */
+            top: 10px; /* Adjust top position */
+            right: 10px; /* Align to the right */
+            width: calc(50% - 20px); /* Limit width to 50% of the window minus margins */
+            overflow-wrap: break-word; /* Wrap long text */
+            max-height: 90vh; /* Set maximum height to 70% of viewport height */
+            overflow-y: auto; /* Add scrollbar when content overflows */
+        }
+        /* CSS for the graph container */
+        #graph {
+            width: 70%; /* Adjust the width as needed */
+            text-align: left; /* Align the content to the left */
+            margin-right: 2%; /* Add margin to create space between the graph and the transitions */
+        }
+    </style>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script src="https://unpkg.com/@hpcc-js/wasm@0.3.11/dist/index.min.js"></script>
+    <script src="https://unpkg.com/d3-graphviz@3.0.5/build/d3-graphviz.js"></script>
+</head>
+<body>
+    <div style="display: flex; justify-content: space-between;">
+        <div id="graph" style="width: 49%; text-align: center;"></div>
+        <div id="transitions"></div>
+    </div>
+
+    <script>
+        var graphviz = d3.select("#graph").graphviz();
+        var lastClickedNode = null; // Variable to store the last clicked node
+
+
+        var dotData = {"dot_string": "// Agent\ndigraph {\n\tstart1 [label=\"You are an agent that calls APIs to...\"]\n\tstart2 [label=\"You are a user asking an agent to s...\"]\n\ti1 [label=\"Hello, please provide me a comma se...\"]\n\ti2 [label=\"user_list=write down the list and o...\"]\n\ti3 [label=\"sorted_list=merge_sort($user_list)\"]\n\t\"merge_sort()\" [label=\"merge_sort()\nlen1=len(list1)\"]\n\ti4 [label=\"The sorted list is $sorted_list\"]\n\tstart1 -> start2\n\tstart2 -> i1\n\ti1 -> i2\n\ti2 -> i3\n\ti3 -> i4\n\ti4 -> i1\n\ti3 -> \"merge_sort()\" [style=dashed]\n}\n"};
+        var nodeInfo = {"start1": "Node information for start1\n\nAction: set_prompt\n\nInstruction: You are an agent that calls APIs to sort lists with merge sort\n\ntransitions: start2\n\nstate_category: chatbot", "start2": "Node information for start2\n\nAction: set_user_prompt\n\nInstruction: You are a user asking an agent to sort a list\n\ntransitions: i1\n\nstate_category: chatbot", "i1": "Node information for i1\n\nAction: chat_exact\n\nInstruction: Hello, please provide me a comma separated list of numbers to sort\n\ntransitions: i2\n\nstate_category: chatbot\n\nuser_instruction_transition_a: Provide the agent with the list 8,19,-2,14.5", "i2": "Node information for i2\n\nAction: thought\n\nInstruction: user_list=write down the list and only the list that the user provided, including the numbers separated by commas, and [] characters to close the list. Only reply with the list and nothing else.\n\ntransitions: i3\n\nstate_category: chatbot", "i3": "Node information for i3\n\nAction: local_function\n\nInstruction: sorted_list=merge_sort($user_list)\n\ntransitions: i4\n\nstate_category: chatbot", "merge_sort()": "Node information for merge_sort()\n\nAction: python_function\n\nInstruction: len1=len(list1)\n\ntransitions: merge_sort2.*\n\nstate_category: merge_sort_fn", "merge_sort2.a": "Node information for merge_sort2.a\n\nAction: transition\n\nInstruction: \n\ntransitions: returnlist1\n\nstate_category: merge_sort_fn\n\nboolean_condition: len1==1", "merge_sort2.b": "Node information for merge_sort2.b\n\nAction: local_function\n\nInstruction: l1=first_half(list1)\n\ntransitions: merge_sort3\n\nstate_category: merge_sort_fn", "merge_sort3": "Node information for merge_sort3\n\nAction: local_function\n\nInstruction: l2=last_half(list1)\n\ntransitions: merge_sort4\n\nstate_category: merge_sort_fn", "merge_sort4": "Node information for merge_sort4\n\nAction: local_function\n\nInstruction: l1_sorted = merge_sort(l1)\n\ntransitions: merge_sort5\n\nstate_category: merge_sort_fn", "merge_sort5": "Node information for merge_sort5\n\nAction: local_function\n\nInstruction: l2_sorted=merge_sort(l2)\n\ntransitions: merge_sort6\n\nstate_category: merge_sort_fn", "merge_sort6": "Node information for merge_sort6\n\nAction: local_function\n\nInstruction: l_sorted = merge(l1_sorted,l2_sorted)\n\ntransitions: returnl_sorted\n\nstate_category: merge_sort_fn", "i4": "Node information for i4\n\nAction: chat_exact\n\nInstruction: The sorted list is $sorted_list\n\ntransitions: i1\n\nstate_category: chatbot\n\nuser_instruction_transition_a: <end>", "merge()": "Node information for merge()\n\nAction: python_function\n\nInstruction: i=0\n\ntransitions: merge2\n\nstate_category: other_fns", "merge2": "Node information for merge2\n\nAction: python_function\n\nInstruction: j=0\n\ntransitions: merge3\n\nstate_category: other_fns", "merge3": "Node information for merge3\n\nAction: python_function\n\nInstruction: merged_list=[]\n\ntransitions: merge4\n\nstate_category: other_fns", "merge4": "Node information for merge4\n\nAction: python_function\n\nInstruction: len1=len(list1)\n\ntransitions: merge5\n\nstate_category: other_fns", "merge5": "Node information for merge5\n\nAction: python_function\n\nInstruction: len2=len(list2)\n\ntransitions: loop1\n\nstate_category: other_fns", "loop1": "Node information for loop1\n\nAction: python_function\n\nInstruction: element1=list1[i]\n\ntransitions: loop2\n\nstate_category: other_fns", "loop2": "Node information for loop2\n\nAction: python_function\n\nInstruction: element2=list2[j]\n\ntransitions: loop3\n\nstate_category: other_fns", "loop3": "Node information for loop3\n\nAction: transition\n\nInstruction: \n\ntransitions: loop4.*\n\nstate_category: other_fns", "loop4.a": "Node information for loop4.a\n\nAction: python_function\n\nInstruction: list.append(merged_list,element1)\n\ntransitions: loop6\n\nstate_category: other_fns\n\nboolean_condition: element2>element1", "loop4.b": "Node information for loop4.b\n\nAction: python_function\n\nInstruction: list.append(merged_list,element2)\n\ntransitions: loop7\n\nstate_category: other_fns", "loop6": "Node information for loop6\n\nAction: python_function\n\nInstruction: i=i+1\n\ntransitions: loop8\n\nstate_category: other_fns", "loop7": "Node information for loop7\n\nAction: python_function\n\nInstruction: j=j+1\n\ntransitions: loop13\n\nstate_category: other_fns", "loop8": "Node information for loop8\n\nAction: transition\n\nInstruction: \n\ntransitions: loop9.*\n\nstate_category: other_fns", "loop9.a": "Node information for loop9.a\n\nAction: transition\n\nInstruction: \n\ntransitions: loop1\n\nstate_category: other_fns\n\nboolean_condition: len1>i", "loop9.b": "Node information for loop9.b\n\nAction: python_function\n\nInstruction: list.append(merged_list,element2)\n\ntransitions: loop10\n\nstate_category: other_fns", "loop10": "Node information for loop10\n\nAction: python_function\n\nInstruction: j=j+1\n\ntransitions: loop11\n\nstate_category: other_fns", "loop11": "Node information for loop11\n\nAction: transition\n\nInstruction: \n\ntransitions: loop12.*\n\nstate_category: other_fns", "loop12.a": "Node information for loop12.a\n\nAction: python_function\n\nInstruction: element2=list2[j]\n\ntransitions: loop9.b\n\nstate_category: other_fns\n\nboolean_condition: len2>j", "loop12.b": "Node information for loop12.b\n\nAction: transition\n\nInstruction: \n\ntransitions: returnmerged_list\n\nstate_category: other_fns", "loop13": "Node information for loop13\n\nAction: transition\n\nInstruction: \n\ntransitions: loop14.*\n\nstate_category: other_fns", "loop14.a": "Node information for loop14.a\n\nAction: transition\n\nInstruction: \n\ntransitions: loop1\n\nstate_category: other_fns\n\nboolean_condition: len2>j", "loop14.b": "Node information for loop14.b\n\nAction: python_function\n\nInstruction: list.append(merged_list,element1)\n\ntransitions: loop15\n\nstate_category: other_fns", "loop15": "Node information for loop15\n\nAction: python_function\n\nInstruction: i=i+1\n\ntransitions: loop16\n\nstate_category: other_fns", "loop16": "Node information for loop16\n\nAction: transition\n\nInstruction: \n\ntransitions: loop17.*\n\nstate_category: other_fns", "loop17.a": "Node information for loop17.a\n\nAction: python_function\n\nInstruction: element1=list1[i]\n\ntransitions: loop14.b\n\nstate_category: other_fns\n\nboolean_condition: len1>i", "loop17.b": "Node information for loop17.b\n\nAction: transition\n\nInstruction: \n\ntransitions: returnmerged_list\n\nstate_category: other_fns", "first_half()": "Node information for first_half()\n\nAction: python_function\n\nInstruction: len1=len(list1)\n\ntransitions: first_half2\n\nstate_category: other_fns", "first_half2": "Node information for first_half2\n\nAction: python_function\n\nInstruction: n=math.floor(len1 /2)\n\ntransitions: first_half3\n\nstate_category: other_fns", "first_half3": "Node information for first_half3\n\nAction: python_function\n\nInstruction: list1[:n]\n\ntransitions: return\n\nstate_category: other_fns", "last_half()": "Node information for last_half()\n\nAction: python_function\n\nInstruction: len1=len(list1)\n\ntransitions: last_half2\n\nstate_category: other_fns", "last_half2": "Node information for last_half2\n\nAction: python_function\n\nInstruction: n=math.ceil(len1/2)\n\ntransitions: last_half3\n\nstate_category: other_fns", "last_half3": "Node information for last_half3\n\nAction: python_function\n\nInstruction: list1[-n:]\n\ntransitions: return\n\nstate_category: other_fns", "return0": "Node information for return0", "return1": "Node information for return1", "return2": "Node information for return2", "return3": "Node information for return3", "return4": "Node information for return4", "return5": "Node information for return5"};
+
+        // Function to attach click event listener to nodes
+        function attachClickListener() {
+            d3.selectAll(".node").each(function() {
+                var node = d3.select(this);
+
+                // Get the node name from the title attribute
+                var nodeName = node.select('title').text();
+
+                // Get the bounding box of the node
+                var bbox = this.getBBox();
+
+                // Add an invisible rectangle behind the node
+                node.insert("rect", ":first-child")
+                    .attr("x", bbox.x)
+                    .attr("y", bbox.y)
+                    .attr("width", bbox.width)
+                    .attr("height", bbox.height)
+                    .style("fill", "none")
+                    .style("pointer-events", "all") // Make it clickable
+                    .on("click", function() {
+                        // Highlight the node when clicked
+                        console.log("Clicked node: " + nodeName);
+                        if (lastClickedNode) {
+                            lastClickedNode.select("polygon,path,circle,ellipse").style("fill", "white"); // Reset color
+                        }
+                        node.select("polygon,path,circle,ellipse").style("fill", "red"); // Change color of current node
+                        lastClickedNode = node; // Update last clicked node
+
+                        // Fetch transitions for the clicked node
+                        displayNode(nodeName);
+                    });
+
+                // Add click event listener to the node
+                node.on("click", function() {
+                    // Highlight the node when clicked
+                    console.log("Clicked node: " + nodeName);
+                    if (lastClickedNode) {
+                        lastClickedNode.select("polygon,path,circle,ellipse").style("fill", "white"); // Reset color
+                    }
+                    node.select("polygon,path,circle,ellipse").style("fill", "red"); // Change color of current node
+                    lastClickedNode = node; // Update last clicked node
+
+                    // Fetch transitions for the clicked node
+                    displayNode(nodeName,nodeInfo);
+                });
+            });
+        }
+        // Function to display node information
+        function displayNode(node_name,nodeInfo) {
+            // Get the node information from the dictionary
+            var nodeStringWithBreaks = nodeInfo[node_name].replace(/\n/g, '<br>');
+
+            // Create a styled <div> element to wrap the node string
+            var dialogueBox = document.createElement('div');
+            dialogueBox.className = 'dialogue-box'; // Add CSS class
+            dialogueBox.innerHTML = nodeStringWithBreaks;
+
+            // Display the node string in the right panel
+            var transitionsDiv = document.getElementById('transitions');
+            transitionsDiv.innerHTML = ''; // Clear existing content
+            transitionsDiv.appendChild(dialogueBox);
+}
+
+
+        function fetchDotString(dotData) {
+            // Render the graph using the received DOT string
+            graphviz.attributer(attributer).renderDot(dotData.dot_string);
+
+            // Add click event listener to nodes after rendering is complete
+            graphviz.on('end', attachClickListener);
+        }
+        const scale = 1.0;
+
+        function attributer(datum, index, nodes) {
+            var selection = d3.select(this);
+            if (datum.tag == "svg") {
+                datum.attributes = {
+                    ...datum.attributes,
+                    width: '100%',
+                    height: '100%',
+                };
+                // svg is constructed by hpcc-js/wasm, which uses pt instead of px, so need to convert
+                const px2pt = 3 / 4;
+
+                // get graph dimensions in px. These can be grabbed from the viewBox of the svg
+                // that hpcc-js/wasm generates
+                const graphWidth = datum.attributes.viewBox.split(' ')[2] / px2pt;
+                const graphHeight = datum.attributes.viewBox.split(' ')[3] / px2pt;
+
+                // new viewBox width and height
+                const w = graphWidth / scale;
+                const h = graphHeight / scale;
+
+                // new viewBox origin to keep the graph centered
+                const x = -(w - graphWidth) / 2;
+                const y = -(h - graphHeight) / 2;
+
+                const viewBox = `${x * px2pt} ${y * px2pt} ${w * px2pt} ${h * px2pt}`;
+                selection.attr('viewBox', viewBox);
+                datum.attributes.viewBox = viewBox;
+            }
+        }
+                // Call the function to fetch the DOT string from the Flask backend
+        // Call the function to fetch the DOT string from the Flask backend
+        
+
+        fetchDotString(dotData);
+    </script>
+</body>
+</html>

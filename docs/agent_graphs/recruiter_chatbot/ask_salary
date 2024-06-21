@@ -1,0 +1,10 @@
+// Agent
+digraph {
+	ask_exp [label=ask_exp]
+	tell_exp [label=tell_exp]
+	reask_exp [label=reask_exp]
+	check_exp [label=check_exp]
+	ask_exp -> tell_exp
+	ask_exp -> reask_exp
+	ask_exp -> check_exp
+}
