@@ -3,7 +3,7 @@ name: Deploy MkDocs to GitHub Pages
 on:
   push:
     branches:
-      - main  # or the branch you want to use
+      - main  # Ensure this matches the branch you're using
 
 jobs:
   deploy:
@@ -11,10 +11,10 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v3  # Update to v3
+      uses: actions/checkout@v3  # Updated to v3
 
     - name: Set up Python
-      uses: actions/setup-python@v4  # Update to v4
+      uses: actions/setup-python@v4  # Updated to v4
       with:
         python-version: '3.x'
 
@@ -26,8 +26,17 @@ jobs:
     - name: Build MkDocs site
       run: mkdocs build
 
-    - name: Deploy to GitHub Pages
-      uses: peaceiris/actions-gh-pages@v3
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./site
+    - name: Move built site to docs
+      run: |
+        rm -rf ./docs
+        mv ./site ./docs
+
+    - name: Commit and push changes
+      run: |
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+        git add .
+        git commit -m "Deploy MkDocs site"
+        git push
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
