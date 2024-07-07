@@ -47,6 +47,9 @@ exec_node(name="change_topic",
 While it would be possible to have a separate interjection node for every possible topic change a user might want, it is better in most situations to first predict that the user wants to change the topic, and then predict what they want to change the topic to by making the interjection node a transition node. This will likely reduce the probability that the classifier predicts an erroneous topic change interjection.
 
 
+It would be possible to obtain a similar result to interjection nodes by using additional transition nodes after every chat node. The chat node could ask the interjection question as its transition question and map the answers to the interjection nodes. An additional transition node could be added for when the answer is the default or "none of the above", and this transition node could ask the original transition question of the chat node and map to the original transitions. Interjection nodes are essentially a shortcut to achieve this result more conveniently without needing to define an additional transition node after every chat node.
+
+
 
 
 ## Other fields for interjection Nodes

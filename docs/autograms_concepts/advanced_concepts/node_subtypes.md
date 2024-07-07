@@ -143,7 +143,7 @@ def apply_transition(self,user_reply,memory_object,classifier,nodes,autogram_con
         memory_object -- MemoryObject defining conversation history
         classifier -- model used to predict multiple choice answer
         nodes -- all nodes in autogram
-        autogram_config -- AgentConfig object with default autogram settings
+        autogram_config -- AutogramConfig object with default autogram settings
 
     returns:
         new_node_id -- predicted transitions
@@ -210,7 +210,7 @@ def get_variable_output(self,user_reply,memory_obj):
     return variable_output
 
 ```
-TODO- current strategy for assigning variables may not be optimal, difficult to assign last user reply as a variable, maybe we want a new node for this.
+
 
 
 

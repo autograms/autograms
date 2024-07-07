@@ -88,7 +88,7 @@ class BaseNode():
         """
 
         """
-        nodes that are callable by function nodes have naming convention in spreadsheet `node_name(arg1,arg2,...,argn)`
+        nodes that are callable by function nodes have naming convention  `node_name(arg1,arg2,...,argn)`
         these names are parsed, name is stored as `node_name()` and args are stored in seperate list
         nodes that are not callable by function nodes do not have any processing done to their name
         """
@@ -706,12 +706,7 @@ class BaseNode():
 
             text = last_reply
             prefix=None
-            # if len(last_reply)>0:
-            #     text = last_reply
-            # elif len(instruction)>0:
-            #     text="Instruction: "+instruction
-            # else:
-            #     text=""
+
                 
         else:  
 

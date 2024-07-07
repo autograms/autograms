@@ -35,8 +35,6 @@ CHAT_SUFFIX_INST_CONVERSION="Respond to the user's last reply, and then include 
 
 
     
-
-
 class AutogramConfig():
     def __init__(
             self,
@@ -87,6 +85,8 @@ class AutogramConfig():
         Initialize AutogramConfig
         Can be used to change the default agent settings if called with arguments and passed when initializing agent.
 
+        
+
         args:
             max_response_len -- max response length from the model.
             default_prompt -- start prompt for agent. Can be changed on-the-fly with set_prompt and append_prompt actions from spreadsheet
@@ -100,8 +100,10 @@ class AutogramConfig():
             chatbot_generation_args -- generation args sent to chatbot
             chatbot_max_tries -- max tries for chatbot
             chatbot_wait_per_try -- number of seconds to wait between tries for chatbot
+            chatbot_max_input_len -- truncate input if it's longer than this number of tokens
             classifier_max_tries -- max tries for classifier
             classifier_wait_per_try -- number of seconds to wait between tries for classifier
+            classifier_max_input_len -- truncate input if it's longer than this number of tokens
             banned_phrases -- phrases we try to strongly discourage chatbot from generating, usually corresponding to refusal to follow instruction.
             post_process_response -- apply post processing to respond
             classifier_type -- type of classifier. Not that classifier is just a language model with restricted logits.
@@ -119,9 +121,15 @@ class AutogramConfig():
             interjection_default_answer -- default answer that leads to no interjection, usually meaning that none of the interjection conditions are true
             default_probability_interjection -- probability of simulating each interjection state
             default_primary_prob_detla -- how much more likely should first (default) transition be than all other transitions, which are uniform
+            chat_exact_inst_conversion -- template for how modify instructions of chat_exact nodes
+            thought_exact_inst_conversion=-- template for how modify instructions of thought_exact nodes
+            chat_suffix_inst_conversion  -- template for how modify instructions of chat_suffix nodes
+            python_built_ins -- allowable python built ins, any built in not listed is disabled
+            python_imports -- python import statements to be applied to autogram
             self_referential -- allow the autogram to access and modify its own code via python nodes by passing a reference to itself using the variable name 'self'
             reference_memory_object -- allows the autogram to access its own memory object from python nodes using the variable '_memory_object'
-
+            include_default_python_modules -- autromatically include all autograms python modules
+            python_modules -- dictionary mapping names to python functions that will be addressable from within autogram
         
         
         """
@@ -225,7 +233,7 @@ class AutogramConfig():
         self.python_modules = python_modules
 
         if include_default_python_modules:
-            from autograms import python_modules 
+            from . import python_modules 
         
             autogram_python_modules=python_modules.submodules
             self.python_modules =  {**self.python_modules, **autogram_python_modules}

@@ -1,0 +1,3 @@
+If you would like to contribute to other parts of AutoGRAMS, we recommend contacting us at bkrause@autograms.ai to have a more detailed discussion of what you would like to add. 
+
+We would be especially interested in graphical editors for autograms that allow them to be created more intuitvely, potentially using html in a similar way to our interactive graphs. However if you have other ideas of how to make AutoGRAMS better we would love to hear them.

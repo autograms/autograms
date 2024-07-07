@@ -7,7 +7,11 @@ import ast
 
 class PythonFunctionNode(BaseNode):
     """
+    corresponds to action = "python_function"
 
+    Node for executing instruction as python code
+
+    code is executed in statement_interpreter.py with eval function
     """
 
     def __init__(self,autogram_config,statement_interpreter=None,**kwargs):
@@ -16,71 +20,9 @@ class PythonFunctionNode(BaseNode):
 
         
         
-        # var_name,func,args=parse_function(self.instruction)
 
-        # if func[:2] in autogram_config.python_modules.keys():
-        #     self.function = autogram_config.python_modules[func[:2]]
-        # else:
-        #     raise Exception("invalid python function call "+func[:2] + " at node "+self.name)
-        
-        # if "api_keys" in kwargs.keys():
-        #     if self.function in kwargs["api_keys"]:
-        #         self.api_key = kwargs["api_keys"][self.function]
-        #     else:
-        #         self.api_key=None
-        # else:
-        #     self.api_key=None
         self.modules = autogram_config.python_modules
 
-
-        # module = ast.parse(self.instruction)
-
-        # fields = dir(module.body[0])
-
-        # if "targets" in fields:
-        #     var_name = module.body[0].targets[0].id
-
-
-        # if isinstance(module.body[0].value,ast.Call):
-        #     func = module.body[0].value.func.id
-
-        #     set_args = []
-
-        #     for arg in module.body[0].value.args:
-        #         if isinstance(arg,ast.Name):
-        #             set_args.append(arg.id)
-
-
-        #         else:
-        #             set_args.append(ast.literal_eval(arg))
-
-
-
-
-
-        # else:
-
-
-
-
-
-
-        # module.body[0].value
-
-        
-        
-
-
-
-       # isinstance(module.body[0].targets[0],ast.Name)
-
-        #module.body[0].targets[0].id
-
-
-       # res.body[0].value.func.id
-       #res.body[0].value.args[0].id
-       #res.body[0].value.args[1].value
-       #isinstance((res.body[0].value.args[1]), ast.Name)
 
 
 
@@ -143,9 +85,5 @@ class PythonFunctionNode(BaseNode):
         
         return response,new_user_reply,response_to_user
     
-# class PythonLiteralNode(PythonFunctionNode):
-#     def apply_instruction(self,user_reply,memory_object,chatbot,nodes):
-#         new_instruction = self.instruction
-#         ind = new_instruction.find("=")
-#         var_name = new_instruction[:ind].replace(" ","")
+
         

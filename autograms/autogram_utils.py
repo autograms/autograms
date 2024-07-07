@@ -10,15 +10,6 @@ import operator
 
 
 
-
-#string that should never occur in sheets, temporary solution for string literals
-# PLACEHOLDER_STR = "SDMWERDSFDSA" + str(random.random())
-# PLACEHOLDER_STR2 = "QDMWERDSFDSA" + str(random.random())
-# PLACEHOLDER_STR3 = "WDMWERDSFDSA" + str(random.random())
-# PLACEHOLDER_STR4 = "ZDMWERDSFDSA" + str(random.random())
-# PLACEHOLDER_STR5 = "ADMWERDSFDSA" + str(random.random())
-
-
 def longest_common_substring(string1, string2):
     answer = ""
     len1, len2 = len(string1), len(string2)
@@ -380,17 +371,19 @@ def process_node_id(new_node_id,memory_object,nodes,statement_interpreter):
             use_score=False
 
         counter=0
+ 
         for node_name in allowed_nodes:
         
             node = nodes[node_name]
 
             if not use_score:
                 best=node_name
-                if (counter<len(allowed_nodes)-1) and statement_interpreter.execute_expression(nodes[allowed_nodes[0]].boolean_condition,memory_object.get_variable_dict()):
+                
+
+                if (counter<len(allowed_nodes)-1) and statement_interpreter.execute_expression(nodes[allowed_nodes[counter]].boolean_condition,memory_object.get_variable_dict()):
                     
                     break
-                else:
-                    continue
+
             else:
 
                 score=0.0
@@ -501,9 +494,7 @@ def process_variable_string(text,variable_dict):
     Replace text with variables like ( "Here is the context: $variable1") with the actual value of the variable.
     Returns empty string for whole string if 1 of more variable isn't defined
     """
-   # text=text.replace("\$",PLACEHOLDER_STR3)
 
-    #variable_dict=memory_object.get_variable_dict()
 
     occurrences = find_occurrences(text, "$")
     new_text = text
@@ -533,14 +524,7 @@ def process_variable_string(text,variable_dict):
     return new_text
 
 def remove_assignment(instruction):
-    # instruction=instruction.replace("\=",PLACEHOLDER_STR4)
-    # ind = instruction.find("=")
-    # if ind>=0:
-    #     instruction=instruction[ind+1:]
-    #     if instruction[0]==" ":
-    #         instruction=instruction[1:]
-    # instruction=instruction.replace(PLACEHOLDER_STR4,"=")
-    # return instruction
+
 
     var_name,instruction = split_assignment(instruction)
 
@@ -566,16 +550,13 @@ def set_variables(instruction ,variable_dict,is_inst=True):
     Otherwise, the entire string in brackets will be removed from the instruction. 
 
     """
-    # instruction=instruction.replace("\{",PLACEHOLDER_STR)
-    # instruction=instruction.replace("\}",PLACEHOLDER_STR2)
-    # instruction=instruction.replace("\$",PLACEHOLDER_STR3)
+
     if is_inst:
         instruction=remove_assignment(instruction)
 
 
     lb = find_occurrences(instruction,"{")
     rb = find_occurrences(instruction,"}")
-    bracket_dict = matching_brackets(instruction)
 
     if len(lb)>0 and len(rb)>0:
         if len(lb)>len(rb):
@@ -584,18 +565,16 @@ def set_variables(instruction ,variable_dict,is_inst=True):
             rb = rb[:len(lb)]
 
 
-        bracket_dict=dict(zip(rb,lb))
+        bracket_dict=dict(zip(lb,rb))
 
 
     
         bracket_list = reversed(sorted(list(bracket_dict.keys())))
+       
         for start in bracket_list:
             fin = bracket_dict[start]
             bracketed_text = instruction[start+1:fin]
             replaced_text = process_variable_string(bracketed_text,variable_dict)
-
-            #just in case variable value has $ symbol, as this would otherwise cause confusion later
-         #   replaced_text=replaced_text.replace("$",PLACEHOLDER_STR3)
 
 
 
@@ -618,13 +597,6 @@ def set_variables(instruction ,variable_dict,is_inst=True):
 
 
 
-
-    # instruction=instruction.replace(PLACEHOLDER_STR,"{")
-    # instruction=instruction.replace(PLACEHOLDER_STR2,"}",)
-    # instruction=instruction.replace(PLACEHOLDER_STR3,"$",)
-
-    
-
     return instruction
 
 
@@ -635,9 +607,6 @@ def check_contains_variables(instruction ,memory_object,is_inst=True):
     Mainly used to determine if we should retain the instruction for a turn when giving the prompt in later turns
     If that previous instruction contained a variable, it may have important information
     """
-    # instruction=instruction.replace("\{",PLACEHOLDER_STR)
-    # instruction=instruction.replace("\}",PLACEHOLDER_STR2)
-    # instruction=instruction.replace("\$",PLACEHOLDER_STR3)
 
     if is_inst:
         instruction=remove_assignment(instruction)
@@ -654,7 +623,7 @@ def check_contains_variables(instruction ,memory_object,is_inst=True):
             rb = rb[:len(lb)]
 
 
-        bracket_dict=dict(zip(rb,lb))
+        bracket_dict=dict(zip(lb,rb))
 
 
 
@@ -824,7 +793,7 @@ def get_function(statement):
     return module.body[0].value.func.id+"()"
     
 
-def parse_function(statement,variable_dict):
+def parse_function(statement,variable_dict,statement_interpreter):
     module = ast.parse(statement)
     if isinstance(module.body[0],ast.Assign):
         var_name = module.body[0].targets[0].id
@@ -841,7 +810,8 @@ def parse_function(statement,variable_dict):
         if isinstance(arg,ast.Name):
             new_args.append(variable_dict[arg.id])
         else:
-            new_args.append(ast.literal_eval(arg))
+            code = ast.unparse(arg)
+            new_args.append(statement_interpreter.execute_expression(code, variable_dict))
 
 
 
@@ -959,30 +929,10 @@ def df2python(**kwargs):
     if len(user_instruction_transitions)>0:
         kwargs['user_instruction_transitions']=user_instruction_transitions
 
-    # if not(kwargs["instruction"] is None):
-    #     if '”' in kwargs["instruction"]:
-    #         kwargs["instruction"] = kwargs["instruction"].replace('”',"\"")
-
-    #     if '“' in kwargs["instruction"]:
-    #         kwargs["instruction"] = kwargs["instruction"].replace('“',"\"")
-
-
-    # if not(kwargs["boolean_condition"] is None):
-    #     if '”' in kwargs["boolean_condition"]:
-    #         kwargs["boolean_condition"] = kwargs["boolean_condition"].replace('”',"\"")
-
-    #     if '“' in kwargs["boolean_condition"]:
-    #         kwargs["boolean_condition"] = kwargs["boolean_condition"].replace('“',"\"")
-
-
 
     return kwargs
 
-# def proc_comma_field(field):
-#     fields = field.split(",")
-#     new_fields =[x.replace(" ","") for x in fields]
-#     print(new_fields)
-#     return new_fields 
+
 
 
 def proc_comma_field(field):

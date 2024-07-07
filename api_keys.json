@@ -1,1 +1,1 @@
-{"openai":""}
+{"load_from_env": true,"openai":"OPENAI_API_KEY"}

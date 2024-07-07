@@ -5,8 +5,7 @@ class ChatNode(BaseNode):
     def __init__(self,autogram_config,statement_interpreter=None,**kwargs):
         super().__init__(autogram_config,statement_interpreter,**kwargs)
         """
-        Corresponds to action = 'chat' in the spreadsheet
-
+        Corresponds to action = 'chat' 
         Node to follow instruction to reply to user. Will break out of while loop defined in reply() function of Autogram class
         """
 
@@ -96,11 +95,11 @@ class ChatNode(BaseNode):
 
 class ChatSuffixNode(ChatNode):
     """
-    Corresponds to action = 'chat_suffix' in the spreadsheet
+    Corresponds to action = 'chat_suffix' 
 
     Similar to chat node, except that instruction has custom modifcation to try to force it to use instruction text at the end of the reply
      
-    Instruction is modifed here to say:
+    If using default AutogramConfig, instruction is modifed here to say:
     "Respond to the user's last reply, and then include the **bold** text at the end of your response to direct the conversation:**" + instruction +"**. It is also okay for the whole repsonse to be the bold text if it fits the situation."
     
     This also contains an autocompletion functionality that is useful if the instruction text is long, allowing model to complete text even if context window isn't long enough
@@ -149,7 +148,7 @@ class ChatSuffixNode(ChatNode):
 
 class ChatExactNode(ChatNode):
     """
-    Corresponds to action = 'chat_exact' in the spreadsheet
+    Corresponds to action = 'chat_exact' 
 
     Reply with exact text in instruction.
     """
@@ -162,7 +161,7 @@ class ChatExactNode(ChatNode):
 
         instruction = set_variables(self.instruction,memory_object.get_variable_dict())
 
-        retain_instruction = False #check_contains_variables(self.instruction,memory_object)
+        retain_instruction = False 
 
         required_text=instruction
 

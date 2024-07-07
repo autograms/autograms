@@ -1,7 +1,14 @@
 from .classifier import Classifier
-import openai
+import openai 
 import tiktoken
 import time
+import pkg_resources
+
+
+openai_version = pkg_resources.get_distribution("openai").version
+
+legacy_openai= [int(x) for x in openai_version.split('.')][0]==0
+
 
 
 class OpenAIClassifier(Classifier):
@@ -11,7 +18,12 @@ class OpenAIClassifier(Classifier):
         self.wait_per_try = autogram_config.classifier_wait_per_try
         self.model_name = autogram_config.classifier_path   
         if "openai" in api_keys.keys():
-            openai.api_key = api_keys["openai"]
+            if legacy_openai:
+                self.client = openai
+                self.client.api_key = api_keys["openai"]
+            else:
+                from openai import OpenAI
+                self.client =  OpenAI(api_key=api_keys["openai"])
         else:
             raise Exception("missing Open AI API key")     
         self.test_mode = False
@@ -48,10 +60,13 @@ class OpenAIClassifier(Classifier):
        
             
             try:
-
-                response = openai.ChatCompletion.create(model=self.model_name,logit_bias=answer_dict,logprobs=True,top_logprobs=5,messages=messages,temperature=0.0,max_tokens=1,n=1)
-          
-                return response.choices[0]['message']['content'],True
+                if legacy_openai:
+                    response = self.client.ChatCompletion.create(model=self.model_name,logit_bias=answer_dict,messages=messages,temperature=0.0,max_tokens=1,n=1)
+                    return response.choices[0]["message"]["content"],True
+                else:
+                    response = self.client.chat.completions.create(model=self.model_name,logit_bias=answer_dict,messages=messages,temperature=0.0,max_tokens=1,n=1)
+        
+                    return response.choices[0].message.content,True
            
             except Exception as exception_str:
 

@@ -5,7 +5,7 @@ import pandas as pd
 
 import json
 
-from autograms import Autogram, MemoryObject, AutogramConfig, AutogramCompiler
+from autograms import read_autogram, AutogramConfig
 
 import argparse
 import importlib.util
@@ -14,12 +14,6 @@ import types
 
 
 
-def import_module_by_file(file_path):
-    loader = importlib.machinery.SourceFileLoader("__temp__", file_path)
-    module = types.ModuleType(loader.name)
-    loader.exec_module(module)
-
-    return module.autogram
 
 
 
@@ -95,7 +89,6 @@ def main():
     parser.add_argument('--user_id', type=str,default="123",help='id number for autogram and output file')
     parser.add_argument('--interactive', action="store_true",help='run user interactive autogram instead of simulation')
     parser.add_argument('--read_as_pure_python', action="store_true",help="load autogram as pure python instead of compiled from python")
-    parser.add_argument('--load_from_save', action="store_true",help='load memory dict from previous conversation')
     parser.add_argument('--self_referential', action="store_true",help="allow references to autogram's own object, overwritten by field in config field if provided")
     parser.add_argument('--include_python_modules', action="store_true",help="include all autograms python modules, overwritten by field in config file it provided")
     parser.add_argument('--save', action="store_true",help='save memory dict so conversation can be reloaded later')
@@ -107,7 +100,7 @@ def main():
 
     
     autogram_file = args.autogram_file
-    load_from_save=args.load_from_save
+
     save=args.save
     interactive = args.interactive
 
@@ -121,14 +114,10 @@ def main():
     else:
         api_keys=dict()
 
-        
 
-    ind = autogram_file.rfind(".")
-    if ind<0:
-        raise Exception("invalid autogram file")
-    
-    path_and_name = autogram_file[:ind]
-    ext=autogram_file[ind:]
+   
+
+
 
     if args.config_file is None:
 
@@ -144,42 +133,10 @@ def main():
         config={**initial_args, **config }
 
         autogram_config=AutogramConfig(**config)
+
+
+    autogram=read_autogram( autogram_file= autogram_file,read_as_pure_python=args.read_as_pure_python,autogram_config=autogram_config,api_keys=api_keys)
         
-        
-
-
-  
-    if ext==".py":
-        fid = open(args.autogram_file)
-        code=fid.read()
-
-        if args.read_as_pure_python:
-            autogram=import_module_by_file(autogram_file)
-
-
-        else:
-
-            autogram_compiler=AutogramCompiler()
-            autogram = autogram_compiler(code,config=autogram_config)
-            autogram.update_api_keys(api_keys)
-
-            autogram.allow_incomplete=False
-            autogram.update_autogram()
-
-
-      
-    elif ext==".csv":
-
-                                
-        df=pd.read_csv(autogram_file)
-        autogram = Autogram(autogram_config,df,api_keys)
-
-
-    else:
-        raise Exception("invalid autogram file extension "+ext)
-
-
-
 
 
     if args.include_test:
@@ -189,28 +146,19 @@ def main():
             
 
 
-    for i in range(0,1):
 
-        if load_from_save:
 
-            fid = open("simulated_user_" + str(user_id) +".json",'r')
-            memory_object= json.load(fid)
-            fid.close() 
+    memory_object=simulate_nodes(autogram,interactive=interactive,user_id=user_id)
 
-        else:
-            memory_object=simulate_nodes(autogram,interactive=interactive,user_id=user_id)
-            if save:
-                fid = open("simulated_user_" + str(user_id) +  ".json",'w')
-                json.dump(memory_dict,fid)
-                fid.close()
 
-        out_strs=get_conv_turns(memory_object.memory_dict)
+    out_strs=get_conv_turns(memory_object.memory_dict)
+
 
 
 
 
         
-    import pdb;pdb.set_trace()
+   # import pdb;pdb.set_trace()
 
 
 

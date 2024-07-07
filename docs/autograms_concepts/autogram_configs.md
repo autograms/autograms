@@ -1,7 +1,7 @@
 # Autogram configs
 
 
-The AutogramConfig Class is important for controlling settings of the autogram, including many settings that can't currently be set from inside the program. Some important choices are setting the models to be used, setting the prompt templates, and setting the python imports and APIs that will be visible from the lmsheets code.
+The AutogramConfig Class is important for controlling settings of the autogram, including many settings that can't currently be set from inside the program. Some important choices are setting the models to be used, setting the prompt templates, and setting the python imports and APIs that will be visible from the AutoGRAMS code.
 
 
 ## Controlling the python imports
@@ -11,12 +11,21 @@ Autogram configs allow you to set what python functions and APIs will be visible
 
 `python_builtins` set what python built ins are available. All other python built ins are disabled. By default, python built ins that allow imports or system manipulation are disabled. To allow all built ins, you can pass `dir(globals()['__builtins__'])` as this argument
 
-`python_imports` this arguments allows you to specify imports by string. For instance passing `["numpy"]` will import the module numpy so that it is usable from within an autogram
+`python_imports` this arguments allows you to specify imports by string. For instance passing `["import numpy as np"]` will import the module numpy so that it is usable with np from python_function nodes within an autogram
 
 `python_modules` you can pass any python function or module to the autogram config to make it usable. 
 
 If you'd like to pass a function that requires an API key, include a keyword argument called "api_key" in the function you pass. (Or wrap the function you'd like to use with another function that includes this argument and handles the api key appropriately).
-You will also need to include the api key in your `api_keys.json` file--the key should match the name of the function, and the value should match the api key.
+You will also need to include the api key in your `api_keys.json` file--the key should match the name of the function, and the value should match the api key or the environment variable were the api key is stored, depending on how "load_from_env" is set in your json file.
+
+`include_default_python_modules` -- True or False - automatically include the autograms built in python modules in autograms/python_modules folder
+
+`self_referential` -- True or False - allows AutoGRAM to reference its own object using `self` from within `python_function` instructions 
+
+
+`reference_memory_object` -- True or False - Allows memory object variable to be referenced directly using `memory_object` from within `python_function` instructions 
+
+
 
 
 
@@ -93,6 +102,15 @@ An autogram uses 3 models A chatbot, a classifier and a userbot (used to simulat
 `reply_start_type`
     Should the reply start appear at the end of the last turn (reply_start_type="suffix") or beginning of the model's turn "prefix". Prefix is only supported for huggingface models. For chat completion model behind at api it isn't possible to control this.
 
+`chat_suffix_inst_conversion`
+    A special instruction template for chat suffix nodes, affects how the instruction is passed to the model and shows up in turn history. Since chat_suffix node instructions define text that should be in the reply, the actual prompt to the language model needs to be refined to tell it to include that text in its reply.
+
+`chat_exact_inst_conversion`
+    A special instruction template for chat exact nodes, affects how the instruction shows up in turn history
+
+`thought_exact_inst_conversion`
+    A special instruction template for thought exact nodes, affects how the instruction shows up in turn history
+
 
 
 
@@ -130,5 +148,6 @@ instruction.
 `default_probability_interjection` -- probability of simulating each interjection state
 
 `default_primary_prob_delta` -- how much more likely should first (default) transition be than all other transitions, which are uniform
+
 
         

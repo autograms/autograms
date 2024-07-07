@@ -12,6 +12,8 @@ from .autogram_utils import  process_node_id, post_process_user_responses, proce
 from .statement_interpreter import StatementInterpreter
 from .models import CHATBOT_TYPES, CLASSIFIER_TYPES
 from .nodes import NODE_TYPES, EXPECTED_FIELDS
+import os
+
 
 
 
@@ -27,20 +29,29 @@ import copy
 class Autogram():
 
     """
-    Autogram is the class that executes the chatbot program defined by the spreadsheet. 
+    Autogram is the class that executes a program defined by a set of nodes and their associated attributes
     It holds autogram.nodes, which is a dictionary of all the nodes that have been loaded.
-    It contains functions to reply to the user, simulate the user's reply, and load addional nodes.
+    It contains functions to reply to the user, simulate the user's reply, or call any callable AutoGRAMS module as a function
     """
    
-    def __init__(self,autogram_config=None,df=None,api_keys={},allow_incomplete=False):
+    def __init__(self,autogram_config=None,df=None,api_keys={},allow_incomplete=None):
 
         """
         Initializes autogram object
         Args:
-            autogram_config - object of type AutogramConfig that defines all the autogram settings, default prompts, and prompt templaes
+            autogram_config - object of type AutogramConfig that defines all the autogram settings, default prompts, and prompt tempalaes
             df - DataFrame object that results from loading the spreadsheet. if df is included, nodes will be defined when autogram is initialized.
             api_keys - dictionary where keys are model type (ex: 'openai') and values are api keys
+            allow_incomplete - boolean, allows an autogram to be defined without valid api keys or fully connected nodes
         """
+
+        if allow_incomplete is None:
+            if autogram_config is None or df is None:
+                allow_incomplete=True
+            else:
+                allow_incomplete=False
+
+
 
         if autogram_config is None:
             autogram_config = AutogramConfig()
@@ -51,17 +62,29 @@ class Autogram():
         self.config = autogram_config
 
          
+        new_api_keys={}
+        if "load_from_env" in api_keys:
+            load_from_env=api_keys["load_from_env"]
+        else:
+            load_from_env=False
 
-        self.api_keys = api_keys
+        for key in api_keys:
+            if not(key=="load_from_env"):
+                if load_from_env:
+                    new_api_keys[key] = os.environ[api_keys[key]]
+                else:
+                    new_api_keys[key]=api_keys[key]
+
+        self.api_keys = new_api_keys
         self.allow_incomplete=allow_incomplete
-        self.statement_interpreter = StatementInterpreter(autogram_config,api_keys)
+        self.statement_interpreter = StatementInterpreter(autogram_config,self.api_keys)
 
         if allow_incomplete:
             try:
             #dictionaries CHATBOT_TYPES and CLASSIFIER_TYPES store the allowable chatbots and classifier classes
-                self.chatbot = CHATBOT_TYPES[autogram_config.chatbot_type](autogram_config,api_keys)
-                self.classifier = CLASSIFIER_TYPES[autogram_config.classifier_type](autogram_config,api_keys,chatbot=self.chatbot)
-                self.user_bot = CHATBOT_TYPES[autogram_config.chatbot_type](autogram_config,api_keys,chatbot=self.chatbot)
+                self.chatbot = CHATBOT_TYPES[autogram_config.chatbot_type](autogram_config,self.api_keys)
+                self.classifier = CLASSIFIER_TYPES[autogram_config.classifier_type](autogram_config,self.api_keys,chatbot=self.chatbot)
+                self.user_bot = CHATBOT_TYPES[autogram_config.chatbot_type](autogram_config,self.api_keys,chatbot=self.chatbot)
             except:
                 self.chatbot =None
                 self.classifier=None
@@ -71,14 +94,14 @@ class Autogram():
 
         else:
             #dictionaries CHATBOT_TYPES and CLASSIFIER_TYPES store the allowable chatbots and classifier classes
-            self.chatbot = CHATBOT_TYPES[autogram_config.chatbot_type](autogram_config,api_keys)
-            self.classifier = CLASSIFIER_TYPES[autogram_config.classifier_type](autogram_config,api_keys,chatbot=self.chatbot)
-            self.user_bot = CHATBOT_TYPES[autogram_config.chatbot_type](autogram_config,api_keys,chatbot=self.chatbot)
+            self.chatbot = CHATBOT_TYPES[autogram_config.chatbot_type](autogram_config,self.api_keys)
+            self.classifier = CLASSIFIER_TYPES[autogram_config.classifier_type](autogram_config,self.api_keys,chatbot=self.chatbot)
+            self.user_bot = CHATBOT_TYPES[autogram_config.chatbot_type](autogram_config,self.api_keys,chatbot=self.chatbot)
 
-        #NODE_TYPES is a dictionary where the keys are the allowable action names (see spreadsheet) and values are the corresponding node classes
+        #NODE_TYPES is a dictionary where the keys are the allowable action names and values are the corresponding node classes
         self.node_types=NODE_TYPES
 
-        #EXPECTED_FIELDS is a list of all allowable fields in the spreadsheets
+        #EXPECTED_FIELDS is a list of all allowable fields
         self.expected_fields=EXPECTED_FIELDS
 
         #default initial state ofr autogram, set to "start1" if not changed
@@ -95,18 +118,22 @@ class Autogram():
             self.add_nodes_from_data_frame(df)
 
             #tests added nodes and update neccesary variables
-            self.update_autogram()
+            self.update()
 
 
 
         
 
 
-    def update_autogram(self,include_inst=False):
+    def update(self,include_inst=False,finalize=True):
 
         """
-        Call update autogram once all nodes have been loaded. It tests the graph defined in the spreadsheet for errors, and updates the interjection nodes, which are nodes that can be reached from any chat state.
+        Call update once all nodes have been loaded. If finalize is True or allow incomplete is False, it tests the graph for errors. It also updates the interjection nodes, which are nodes that can be reached from any chat state.
         """
+
+        if finalize==True:
+            self.allow_incomplete=False
+        
 
         #test_transitions(self.nodes)
         graph = get_graph(self.nodes,allow_undefined=self.allow_incomplete,include_inst=include_inst)
@@ -118,21 +145,36 @@ class Autogram():
 
 
     def update_api_keys(self,api_keys):
-        self.statement_interpreter = StatementInterpreter(self.config,api_keys)
+
+        new_api_keys={}
+        if "load_from_env" in api_keys:
+            load_from_env=api_keys["load_from_env"]
+        else:
+            load_from_env=False
+
+        for key in api_keys:
+            if not(key=="load_from_env"):
+                if load_from_env:
+                    new_api_keys[key] = os.environ[api_keys[key]]
+                else:
+                    new_api_keys[key]=api_keys[key]
+
+        self.api_keys = new_api_keys
+        self.statement_interpreter = StatementInterpreter(self.config,self.api_keys)
 
         if self.chatbot is None:
-            self.chatbot = CHATBOT_TYPES[self.config.chatbot_type](self.config,api_keys)
-            self.classifier = CLASSIFIER_TYPES[self.config.classifier_type](self.config,api_keys,chatbot=self.chatbot)
-            self.user_bot = CHATBOT_TYPES[self.config.chatbot_type](self.config,api_keys,chatbot=self.chatbot)
+            self.chatbot = CHATBOT_TYPES[self.config.chatbot_type](self.config,self.api_keys)
+            self.classifier = CLASSIFIER_TYPES[self.config.classifier_type](self.config,self.api_keys,chatbot=self.chatbot)
+            self.user_bot = CHATBOT_TYPES[self.config.chatbot_type](self.config,self.api_keys,chatbot=self.chatbot)
 
-        self.api_keys=api_keys
+
 
 
 
 
     def reply(self,user_reply="",memory_object=None,memory_dict=None,set_state=None,test_mode=False,return_as_dict=False):
         """
-        Function to reply when a new user response is recieved. This function will apply nodes and transitions until it reaches a node that allows a reply (usually a chat type node)
+        Function to reply when a new user response is received. This function will apply nodes and transitions until it reaches a node that allows a reply (usually a chat type node)
         Args:
             user_reply - string that gives last user reply
             memory_object - MemoryObject that keeps track of memory of conversation history, states, and variables. Will define memory_object from memory_dict if memory_object isn't defined
@@ -205,18 +247,19 @@ class Autogram():
                 memory_object.assign_variables(node,variable_output)
 
                 """
-                Get the next node id using the nodes transition function. Each node type can have a different apply_transition, with base behavior defined in BaseNod
+                Get the next node id using the nodes transition function. Each node type can have a different apply_transition, with base behavior defined in BaseNode
                 if only 1 transition is defined, will usually return this
-                if multiple transitions are defined, will use classifier model to answer a multiple choice question defined in the spreadsheet to determine new node
+                if multiple transitions are defined, will use classifier model to answer a multiple choice question defined for previously executed the node to determine new node
                 """
                 new_node_id = node.apply_transition(user_reply,memory_object,self.classifier,self.nodes,self.config)
 
                 """
                 certain node names need additional processing
                 for instance "return" transitions go back to the function that called them
-                transitions that end in .* and .n have special behavior that depend on the state history
+                transitions that end in .* implement wildcard transitions
                 """
                 new_node_id = process_node_id(new_node_id,memory_object,self.nodes,self.statement_interpreter)
+                
                 
                 if new_node_id=="quit":
                     if return_as_dict:
@@ -312,7 +355,6 @@ class Autogram():
             memory_object = MemoryObject(self.config,memory_dict)
 
             var_names=[]
-            variables=[]
 
             
             for i in range(len(args_list)):
@@ -363,8 +405,6 @@ class Autogram():
                 #temporarily assigns variable output to variable 'last_variable_output'. Will also asisgn it to any variables defined in the node's instruction
                 memory_object.assign_variables(node,variable_output)
 
-                print(node.name)
-
 
 
 
@@ -374,7 +414,7 @@ class Autogram():
                 """
                 Get the next node id using the nodes transition function. Each node type can have a different apply_transition, with base behavior defined in BaseNod
                 if only 1 transition is defined, will usually return this
-                if multiple transitions are defined, will use classifier model to answer a multiple choice question defined in the spreadsheet to determine new node
+                if multiple transitions are defined, will use classifier model to answer a multiple choice question defined in the previously executed node to determine new node
                 """
 
                 new_node_id = node.apply_transition(user_reply,memory_object,self.classifier,self.nodes,self.config)
@@ -382,7 +422,7 @@ class Autogram():
                 """
                 certain node names need additional processing
                 for instance "return" transitions go back to the function that called them
-                transitions that end in .* and .n have special behavior that depend on the state history
+                transitions that end in .* implement wildcard transitions for if/else logic
                 """
                 new_node_id = process_node_id(new_node_id,memory_object,self.nodes,self.statement_interpreter)
                 
@@ -515,7 +555,7 @@ class Autogram():
 
 
         code_str+="\nautogram.allow_incomplete=False\n"
-        code_str+="autogram.update_autogram()"
+        code_str+="autogram.update()"
 
         return code_str
 

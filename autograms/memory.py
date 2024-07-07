@@ -1,5 +1,6 @@
 
 from .autogram_utils import get_variable, get_assignment
+#from .__init__ import __version__
 
 class MemoryObject():
     """
@@ -9,18 +10,19 @@ class MemoryObject():
     fields of memory_dict:
         'stack' - The core memory used by the system. A list of dictionaries that tracks memory at each function scope level
         'model_turns' - Mainly for logging/debugging. A list of inputs given to every call to the classifier and chatbot, as well as the response/prediction from the classifier/chatbot
+        'state_trajectory' - stores a list of dictionaries corresponding to each node visited
+        'version' - the autograms version that created the memory object. If the structure of the memory object changes, version will be used for mapping memory objects from old versions of autograms to new ones.
     
     Calling a function increases length of stack by 1, and return statement pops last element
     
     fields of each stack element:
         'turns' - list of dictionaries that describe different types of inputs, the output, and other fields associated with each node call
-        'stored_states' - list of previous states stored in memory. Used in .n and .* type node transitions
         'last_state' - last state corresponding to node at which apply_instruction() function was called
         'variables' - dictionary keeping track of all variables at that layer of the stack
         'prompt' - prompt at that layer of the stack. Initialized to default prompt in AutogramConfig object, can be changed with `set_prompt` and `append_prompt` node types.
         'user_prompt' - user prompt at that layer of the stack. Initialized to default user_prompt in AutogramConfig object, can be changed with `set_user_prompt` and `append_user_prompt` node types.
         'function_scope' - type of function that called the level of the state. Can either be 'normal', 'local', 'global' 
-                'normal' - corresponds to FunctionNode. Sees previous layer of stack (as well as any layers previous layer can see), resets to default prompts, erases stack layer and elements return is hit (except for 'stored_states', which is maintained after a return for normal functions)
+                'normal' - corresponds to FunctionNode. Sees previous layer of stack (as well as any layers previous layer can see), resets to default prompts, erases stack layer and elements return is hit 
                 'local' - corresponds to LocalFunctionNode. Doesn't see previous layers of stack, only can access variables that are passed as function arguments. Erases stack layer after return.
                 'global' - corresponds to GlobalFunctionNode. Sees all previous layer of the stack (as well as any layers previous layer can see), keeps prompts of previous layer, and adds all fields to above layer after return.
     
@@ -34,16 +36,26 @@ class MemoryObject():
             memory_dict - dictionary that defines memory
         """
 
+        from . import __version__
+
         if memory_dict is None:
 
             self.memory_dict=dict()
-            self.memory_dict['stack']=[{"turns":[],"stored_states":[],"last_state":"","variables":{}, "prompt":autogram_config.default_prompt,"user_prompt":autogram_config.default_user_prompt,"function_scope":"normal"}]
+            self.memory_dict['stack']=[{"turns":[],"last_state":"","variables":{}, "prompt":autogram_config.default_prompt,"user_prompt":autogram_config.default_user_prompt,"function_scope":"normal"}]
             if autogram_config.log_model_turns:
                 self.memory_dict['model_turns']=[]
+
+
+            self.memory_dict["state_trajectory"]=[]
+
+
+            #we may later use this to maintain backward compatibiltiy if future memory objects have different structure
+            self.memory_dict["version"] = __version__
         
                
 
         else:
+            
 
             self.memory_dict=memory_dict
 
@@ -255,18 +267,14 @@ class MemoryObject():
     def get_stored_states(self):
         """
         returns:
-            stored_states -- get a list of all stored states in current scope
+            stored_states -- get a list of all stored states
         """ 
         stored_states=[]
-        for i in reversed(range(len(self.memory_dict['stack']))):
+        for i in reversed(range(len(self.memory_dict['state_trajectory']))):
+
+            stored_states.append(self.memory_dict['state_trajectory'][i]['state'])
 
 
-            stored_states = self.memory_dict['stack'][i]['stored_states'] + stored_states
-
-            scope = self.memory_dict['stack'][i]['function_scope']
-
-            if scope=="local":
-                break
         return stored_states
 
     def get_variable_dict(self,prev_scope=False):
@@ -298,7 +306,7 @@ class MemoryObject():
         """
         args:
             state -- name of state, corresponsonding to node.name
-            category -- category of state. Used in combination with conv_scope attribute in spreadsheet to select states from only 1 category
+            category -- category of state. Used in combination with conv_scope attribute to select states from only 1 category
             instruction -- processed instruction used by the model
             agent_reply -- model's reply
             user_reply -- user's reply model was responding to, or "" if model was only responding to instruction
@@ -320,7 +328,8 @@ class MemoryObject():
             state -- name of state, corresponsonding to node.name
         """
         self.memory_dict['stack'][-1]['last_state'] = state
-        self.memory_dict['stack'][-1]['stored_states'].append(state)
+
+        self.memory_dict['state_trajectory'].append({"state":state})
 
     def set_prompt(self,text):
         """
@@ -456,7 +465,7 @@ class MemoryObject():
 
             self.memory_dict['stack'][-2]['turns'] +=self.memory_dict['stack'][-1]['turns'] 
 
-            self.memory_dict['stack'][-2]['stored_states'] +=self.memory_dict['stack'][-1]['stored_states']
+           # self.memory_dict['stack'][-2]['stored_states'] +=self.memory_dict['stack'][-1]['stored_states']
             for key in variables.keys():
                 self.memory_dict['stack'][-2]['variables'][key]=variables[key]
 
@@ -470,8 +479,8 @@ class MemoryObject():
 
 
         elif scope=='normal':
-            #normal scope resets most of the stack, but retained the stored_states to keep track of which states were visited during the function call (and potentially use them for .* or .n transitions)
-            self.memory_dict['stack'][-2]['stored_states'] +=self.memory_dict['stack'][-1]['stored_states']
+
+           # self.memory_dict['stack'][-2]['stored_states'] +=self.memory_dict['stack'][-1]['stored_states']
             del self.memory_dict['stack'][-1]
             
         else:
@@ -512,7 +521,7 @@ class MemoryObject():
         returns:
             is_call: whether or not function node is in process of calling a function
         """
-        is_call=len(self.memory_dict['stack'])>1 and len(self.memory_dict['stack'][-1]["stored_states"])==0
+        is_call=len(self.memory_dict['stack'])>1 and len(self.memory_dict['stack'][-1]["last_state"])==0
         return is_call
 
     def manage_call(self,variable_dict,function_scope):
@@ -522,13 +531,13 @@ class MemoryObject():
             variable_dict -- variables that the new scope will be initialized with
             function_scope -- function scope type, "normal", "global", or "local"
         """
-        if function_scope=="global":
+        if function_scope=="global" or function_scope=="normal":
             prev_prompt = self.memory_dict['stack'][-1]['prompt']
             prev_user_prompt = self.memory_dict['stack'][-1]['user_prompt']
-            self.memory_dict['stack'].append({"turns":[],"stored_states":[],"last_state":"","variables":variable_dict, "prompt":prev_prompt,"user_prompt":prev_user_prompt,"function_scope":function_scope})
+            self.memory_dict['stack'].append({"turns":[],"last_state":"","variables":variable_dict, "prompt":prev_prompt,"user_prompt":prev_user_prompt,"function_scope":function_scope})
         
         else:
-            self.memory_dict['stack'].append({"turns":[],"stored_states":[],"last_state":"","variables":variable_dict, "prompt":self.default_prompt,"user_prompt":self.default_user_prompt,"function_scope":function_scope})
+            self.memory_dict['stack'].append({"turns":[],"last_state":"","variables":variable_dict, "prompt":self.default_prompt,"user_prompt":self.default_user_prompt,"function_scope":function_scope})
         
 
     def set_python_return(self,variable_output):
@@ -557,3 +566,15 @@ class MemoryObject():
             memory_dict --  memory dictionary that keeps track of memory
         """
         self.memory_dict=memory_dict
+
+
+
+
+def get_version():
+    setup_path = os.path.join(os.path.dirname(__file__), 'setup.py')
+    with open(setup_path, 'r') as f:
+        content = f.read()
+    version_match = re.search(r"version\s*=\s*['\"]([^'\"]*)['\"]", content)
+    if version_match:
+        return version_match.group(1)
+    raise RuntimeError("Unable to find version string.")

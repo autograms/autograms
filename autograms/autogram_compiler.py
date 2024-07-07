@@ -1,8 +1,11 @@
 import ast
-from autograms import Autogram
+from .autogram import Autogram
 import pandas as pd
 
 def extract_function_definitions(node,function_dict):
+    """
+    Recursively traverse AST to find all function definitions in code
+    """
 
     if isinstance(node, ast.Module):
         for stmt in node.body:
@@ -40,7 +43,13 @@ def extract_function_definitions(node,function_dict):
 
 
 def compile_from_ast(node,autogram_compiler_chain):
-    
+    """
+    Recursive traversal of AST nodes to create AutoGRAMS nodes
+
+    node - AST node in python AST
+    autogram_compiler_chain - object for storing and adding AutoGRAMS nodes in the current body of statements
+
+    """
     
     if isinstance(node, ast.Module):
         for stmt in node.body:
@@ -54,20 +63,12 @@ def compile_from_ast(node,autogram_compiler_chain):
 
 
 
-        # func_name=node.name
-        # func_args=[]
-        # for arg in node.args.args:
-        #     func_args.append(arg.arg)
-        # func_args = node.args
-
-        # function_chain = autogram_compiler_chain.functions[func_name]
-
-
-        # for stmt in node.body:
-        #     compile_from_ast(stmt,autogram_compiler_chain=function_chain)
     elif isinstance(node, ast.If):
-        print("reached if statement")
-        print(autogram_compiler_chain.num_conditionals)
+
+        """
+        if AST node is a conditional, create new compiler chain to process body of each conditional, and merge add the new chains to the parent chain with the autogram_compiler_chain.add_conditional() method
+        """
+
   
         cond = ast.unparse(node.test)
      
@@ -123,20 +124,20 @@ def compile_from_ast(node,autogram_compiler_chain):
         
         
 
-            
+
 
     elif isinstance(node, ast.For):
+        """
+        if AST node is forloop, create new compiler chain to process body of forloop, and merge new chain with parent chain in autogram_compiler_chain.add_for_loop method
+        """
       
-  
-        
+   
 
         target = ast.unparse(node.target).strip()
 
         iter = ast.unparse(node.iter).strip()
 
-        # extract_code_from_ast(node.target,target_code_lines)
-        # iter_code_lines=[]
-        # extract_code_from_ast(node.iter,iter_code_lines)
+
 
         temp_chain =autogram_compiler_chain.spawn_chain(prefix="forloop"+str(autogram_compiler_chain.num_for_loops+1)+"_")
         
@@ -147,7 +148,9 @@ def compile_from_ast(node,autogram_compiler_chain):
         
 
     elif isinstance(node, ast.While):
-
+        """
+        if AST node is whileloop, create new compiler chain to process body of whileloop, and merge new chain with parent chain in autogram_compiler_chain.add_while_loop method
+        """
         
 
         cond = ast.unparse(node.test)
@@ -167,7 +170,9 @@ def compile_from_ast(node,autogram_compiler_chain):
 
         
     elif isinstance(node, (ast.Assign)):
-        
+        """
+        if AST node is assignment, the assigned variable is parsed out and added to the node's instruction. This adds a single node and returns
+        """
 
         if isinstance(node.value,ast.Call):
             if ast.unparse(node.value.func)=="exec_node":
@@ -208,7 +213,9 @@ def compile_from_ast(node,autogram_compiler_chain):
       
             autogram_compiler_chain.add_node(action="python_function",name="auto",transitions=["next"],instruction= ast.unparse(node).strip())
     elif isinstance(node, ast.Expr):
-        
+        """
+        if AST node is expression, it is added to the graph. This adds a single to the current chain node and returns.
+        """
         if isinstance(node.value,ast.Call):
            
             if ast.unparse(node.value.func)=="exec_node":
@@ -265,9 +272,11 @@ def compile_from_ast(node,autogram_compiler_chain):
             raise Exception("augmented assignment not fully handled")
         
     elif isinstance(node,ast.Return):
+        """
+        Return statements are converted to a return transition from the final node of the function
+        """
 
-        print(type(node.value))
- 
+
 
         if node.value is None:
             autogram_compiler_chain.add_node(action="transition",name="auto",transitions=["return"])
@@ -283,14 +292,22 @@ def compile_from_ast(node,autogram_compiler_chain):
 
     
     else:
-
+        """
+        Could reach this if there is an unhandled node
+        """
+        raise Exception("unhandled abstract syntax tree node type, python code may not be supported by AutoGRAMS compiler")
         
-        import pdb;pdb.set_trace()
+     
 
     return 
 
 
 class AutogramCompilerChain():
+    """
+    Class for building a set of nodes from code
+    when encountering if statements and loops, spawns new child chain to define AtuoGRAMS nodes for body of each indent level
+    child chains are merged with parent chain using methods specific to forloops, whileloops, and if statements
+    """
     def __init__(self,prefix="_",functions={}):
         self.node_args = list()
         self.num_conditionals=0
@@ -302,6 +319,9 @@ class AutogramCompilerChain():
         
 
     def add_node(self,**kwargs):
+        """
+        Add and store the arguments to create a new node
+        """
         if not("name") in kwargs or kwargs["name"]=="auto":
             kwargs['name']=self.prefix+"node"+str(len(self.node_args)+1)
 
@@ -333,9 +353,18 @@ class AutogramCompilerChain():
 
 
     def spawn_chain(self,prefix):
+        """
+        Defines new child chain. Needs prefix information from parent to know what to call automatically named nodes in child chain
+        """
         return AutogramCompilerChain(prefix=self.prefix+prefix,functions=self.functions)
 
     def add_conditional(self,sub_chains,conds):
+        """
+        sub_chains - list of chains corresponding to the bodies of each condition in branch
+        conds- list of each condition in the branch
+
+        create wildcard transition nodes to handle conditionals.
+        """
         self.num_conditionals+=1
         abcde= "abcdefghijklmnopqrstuvwxyz"
 
@@ -394,7 +423,13 @@ class AutogramCompilerChain():
 
 
     def add_while_loop(self,body_chain,cond):
+        """
+        body_chain - chain corresponding to body of while loop
+        cond - exit condition of while loop
 
+        Connects body_chain in loop structure with wildcard transition to facilitate exit
+        
+        """
 
         self.num_loops+=1
         while_loop_entrace= self.prefix+"whileloop"+str(self.num_loops)+"_start"
@@ -431,6 +466,13 @@ class AutogramCompilerChain():
 
     def add_for_loop(self,body_chain,target,iter):
 
+        """
+        body_chain - chain corresponding to body of for loop
+        target - name of forloop iterator
+        iter - name of forloop iterable object
+
+        
+        """
         self.num_for_loops+=1
         loop_prefix = self.prefix+"forloop"+str(self.num_for_loops)
         init_loop_counter = self.prefix+"forloop"+str(self.num_for_loops)+"_init_counter"
@@ -474,24 +516,14 @@ class AutogramCompilerChain():
         
 
     def __call__(self,code):
-        # Tokenize the code
-       # custom_ast_walk(ast.parse(code))
-        parsed_code = ast.parse(code)
-        # tokens = list(ast.walk(ast.parse(code)))
 
-        # # Execute each statement in the code
-        # for node in tokens:
-        #     if isinstance(node, ast.stmt):
-        #         # Evaluate each statement
-        #         eval(compile(ast.Expression(node), filename='', mode='eval'))
+        parsed_code = ast.parse(code)
+
         extracted_code = []
 
 
         compile_from_ast(parsed_code,extracted_code )
 
-        # Print the extracted code
-        for stmt in extracted_code:
-            print(stmt)
 
 
 class AutogramCompiler():
@@ -501,14 +533,13 @@ class AutogramCompiler():
         
 
     def __call__(self,code,config=None,return_nodes=False):
-        # Tokenize the code
-       # custom_ast_walk(ast.parse(code))
+
         parsed_code = ast.parse(code)
-        # tokens = list(ast.walk(ast.parse(code)))
 
 
         function_dict={}
 
+        #find every function defined in the program, add them to function dict. Initialize compiler chain for each function
         extract_function_definitions(parsed_code,function_dict)
 
 
@@ -527,7 +558,7 @@ class AutogramCompiler():
             function_chain.functions=functions
 
             for stmt in function_dict[key]["function_body"]:
-
+                #add nodes for function
                 compile_from_ast(stmt,function_chain)
 
             if len(function_chain.node_args[-1]['transitions'])==1:
@@ -537,14 +568,13 @@ class AutogramCompiler():
 
 
 
-        # # Execute each statement in the code
-        # for node in tokens:
-        #     if isinstance(node, ast.stmt):
-        #         # Evaluate each statement
-        #         eval(compile(ast.Expression(node), filename='', mode='eval'))
         compiler_chain = AutogramCompilerChain(functions=functions)
-
+        #create nodes for all code outside of functions 
         compile_from_ast(parsed_code,compiler_chain)
+        if len(compiler_chain.node_args)>0:
+            if len(compiler_chain.node_args[-1]['transitions'])==1:
+                if compiler_chain.node_args[-1]['transitions'][0]=="next":
+                    compiler_chain.node_args[-1]['transitions'][0]="quit"
 
         autogram = Autogram(config,None,{},allow_incomplete=True)
 
@@ -581,28 +611,3 @@ class AutogramCompiler():
 
             return autogram
 
-        # new_df=pd.DataFrame(autogram.convert_to_df())
-        # fname="compiled_merge_sort.csv"
-
-        # new_df.to_csv(fname,index=False)
-        # import pdb;pdb.set_trace()
-
-
-
-
-# def main():
-
-#     autogram_compiler = AutogramCompiler()
-
-#     fid = open("python_autograms/merge_sort.py")
-
-#   #  fid = open("python_autograms/merge_sort.py")
-
-#     code = fid.read()
-
-#     prompt_script_nodes= autogram_compiler(code)
-
-
-
-
-# main()

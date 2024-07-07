@@ -1,0 +1,1 @@
+python examples/chatbot_designer/run_meta_autogram.py --autogram_file examples/chatbot_designer/chatbot_meta_autogram.py --api_key_file api_keys.json --outfile "meta_designed_autogram.csv"

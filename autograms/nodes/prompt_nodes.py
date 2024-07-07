@@ -12,7 +12,7 @@ class PromptModifierNode(BaseNode):
 
 class SetUserPromptNode(PromptModifierNode):
     """
-    corresponds to action = "set_user_prompt" in spreadsheet 
+    corresponds to action = "set_user_prompt" 
     sets the user prompt at the current scope
     """
     def __init__(self,autogram_config,statement_interpreter=None,**kwargs):
@@ -40,7 +40,7 @@ class SetUserPromptNode(PromptModifierNode):
 
 class SetPromptNode(PromptModifierNode):
     """
-    corresponds to action = "set_prompt" in spreadsheet 
+    corresponds to action = "set_prompt" 
     sets the prompt at the current scope
     """
     def __init__(self,autogram_config,statement_interpreter=None,**kwargs):
@@ -66,7 +66,7 @@ class SetPromptNode(PromptModifierNode):
 
 class AppendUserPromptNode(PromptModifierNode):
     """
-    corresponds to action = "append_user_prompt" in spreadsheet 
+    corresponds to action = "append_user_prompt" 
     appends the user prompt at the current scope
     """
     def __init__(self,autogram_config,statement_interpreter=None,**kwargs):
@@ -93,7 +93,7 @@ class AppendUserPromptNode(PromptModifierNode):
 
 class AppendPromptNode(PromptModifierNode):
     """
-    corresponds to action = "append_prompt" in spreadsheet 
+    corresponds to action = "append_prompt" 
     appends the prompt at the current scope
     """
     def __init__(self,autogram_config,statement_interpreter=None,**kwargs):

@@ -8,7 +8,7 @@ import re
 import ast
 
 
-from autograms import Autogram, MemoryObject, AutogramConfig, AutogramCompiler
+from autograms import Autogram, read_autogram, AutogramConfig, AutogramCompiler
 
 import argparse
 
@@ -324,19 +324,8 @@ def main():
     config = AutogramConfig(python_modules=function_dict,chatbot_path="gpt-4-turbo-2024-04-09",chatbot_generation_args={"temperature":0.1})
 
 
+    autogram = read_autogram(args.autogram_file,autogram_config=config,api_keys=api_keys)
 
-    fid = open(args.autogram_file)
-    code=fid.read()
-
-    autogram_compiler=AutogramCompiler()
-
-
-
-    autogram = autogram_compiler(code,config)
-
-    autogram.update_api_keys(api_keys)
-    autogram.allow_incomplete=False
-    autogram.update_autogram()
 
 
     prompt=args.prompt
@@ -351,7 +340,7 @@ def main():
     for node_arg in node_args:
         new_autogram.add_node(**node_arg)
 
-    new_autogram.update_autogram()
+    new_autogram.update()
     new_df=pd.DataFrame(new_autogram.convert_to_df())
 
 

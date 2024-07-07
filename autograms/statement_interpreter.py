@@ -1,44 +1,8 @@
-import operator
+
 import ast
-import importlib
-
-def add_submodules(module,module_name,callable_fns,depth=0,max_depth=3):
-    
-    if callable(module):
-        callable_fns[module_name]= module
-        
-
-        
-    submodules = dir(module)
-   
-      
-    contains__ = [x[:2] == "__" for x in submodules]
 
 
-    if "__" in module_name or all(contains__) or depth==max_depth:
-        return
-    else:
-        for mod in submodules:
-            try:
-                getattr(module,mod)
-            except:
-                continue
-            add_submodules(getattr(module,mod),module_name+"."+mod,callable_fns=callable_fns,depth=depth+1,)
 
-
-def get_operator(op_name):
-    if op_name=="div":
-        op_function = getattr(operator, "truediv")
-    elif op_name=="noteq":
-        op_function = getattr(operator, "ne")
-    elif op_name=="is":
-        op_function = getattr(operator, "is_")
-    elif op_name=="isnot":
-        op_function = getattr(operator, "is_not")
-
-    else:
-        op_function = getattr(operator, op_name)
-    return op_function
 
 class Disallowed():
     def __init__(self,name):
@@ -48,14 +12,7 @@ class Disallowed():
     def __call__(self,*args,**var_args):
         raise Exception(self.name + " not allowed")
     
-class APIWrapper():
 
-    def __init__(self,name,api_key,function):
-        self.api_key = api_key
-        self.name=name
-        self.function = function
-    def __call__(self,*args,**var_args):
-        return self.function(*args,api_key=self.api_key,**var_args)
 
 
 def dynamic_import(statements):
@@ -93,17 +50,21 @@ class StatementInterpreter():
         for mod_name in imported_modules.keys():
 
             self.modules[mod_name]=imported_modules[mod_name]
+
+            if mod_name in api_keys.keys():
+                self.modules[mod_name].api_key = api_keys[mod_name]
       
 
         for key in autogram_config.python_modules.keys():
+
+            self.modules[key]=autogram_config.python_modules[key]
             if key in api_keys.keys():
-                self.modules[key].api_key = api_keys[key] #=APIWrapper(key,api_keys[key],autogram_config.python_modules[key])
+                self.modules[key].api_key = api_keys[key] 
 
-            else:
-                self.modules[key]=autogram_config.python_modules[key]
-
-
-
+            if hasattr(autogram_config.python_modules[key], "api_key_name"):
+                api_key_name = getattr(autogram_config.python_modules[key], "api_key_name")
+                if api_key_name in api_keys.keys():
+                    self.modules[key].api_key = api_keys[api_key_name]
 
 
 
@@ -114,13 +75,12 @@ class StatementInterpreter():
         
 
         locals_dict = {**variables,**self.modules,**self.disallowed_built_ins}
+        
         try:
             output=eval(code, {}, locals_dict)
         except Exception as exc:
-            import pdb;pdb.set_trace()
+            
             raise Exception("Python function node with code: "+str(code) +" failed with exception "+str(exc))
-
-
 
 
         return output

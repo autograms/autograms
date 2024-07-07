@@ -1,11 +1,11 @@
-# AutoGRAMS language
+# AutoGRAMS
 
-This is the official documentation of the [AutoGRAMS framework](https://github.com/benkrause/autograms). AutoGRAMS, or autonomous graphical agent modeling software, is an agent framework and a high level programming language that combines machine instructions with language instructions, and supports concepts such as function calls and memory within the language. AutoGRAMS programs, which we refer to as autograms, are represented as graphs, allowing users to easily program tree or graph networks of prompts into chatbots. The long term vision of AutoGRAMS is to become the language that AI uses to program AI. This section includes the introduction and guide to getting started.
+This is the official documentation of the [AutoGRAMS framework](https://github.com/autograms/autograms). AutoGRAMS, or autonomous graphical agent modeling software, is an agent framework and a high level programming language that combines machine instructions with language instructions, and supports concepts such as function calls and memory within the language. AutoGRAMS programs, which we refer to as "autograms" or autonomous programs, are represented as graphs, allowing users to easily program tree or graph networks of prompts into chatbots. The long term vision of AutoGRAMS is to become a language that AI uses to program AI (or re-program itself). This section includes the introduction and guide to getting started.
 
 
 ## Introduction
 
-While the AutoGRAMS framework can be used as a complex programming language, the initial motivation and applications were relatively simple. Often LLM model's struggle to lead conversations that require multiple conversational steps that can take several trajectories. Let's say you want an LLM to teach someone something or interview a person about a topic. If you simply give the model a prompt at the start, it will do pretty well for the first turn. However, if you try to get it to follow a complex script, it will often veer off from this, and just go wherever the user takes the conversation. While being more reactive to the user can be useful, the ability to proactively lead a conversation according to a script or series of steps is also important. One way to better control this is to design a tree or graph of instructions for the model, instead of simply having a prompt at the start. The idea is that the model starts off with a single instruction, but depending on how the user responds, the instruction that the model receives at the next turn will be different. AutoGRAMS allows you to consider the tree of possible situations that an agent might encounter, and preprogram an instruction for each of those situations. This works by defining a graph using a spreadsheet (or in python if you prefer), where each row of the spreadsheet is a node in the graph.  
+While the AutoGRAMS framework can be used as a complex programming language, the initial motivation and applications were relatively simple. Often LLM model's struggle to lead conversations that require multiple conversational steps that can take several trajectories. Let's say you want an LLM to teach someone something or interview a person about a topic. If you simply give the model a prompt at the start, it will do pretty well for the first turn. However, if you try to get it to follow a complex script, it will often veer off from this, and just go wherever the user takes the conversation. While being more reactive to the user can be useful, the ability to proactively lead a conversation according to a script or series of steps is also important. One way to better control this is to design a tree or graph of instructions for the model, instead of simply having a prompt at the start. The idea is that the model starts off with a single instruction, but depending on how the user responds, the instruction that the model receives at the next turn will be different. AutoGRAMS allows you to consider the tree of possible situations that an agent might encounter, and preprogram an instruction for each of those situations. This works by defining a graph using a spreadsheet or in python, where each row of the spreadsheet is a node in the graph.  
 
 Let's consider an example of how this can work. Let's say we want the model to act as a recruiter and asks the user their salary expectations. After receiving the user's reply, the agent must chose which of potentially several nodes it should transition to next. To do this, it can use a predefined multiple choice question such as 
 
@@ -32,87 +32,105 @@ For many users, the above usecase of designing trees or graphs of situational in
 
 When computer programs run, they execute instructions and facilitate the transitions (loops, conditionals, sequential statements etc.) between these instructions. A programming language in the traditional sense executes exact instructions and facilitates transitions that use exact boolean logic. However, for many complex applications, executing exact instructions can be intractable since it requires writing logic to describe any situation. Generative language models have developed the ability to follow complex human language instructions such as "Write a paragraph about X" or "write code the does Y" that would be intractable to implement using the basic logical instructions of a programming language. One of our main goals with AutoGRAMS was to develop a programming language that allows for execution of both traditional machine instructions as well as human language instructions as primitive operations in the programming language, as well as to use both traditional boolean logic and language model predictions to facilitate the transition between instructions in a program.
 
-In AutoGRAMS, each program or function is represented as set of nodes with behaviors defined in each respective node's fields. AutoGRAMS represents each autogram as a graph--each node executes an instruction, and facilitates a transition to another node that it connects to. Loops can be implemented with into these graphs by having the graph circle back on itself, and by ensuring that there is a transition in the loop that exits that graph if the right conditions are met. AutoGRAMS also supports some basic python statements as well as any predefined python function call that is passed to the agent at initialization. This mechanism allows for external API calls. Variables in AutoGRAMS are allowed to be any python object--calls to the chatbot yield string variables, whereas calls to python statements or functions can potentially be any object. These variables can then be used in later instructions, or passed into other external python functions.
+In AutoGRAMS, each each autogram is represented as a graph--each node executes an instruction, and facilitates a transition to another node that it connects to. Loops can be implemented with into these graphs by having the graph circle back on itself, and by ensuring that there is a transition in the loop that exits that graph if the right conditions are met. AutoGRAMS also supports basic python statements as well as any predefined python function call that is passed to the agent at initialization. This mechanism allows for external API calls. Variables in AutoGRAMS are allowed to be any python object--calls to the chatbot yield string variables, whereas calls to python statements or functions can potentially be any object. These variables can then be used in later instructions, or passed into other external python functions.
 
-We also implement function calls within AutoGRAMS, where the calling node jumps to another graph, and that graph is traversed until it hits a special return node, which returns a result back to the calling node. These graph functions can also call themselves recursively, allowing for recursive logic to be built around an LLMs instruction following capabilities. There are several different kinds of functions in AutoGRAMS, which have different rules about variable scope, which is maintained using a function stack.
+ AutoGRAMS also allows function calls, where the calling node jumps to another graph, and that graph is traversed until it hits a special return node, which returns a result back to the calling node. These graph functions can also call themselves recursively, allowing for recursive logic to be built around an LLMs instruction following capabilities. There are several different kinds of functions in AutoGRAMS, which have different rules about variable scope, which is maintained using a function stack.
 
-## Installation
+## Installation and Requirements
 
-You can install with `pip install .` in the top level directory. Officially supports python 3.9 but may work in other versions. Will require setting up CUDA toolkit and pytorch to run the huggingface models.
+You can install with `pip install autograms` or clone the repository and use `pip install .` in the top level directory. You will need python 3.9 or greater. 
+
+- To be able visualize AutoGRAMS graphs, install graphviz, which can be done in linux with: `sudo apt install graphviz`
+
+- Will require using an openai api key to run Open AI models. The fastest way to start is to set the api key in the in the environment, which can be done in linux with:
+      `export OPENAI_API_KEY=[your key]` 
+
+      If you'd prefer to store your api key in a file, you can open `api_keys.json`, change "load_from_env" to `false`, and set the value of "openai" to be equal to your api key. 
+
+
+
+- Will require installing pytorch to run the huggingface models.
+
+
 
 
 
 ## Writing the code
 
-As we mentioned before, programs in AutoGRAMS are represented as a list of nodes, each which contain a series of fields. There are several ways to program these nodes. If you'd like to get started quickly, coding in a spreadsheet or coding directly in python may seem more familiar. If you'd like to code very advanced programs, AutoGRAMS compiled from python allows for more advanced features like combining interconnected nodes with standard python code and loops, although these more advanced features aren't neccessary to use it.
-
-1. code in a spreadsheet
-
-
-Spreadsheets are potentially useful since most programs in AutoGRAMS consist mainly of string fields such as instructions, questions, and answers, and defining each node as a row in a spreadsheet, and each field as a cell in a spreadsheet, could be convenient for this. Describing the tree of a simple chatbot is fairly straightforward spreadsheet--you need to define the node names in one column and comma separated transitions in another field. However, Spreadsheets are less convenient for programs that more closely resemble traditional programs. For instance, programs that use loops can be coded in a spreadsheet by having a graph loop back on itself,but this probably isn't ideal. 
-
-
-2. code directly in python
-
-Another way to program nodes it to just define them add them one by one to to the agent. This might be most straightforward if you'd like to code in simple python. Some of the downsides to this downsides are similar to coding in a spreadsheet--since the program is defined by the graph, adding features such as forloops need to be implemented in the graph. Also, if you'd like your AutoGRAMS program to mix in python statements or variable assignments, these need to be passed as strings in the instruction field of the node rather than 
-
-3. AutoGRAMS compiled from python
-
-This third approach gives the flexibility of writing code--including loops, python statements, and variable assignments, directly in python, while also mixing in AutoGRAMS graph nodes. The .py file is read and compiled into an AutoGRAMS graph automatically--So for instance if you write a forloop around an AutoGRAMS node, the AutoGRAMS compiler will make new nodes automatically to handle the forloop and the resulting AutoGRAMS graph will loop back on itself. 
+Programs in AutoGRAMS are represented as a list of nodes, each which contain a series of fields. There are several ways to program these nodes. If you'd like to get started coding directly in python may seem most familiar. If you'd like to code very advanced programs, AutoGRAMS compiled from python allows for more advanced features like combining interconnected nodes with standard python code and loops, although these more advanced features aren't necessary to use it. The 3 options for implementing an autogram right now are:
 
 
 
-We will start with a simple example. Let's say we have an agent that offers to tell the user about recent advances in AI. If the user wants this, it continues with this. Otherwise it asks the user what they would prefer to talk about.
+
+1. code directly in pure python
+
+      One straightforward way to code nodes is to program nodes it to just define them add them one by one to to the autogram. This has the upside that it manipulates the data structure representing the AutoGRAM directly--all other methods are eventually converted to the pure python representation. Coding directly in python is also going to be most familiar to most users.
+
+      The downside of pure python is that ironically, it is more difficult to implement autograms that integrate python code. Nodes can execute python code, however in pure python this code needs to be passed to a node as a string, which may be inconvenient and more difficult to read. AutoGRAMS nodes are also inherently capable of implementing features such as loops and conditionals, however coding these requires nodes to be set and connected in the right way. 
+
+
+
+
+2. AutoGRAMS compiled from python
+
+      This approach gives the flexibility of writing code--including loops, python statements, and variable assignments, directly in python, while also incorporating AutoGRAMS graph nodes. The .py file is read and compiled into an AutoGRAMS graph automatically--So for instance if you write a forloop around an AutoGRAMS node, the AutoGRAMS compiler will make new nodes automatically to handle the forloop and the resulting AutoGRAMS graph will loop back on itself. 
+
+
+3. code in a spreadsheet
+
+
+      Spreadsheets are potentially useful since most programs in AutoGRAMS consist mainly of string fields such as instructions, questions, and answers, and defining each node as a row in a spreadsheet, and each field as a cell in a spreadsheet, could be convenient for this. Describing the tree of a simple chatbot is fairly straightforward spreadsheet--you need to define the node names in one column and comma separated transitions in another field.
+
+
+
+In the future, we also plan to have a graphical interface that allows autograms to be programmed more visually.
+
+## Simple "getting started" example
+
+We will start with a simple example in pure python. We start with pure python because other methods of implementation are mapped to a pure python, making it the most useful starting point for understanding AutoGRAMS.
+
+
+Let's say we have an agent that offers to tell the user about recent advances in AI. If the user wants this, it continues with this. Otherwise it asks the user what they would prefer to talk about.
 
 
 <iframe src="agent_graphs/simple_chatbot/full_graph.html" width="100%" height="300px"></iframe>
 Click on a node in the graph above to view fields.
 
 
-
-
-
-### Coding nodes in a spreadsheet
-
-We will use the spreadsheet to define 4 nodes, where each row in the spreadsheet defines a node. Generally, the first node will be the first row, although if name a node "start1" then this will automatically be set to the first node. In the case below, the first node gives an `instruction` to tell the user "Would you like me to tell you more about the latest advances in AI?", as listed in the instruction field. We name the node "ask_question". 
-
-
-<iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vSgcJiEpGXvXcxCppisqXtx2PAyBrj28_tJKeIUf_Thi1IR_YG4Wg3lfwlQWqSWNrUZ53YBScZmjM3P/pubhtml?gid=0&amp;single=true&amp;widget=true&amp;headers=false" width="100%" height="300px"></iframe>
-
-You can name nodes whatever you want, but chosing meaningful names can help because 
-1. you need to reference these names in transitions to connect nodes 
-2. The node names show up when you do visualizations of the graph
-
-The action field defines the action that is performed in a node, which also defines what type of node it is. A `chat_exact` node tells the agent to reply with the exact text that it in the instruction, and does not actually call the underlying chatbot language model. These types of nodes are often useful for introducing agents on the first conversation turn. The rest of the nodes are `chat` nodes, Where the model is told to follow the instruction to reply to the user, which calls the chatbot language model.
-
-The way this agent moves through the graph will be dependent on the user's answer, and is defined by the transitions, transition question, and transition choices. The "transitions" column expects a comma separated list of nodes that the agent can transition to next. For nodes that allow for multiple transitions, the order of the transitions matters, since they need to be aligned with the transition choices. In the node `ask_question`, there are 2 transitions defined-- `tell_about_ai` and `ask_user_preference`. There is also a transition question--`Does the user want to talk about ai?` and 2 transition answers, `transition choice a`, which is `yes`, and `transition choice b`, which is `no`. The way that these nodes works is:
-
-1. agent executes the instruction, in this case, replying with the exact text "Would you like me to tell you more about the latest advances in AI?"
-2. The agent waits for a response, in this case, the user reply
-3. The same node then asks the classifier (Which is also a language model) the `transition question`:`Does the user want to talk about ai?`
-4. The classifier predicts an answer-the agent limit the predictions of the classifier to just `yes` and `no`for yes/no questions, and 'A-Z' for non yes/no multiple choice questions.
-5. the answer is used to pick the transition. Since `yes` is the first answer, if the answer to the question is predicted to be yes, the agent will transition to `tell_about_ai`. Otherwise it will transition to `ask_user_preference`
-
-For nodes with only one transition, steps 3-5 are skipped since the transition is deterministic. Therefore, no transition question or choices are needed. The final state of the chatbot, `continue_conversation`, connects to itself, allowing the conversation to continue indefintely. 
-
-
-
-
-### Coding nodes in python directly
-
-Nodes can be coded in python directly by adding them to an autogram object one by one. While this is technically the pure python way of coding, it allows less flexibility. 
-
-```
-from autograms import autogram
-```
-
-To add nodes, use the `autogram.add_node()` method to add them one by one. This is equivalent to a row in the spreadsheet.
-
-This first block initializes the "ask_question" node as a "chat_exact" node. The fields are the same as the spreadsheet, except that fields associated with transitions are initialized as lists. For instance, transitions is a comma separated list in the spreadsheet. Instead of having separate fields for each transition choice (`transition_choice_a`, `transition_choice_b`, ..., etc.), `transition_choices` is defined in a list that is the same length as `transitions`. For a full list of arguments to add_node, see the documentation of the `__init__` method of BaseNode `nodes/base_node.py`, which is where these arguments are ultimately passed. The fields of the spreadsheet are ultimately converted to arguments of this format. 
+Lets create a new file called `run_simple_example.py`. The same example can be found in the tutorial_examples/simple_example folder. Let's initialize the autogram
 
 
 ```
+from autograms import Autogram, AutogramConfig
+import json
 
+API_KEY_FILE = "../../api_keys.json"
+with open(API_KEY_FILE) as f:
+      api_keys = json.load(f)
+
+#arguments to autogram config allow default settings to be changed
+config = AutogramConfig()
+
+#initializes incomplete autogram that we will add nodes to
+autogram = Autogram(api_keys=api_keys, config=config)
+```
+In the above code, we loaded the api key file and initialized an agent config with the default arguments. If you would prefer to run this tutorial with a huggingface model instead of an openai model, assuming you have pytorch installed, you can instead do:
+
+```
+api_keys ={}
+config = AutogramConfig(classifier_type="huggingface",chatbot_type="huggingface",\
+  chatbot_path="mistralai/Mistral-7B-Instruct-v0.1",classifier_path="mistralai/Mistral-7B-Instruct-v0.1")
+autogram = Autogram(api_keys = api_keys,autogram_config = config)
+
+```
+
+
+
+Nodes can be coded in python directly by adding them to an autogram object one by one using the autogram.add_node() method. 
+
+
+
+```
 autogram.add_node(
       action = "chat_exact",
       name = "ask_question",
@@ -122,16 +140,33 @@ autogram.add_node(
       transition_choices = ['yes', 'no'],
       )
 ```
+You can name nodes whatever you want, but choosing meaningful names can help because 
+1. you need to reference these names in transitions to connect nodes 
+2. The node names show up when you do visualizations of the graph
 
-This next blocks initializes the remaining nodes in the above example. No `transition_question` or `transition_choices` are needed since there is only one possible transition for each of those nodes.
+The first node added will be the first node in the graph, unless another node is later given the special name "start1". In the case above, the first node gives an `instruction` to tell the user "Would you like me to tell you more about the latest advances in AI?", as listed in the instruction field. We name the node "ask_question". 
+
+The action field defines the action that is performed in a node, which also defines what type of node it is. A `chat_exact` node tells the agent to reply with the exact text that it in the instruction, and does not actually call the underlying chatbot language model. These types of nodes are often useful for introducing agents on the first conversation turn. The rest of the nodes are `chat` nodes, Where the model is told to follow the instruction to reply to the user, which calls the chatbot language model.
+
+The way this agent moves through the graph will be dependent on the user's answer, and is defined by the transitions, transition question, and transition choices. The "transitions" field expects a  list of nodes that the agent can transition to next. For nodes that allow for multiple transitions, the order of the transitions matters, since they need to be aligned with the transition choices. In the node `ask_question`, there are 2 transitions defined-- `tell_about_ai` and `ask_user_preference`, and we will still need to define new nodes for these transitions. There is also a transition question--`Does the user want to talk about ai?` and 2 transition answers, `transition choice a`, which is `yes`, and `transition choice b`, which is `no`. The way that these nodes works is:
+
+1. agent executes the instruction, in this case, replying with the exact text "Would you like me to tell you more about the latest advances in AI?"
+2. The agent waits for a response, in this case, the user reply
+3. The same node then asks the classifier (Which is also a language model) the `transition question`:`Does the user want to talk about ai?`
+4. The classifier predicts an answer-the agent limit the predictions of the classifier to just `yes` and `no`for yes/no questions, and 'A-Z' for non yes/no multiple choice questions.
+5. the answer is used to pick the transition. Since `yes` is the first answer, if the answer to the question is predicted to be yes, the agent will transition to `tell_about_ai`. Otherwise it will transition to `ask_user_preference`
+
+For nodes with only one transition, steps 3-5 are skipped since the transition is deterministic. Therefore, no transition question or choices are needed. 
+
+We need to define nodes for `tell_about_ai` and `ask_user_preference`, so let's do that below. Both of these nodes will transition to a single new node called `continue_conversation`. No `transition_question` or `transition_choices` are needed since there is only one possible transition for each of those nodes.
 
 ```
-
 autogram.add_node(
       action = "chat",
       name = "tell_about_ai",
       transitions = ['continue_conversation'],
-      instruction = "Tell the user more about the latest advances in AI.",
+      instruction = ("Tell the user about the latest advances in AI. Mention that"
+        "a new framework called AutoGRAMS was recently released that allows greater control over AI agents."),
       )
 
 autogram.add_node(
@@ -140,7 +175,12 @@ autogram.add_node(
       transitions = ['continue_conversation'],
       instruction = "Confirm with the user the user what they would prefer to talk about.",
       )
+```
 
+
+Let's add the final node to the autogram. `continue_conversation`, connects to itself, allowing the conversation to continue indefinitely.
+
+```
 autogram.add_node(
       action = "chat",
       name = "continue_conversation",
@@ -150,12 +190,85 @@ autogram.add_node(
 ```
 
 
-### compiling AutoGRAMS from python
-
-In order to allow python code, loops, and conditionals to be directly implemented in combination with AutoGRAMS nodes, we created a compiler that converts python code into AutoGRAMS graph, allowing python code and AutoGRAMS nodes to be interleaved. This code is not true python, but behaves identically for simple python programs in most cases, other than the AutoGRAMS nodes which behave differently. The idea is that pure python statements and external function calls are treated as special "python_function" nodes that call the python interpreter, and loops and conditionals can be used to form an AutoGRAMS graph automatically. Each (non-python) AutoGRAMS node is implemented using a special built in method called exec_node(), which takes the same arguments as autogram.add_node(). The main difference is that in compiled AutoGRAMS, the order of nodes can be used to infer transitions. If nodes do not have transitions, nodes are executed in the order they appear in the code. nodes can also use a special "next" transition that simply goes to the next node or line of code. The first 3 nodes of the simple program can be implemented as follows:
+Let's finalize the initialization of the autogram. Once we have defined all the nodes, the autogram checks to be sure that the nodes and transitions we defined are valid.
 
 ```
-#notice the "next" transition, which will go to "tell_about_ai" since it is next in the code.
+autogram.update(finalize=True)
+```
+
+We can view an interactive graph of the autogram we've just created.
+
+
+```
+from autograms.graph_utils import visualize_autogram
+
+visualize_autogram(autogram,root_path="simple_example")
+```
+Running this will create several files including `simple_example.html`. You can try opening `simple_example.html` in a browser and click on different nodes in the graph to see the fields we have set.
+
+Finally, we would like to interact with the autogram, so let's create an interactive terminal to do this
+
+```
+memory_object=None
+user_reply=""
+while True:
+      reply,memory_object = autogram.reply(user_reply,memory_object=memory_object)
+      print("Agent: " + reply)
+      user_reply = input("User: ")
+```
+
+As long as your api_key.json file is set correctly, running the program with: 
+`python simple_example.py` 
+
+should create an interactive terminal to run the chatbot. Notice how the chatbot's second reply should follow a different instruction depending on your answer to the first question. Building larger conversation trees that adapt to a broader range of user behaviors is one of the main purposes of AutoGRAMS.
+
+
+
+## compiling AutoGRAMS from python
+
+In order to allow python code, loops, and conditionals to be directly implemented in combination with AutoGRAMS nodes, we created a compiler that converts python code into AutoGRAMS graph, allowing python code and AutoGRAMS nodes to be interleaved. This code is not true python, but behaves identically for simple python programs in most cases, other than the AutoGRAMS nodes which behave differently. The idea is that pure python statements and external function calls are treated as special "python_function" nodes that call the python interpreter, and loops and conditionals can be used to form an AutoGRAMS graph automatically. Each (non-python) AutoGRAMS node is implemented using a special built in method called exec_node(), which takes the same arguments as autogram.add_node(). The main difference is that in compiled AutoGRAMS, the order of nodes can be used to infer transitions. If nodes do not have transitions, nodes are executed in the order they appear in the code. nodes can also use a special "next" transition that simply goes to the next node or line of code. AutoGRAMS compiled from python need to be implemented in a separate file from the code that runs the autogram, so let's create a new file called `simple_example_compiled.py`.
+
+
+
+No imports are needed in `simple_example_compiled.py` since these are handled by the AutogramConfig when the autogram actually runs. The nodes of the simple program can be implemented as follows:
+
+```
+#the "next" transition, which will go to "tell_about_ai" since it is next in the code.
+exec_node(
+      action = "chat_exact",
+      name = "ask_question",
+      transitions = ['next', 'ask_user_preference'],
+      instruction = "Would you like me to tell you more about the latest advances in AI?",
+      transition_question = "Does the user want to talk about ai?",
+      transition_choices = ['yes', 'no'],
+      )
+
+exec_node(
+      action = "chat",
+      name = "tell_about_ai",
+      transitions = ['before_while'],
+       instruction = ("Tell the user about the latest advances in AI. Mention that"
+        "a new framework called AutoGRAMS was recently released that allows greater control over AI agents.")
+      )
+
+#will automatically transition to next defined node if no transitions defined
+exec_node(
+      action = "chat",
+      name = "ask_user_preference",
+      instruction = "Confirm with the user the user what they would prefer to talk about.",
+      )
+
+exec_node(
+      action = "chat",
+      name = "continue_conversation",
+      transitions = ['continue_conversation'],
+      instruction = "Respond to the user.",
+      )
+```
+
+Another equivalent way to code in AutoGRAMS compiled form python uses a while loop for the last node instead of a self-transition.
+
+```
 exec_node(
       action = "chat_exact",
       name = "ask_question",
@@ -167,73 +280,140 @@ exec_node(
 exec_node(
       action = "chat",
       name = "tell_about_ai",
-      transitions = ['continue_conversation'],
-      instruction = "Tell the user more about the latest advances in AI.",
+      transitions = ['before_while'],
+       instruction = ("Tell the user about the latest advances in AI. Mention that"
+        "a new framework called AutoGRAMS was recently released that allows greater control over AI agents.")
       )
 
 exec_node(
       action = "chat",
       name = "ask_user_preference",
-      transitions = ['continue_conversation'],
       instruction = "Confirm with the user the user what they would prefer to talk about.",
       )
-
-The last node, which connects to itself to allow the conversation to continue indefinitely can be implemented in 2 different ways--one using an explicitly defined transition back to itself
-
-```
 exec_node(
-      action = "chat",
-      name = "continue_conversation",
-      transitions = ['continue_conversation'],
-      instruction = "Respond to the user.",
+      action = "transition",
+      name = "before_while",
       )
-```
 
-And the other using an infinite while loop to make the sample transition implicitly
-
-```
+#while loop connects node to itself
 while True:
       exec_node(
             action = "chat",
             name = "continue_conversation",
             instruction = "Respond to the user.",
-            )
+      )
 ```
 
-Using the while loop will result in a slightly different representation in the AutoGRAMS graph since extra nodes will handle the while loop logic, however this is functionally equivalent to using the self-transition. Note that since this is a chat node, the loop will temporarily pause each time to get the user's response, but you probably wouldn't want to have an infinite loop of non-chat nodes. 
+An extra placeholder node was needed before the while loop, since nodes are unable to jump into a while loop from outside of one. This placeholder node used an action of type "transition", which is basically a node that does not execute any instruction and it's main function is to connect other nodes.
 
 
+Using the while loop will result in a slightly different representation in the AutoGRAMS graph since extra nodes will handle the while loop logic, however this is functionally equivalent to using the self-transition.  Note that since this is a chat node, the loop will temporarily pause each time to get the user's response, but you probably wouldn't want to have an infinite loop of non-chat nodes. 
 
-## Visualizing the agent
+in a separate file, the autogram can be compiled and read. Here is code that can be used to visualize and interact with the autogram we just defined
+
+```
+from autograms.graph_utils import visualize_autogram
+from autograms import read_autogram
+import json
+
+API_KEY_FILE = "../../api_keys.json"
+with open(API_KEY_FILE) as f:
+      api_keys = json.load(f)
 
 
+autogram = read_autogram("simple_example_compiled.py",api_keys=api_keys)
+
+visualize_autogram(autogram,root_path="simple_example_compiled")
+
+memory_object=None
+user_reply=""
+while True:
+      reply,memory_object = autogram.reply(user_reply,memory_object=memory_object)
+      print("Agent: " + reply)
+      user_reply = input("User: ")
+
+```
+
+The `read_autogram()` method can also accept a autogram_config argument, so for a huggingface autogram you could instead use 
+
+```
+from autograms import AutogramConfig
+config = AutogramConfig(classifier_type="huggingface",chatbot_type="huggingface",\
+  chatbot_path="mistralai/Mistral-7B-Instruct-v0.1",classifier_path="mistralai/Mistral-7B-Instruct-v0.1")
+autogram = read_autogram("simple_example_compiled.py",api_keys=api_keys,autogram_config=config)
+```
+
+## coding in a spreadsheet
+
+We can also use a spreadsheet to define 4 nodes, where each row in the spreadsheet defines a node. 
+
+<iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vSgcJiEpGXvXcxCppisqXtx2PAyBrj28_tJKeIUf_Thi1IR_YG4Wg3lfwlQWqSWNrUZ53YBScZmjM3P/pubhtml?gid=0&amp;single=true&amp;widget=true&amp;headers=false" width="100%" height="300px"></iframe>
+
+ The fields are the same as in python, except that fields associated with transitions are comma separated lists. Instead of having a list for transition transition choices, transition choices are defined as separate fields (`transition_choice_a`, `transition_choice_b`, ..., etc.). Fields in spreadsheets (unlike in python) are case insensitive and can use spaces and underscores interchangeably--both are converted to underscores when mapping to fields in python.
 
 
-Since AutoGRAMS programs are defined by nodes, visualizing programs in AutoGRAMS can be very helpful for understanding how they work. The `make_interactive_graph.py` script in the highest level of the repository can generate interactive graphs for any AutoGRAMS agent coded in a spreadsheet or in python. To generate the graph for the above example, you can run
+The csv autogram can be visualized and interacted with from python as follows:
 
-python ``make_interactive_graph.py --autogram_file agents/tutorials/simple_chatbot.csv``
+```
+from autograms.graph_utils import visualize_autogram
+from autograms import read_autogram
+import json
 
-or alternatively ``make_interactive_graph.py --autogram_file agents/tutorials/simple_chatbot.py``
+API_KEY_FILE = "../../api_keys.json"
+with open(API_KEY_FILE) as f:
+      api_keys = json.load(f)
 
-This will create several new files in a new folder `agent_graphs/simple_chatbot`.
-Potentially most useful full be `agent_graphs/simple_chatbot/full_graph.html`. This file can be opened in a browser to view an interactive visualization of the agent. You can click on any node to highlight it and view the fields for that node.
+autogram = read_autogram("simple_example.csv",api_keys=api_keys)
+
+visualize_autogram(autogram,root_path="simple_example_spreadsheet")
+
+memory_object=None
+user_reply=""
+while True:
+      reply,memory_object = autogram.reply(user_reply,memory_object=memory_object)
+      print("Agent: " + reply)
+      user_reply = input("User: ")
+
+```
+
+## Visualizing autograms with `make_interactive_graph.py`
+
+
+The `make_interactive_graph.py` script in the root directory of the repository can generate interactive graphs for any AutoGRAMS agent coded in a spreadsheet or in python. To generate the graph for the above example, you can run
+
+python ``make_interactive_graph.py --autogram_file tutorial_examples/simple_example/simple_example.csv``
+
+or alternatively ``make_interactive_graph.py --autogram_file tutorial_examples/simple_example/simple_example_compiled.py``
+
+This will create several new files. Potentially most useful full be `tutorial_examples/simple_example/simple_example_full_graph.html`. This file can be opened in a browser to view an interactive visualization of the agent. You can click on any node to highlight it and view the fields for that node. 
 
 Here is a full list of the arguments for `make_interactive_graph.py`
 
 `--autogram_file` - the path of a .csv or .py file where your agent is coded
-`--filter_category` - only graph nodes defined by `State Category` and their transitions. `State Category` is a node field that you can use to categorize nodes. This allows for partial graphs of complex programs to be used. the output files will be named after that state category instead of `full_graph` if this argument is used.
+`--filter_category` - only graph nodes defined by `state_category` and their transitions. `state_category` is a node field that you can use to categorize nodes. This allows for partial graphs of complex programs to be used. the output files will be named after that state category instead of `full_graph` if this argument is used.
 `--label_by_inst` instead of using node names to label nodes, use an abbreviation of the node instruction.
 `--graph_format` for the graph image file, what image format should be saved (png, pdf, etc.)
---read_from_pure_python - if passing in a .py file, this tells us whether it is AutoGRAMS compiled from python (default) or AutoGRAMS implemented in pure python.
+--read_from_pure_python - if passing in a .py file, this specifies whether it is AutoGRAMS compiled from python (default) or AutoGRAMS implemented in pure python. In the case of pure python, it will load the autogram initialized in the provided .py file, assuming it is named "autogram".
 
 
 
-## Running a chatbot
+## Running a chatbot with `run_autogram.py`
 
-You can use `run_autogram.py` to run a chatbot in the terminal. You need an agent file and an api key file if using any APIs. By default AutoGRAMS does use the open AI API for chatbots, but you can also use huggingface LMs that run locally if you specify this in the agent config. You can copy paste your open ai API key into the appropriate slot in api_keys.json, or define a similar json file somewhere else with "openai" as a key and the actual key as the value.
+You can use `run_autogram.py` to run a chatbot in the terminal. You need an agent file and an api key file if using any APIs.
 
 
 To run the tutorial example above, you can run:
-`python run_autogram.py --autogram_file agents/tutorials/simple_chatbot.csv --api_key_file api_keys.json --interactive`
+`python run_autogram.py --autogram_file tutorial_examples/simple_example/simple_example.csv --api_key_file api_keys.json --interactive`
 
 This will create an interactive chatbot in the terminal where you can chat with the agent.
+
+
+
+
+
+
+
+
+
+ 
+

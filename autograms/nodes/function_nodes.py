@@ -6,7 +6,7 @@ from ..autogram_utils import check_node_req,parse_function,set_variables,get_fun
 class FunctionNode(BaseNode):
     """
     Node that calls a function
-    Corresponds to action: "function" in the spreasheet
+    Corresponds to action = "function"
     This node is reached twice, once when calling a function, and again when returning from the function call.
     This class is for functions with scope "normal", which is the default.
     When calling a function, normal scope functions can see:
@@ -31,6 +31,7 @@ class FunctionNode(BaseNode):
         super().__init__(autogram_config,statement_interpreter,**kwargs)
 
         self.function_type = function_type
+        self.statement_interpreter=statement_interpreter
     def apply_transition(self,user_reply,memory_object,classifier,nodes,autogram_config):
 
 
@@ -100,7 +101,7 @@ class FunctionNode(BaseNode):
             If calling a function, we need to call memory object.manage_call to append the stack to intialize the new scope
             """
             instruction = set_variables(self.instruction,memory_object.get_variable_dict())
-            var_name,func,args=parse_function(instruction,memory_object.get_variable_dict())
+            var_name,func,args=parse_function(instruction,memory_object.get_variable_dict(),self.statement_interpreter)
 
             memory_object.append_state(self.name)
             turn_dict = {"retain_instruction":False,"user_reply":"","agent_reply":"","instruction":instruction,"state":self.name,"category":self.state_category,"is_reply":False}
@@ -155,7 +156,7 @@ class LocalFunctionNode(FunctionNode):
     Function with local scope, can only see arguments that are passed to it. 
     When returning, everything besides returned variable is erased in the stack.
 
-    Corresponds to action "local_function" in spreadsheets
+    Corresponds to action = "local_function" 
 
     When calling a function, lcoal scope functions can see:
         - any arguments passed to the function
@@ -189,7 +190,7 @@ class GlobalFunctionNode(FunctionNode):
     When returning, all lists (turns and stored states) are appended to previous scope
     all variables and prompts set in global function overwrite previous variables and prompts
 
-    Corresponds to action "global_function" in spreadsheets
+    Corresponds to action = "global_function" 
 
     
     When calling a function, global scope functions can see:

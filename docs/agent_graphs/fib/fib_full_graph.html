@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Interactive Graph</title>
+    <style>
+        /* CSS for the dialogue box */
+        .dialogue-box {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin: 10px;
+            font-size: 24px; /* Adjust font size as needed */
+            text-align: left; /* Align text to left */
+            position: fixed; /* Fix position */
+            top: 10px; /* Adjust top position */
+            right: 10px; /* Align to the right */
+            width: calc(50% - 20px); /* Limit width to 50% of the window minus margins */
+            overflow-wrap: break-word; /* Wrap long text */
+            max-height: 90vh; /* Set maximum height to 70% of viewport height */
+            overflow-y: auto; /* Add scrollbar when content overflows */
+        }
+        /* CSS for the graph container */
+        #graph {
+            width: 70%; /* Adjust the width as needed */
+            text-align: left; /* Align the content to the left */
+            margin-right: 2%; /* Add margin to create space between the graph and the transitions */
+        }
+    </style>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script src="https://unpkg.com/@hpcc-js/wasm@0.3.11/dist/index.min.js"></script>
+    <script src="https://unpkg.com/d3-graphviz@3.0.5/build/d3-graphviz.js"></script>
+</head>
+<body>
+    <div style="display: flex; justify-content: space-between;">
+        <div id="graph" style="width: 49%; text-align: center;"></div>
+        <div id="transitions"></div>
+    </div>
+
+    <script>
+        var graphviz = d3.select("#graph").graphviz();
+        var lastClickedNode = null; // Variable to store the last clicked node
+
+
+        var dotData = {"dot_string": "// Agent\ndigraph {\n\t\"fibonacci()\" [label=\"fibonacci(n)\"]\n\tfibonacci_conditional1_start [label=fibonacci_conditional1_start]\n\t\"fibonacci_conditional1.a\" [label=\"n <= 0\"]\n\tfibonacci_conditional1a_node1 [label=\"print('Incorrect input')\"]\n\t\"fibonacci_conditional1.b\" [label=\"n == 1\"]\n\tfibonacci_conditional1b_node1 [label=0]\n\t\"fibonacci_conditional1.c\" [label=\"n == 2\"]\n\tfibonacci_conditional1c_node1 [label=1]\n\t\"fibonacci_conditional1.d\" [label=\"fibonacci_conditional1.d\"]\n\tfibonacci_conditional1d_node1 [label=\"nm1=fibonacci(n - 1)\"]\n\tfibonacci_conditional1d_node2 [label=\"nm2=fibonacci(n - 2)\"]\n\tfibonacci_conditional1d_node3 [label=\"nm1 + nm2\"]\n\tfibonacci_conditional1_end [label=fibonacci_conditional1_end]\n\treturn0 [label=return]\n\treturn1 [label=return]\n\treturn2 [label=return]\n\treturn3 [label=return]\n\t\"fibonacci()\" -> fibonacci_conditional1_start\n\tfibonacci_conditional1_start -> \"fibonacci_conditional1.a\"\n\tfibonacci_conditional1_start -> \"fibonacci_conditional1.b\"\n\tfibonacci_conditional1_start -> \"fibonacci_conditional1.c\"\n\tfibonacci_conditional1_start -> \"fibonacci_conditional1.d\"\n\t\"fibonacci_conditional1.a\" -> fibonacci_conditional1a_node1\n\tfibonacci_conditional1a_node1 -> fibonacci_conditional1_end\n\t\"fibonacci_conditional1.b\" -> fibonacci_conditional1b_node1\n\tfibonacci_conditional1b_node1 -> return0\n\t\"fibonacci_conditional1.c\" -> fibonacci_conditional1c_node1\n\tfibonacci_conditional1c_node1 -> return1\n\t\"fibonacci_conditional1.d\" -> fibonacci_conditional1d_node1\n\tfibonacci_conditional1d_node1 -> fibonacci_conditional1d_node2\n\tfibonacci_conditional1d_node2 -> fibonacci_conditional1d_node3\n\tfibonacci_conditional1d_node3 -> return2\n\tfibonacci_conditional1_end -> return3\n\tfibonacci_conditional1d_node1 -> \"fibonacci()\" [style=dashed]\n\tfibonacci_conditional1d_node2 -> \"fibonacci()\" [style=dashed]\n}\n"};
+        var nodeInfo = {"fibonacci()": "Node information for fibonacci()\n\nAction: transition\n\nInstruction: \n\ntransitions: fibonacci_conditional1_start", "fibonacci_conditional1_start": "Node information for fibonacci_conditional1_start\n\nAction: transition\n\nInstruction: \n\ntransitions: fibonacci_conditional1.*", "fibonacci_conditional1.a": "Node information for fibonacci_conditional1.a\n\nAction: transition\n\nInstruction: \n\ntransitions: fibonacci_conditional1a_node1\n\nboolean_condition: n <= 0", "fibonacci_conditional1a_node1": "Node information for fibonacci_conditional1a_node1\n\nAction: python_function\n\nInstruction: print('Incorrect input')\n\ntransitions: fibonacci_conditional1_end", "fibonacci_conditional1.b": "Node information for fibonacci_conditional1.b\n\nAction: transition\n\nInstruction: \n\ntransitions: fibonacci_conditional1b_node1\n\nboolean_condition: n == 1", "fibonacci_conditional1b_node1": "Node information for fibonacci_conditional1b_node1\n\nAction: python_function\n\nInstruction: 0\n\ntransitions: return", "fibonacci_conditional1.c": "Node information for fibonacci_conditional1.c\n\nAction: transition\n\nInstruction: \n\ntransitions: fibonacci_conditional1c_node1\n\nboolean_condition: n == 2", "fibonacci_conditional1c_node1": "Node information for fibonacci_conditional1c_node1\n\nAction: python_function\n\nInstruction: 1\n\ntransitions: return", "fibonacci_conditional1.d": "Node information for fibonacci_conditional1.d\n\nAction: transition\n\nInstruction: \n\ntransitions: fibonacci_conditional1d_node1", "fibonacci_conditional1d_node1": "Node information for fibonacci_conditional1d_node1\n\nAction: local_function\n\nInstruction: nm1=fibonacci(n - 1)\n\ntransitions: fibonacci_conditional1d_node2", "fibonacci_conditional1d_node2": "Node information for fibonacci_conditional1d_node2\n\nAction: local_function\n\nInstruction: nm2=fibonacci(n - 2)\n\ntransitions: fibonacci_conditional1d_node3", "fibonacci_conditional1d_node3": "Node information for fibonacci_conditional1d_node3\n\nAction: python_function\n\nInstruction: nm1 + nm2\n\ntransitions: return", "fibonacci_conditional1_end": "Node information for fibonacci_conditional1_end\n\nAction: transition\n\nInstruction: \n\ntransitions: return", "return0": "Node information for return0", "return1": "Node information for return1", "return2": "Node information for return2", "return3": "Node information for return3"};
+
+        // Function to attach click event listener to nodes
+        function attachClickListener() {
+            d3.selectAll(".node").each(function() {
+                var node = d3.select(this);
+
+                // Get the node name from the title attribute
+                var nodeName = node.select('title').text();
+
+                // Get the bounding box of the node
+                var bbox = this.getBBox();
+
+                // Add an invisible rectangle behind the node
+                node.insert("rect", ":first-child")
+                    .attr("x", bbox.x)
+                    .attr("y", bbox.y)
+                    .attr("width", bbox.width)
+                    .attr("height", bbox.height)
+                    .style("fill", "none")
+                    .style("pointer-events", "all") // Make it clickable
+                    .on("click", function() {
+                        // Highlight the node when clicked
+                        console.log("Clicked node: " + nodeName);
+                        if (lastClickedNode) {
+                            lastClickedNode.select("polygon,path,circle,ellipse").style("fill", "white"); // Reset color
+                        }
+                        node.select("polygon,path,circle,ellipse").style("fill", "red"); // Change color of current node
+                        lastClickedNode = node; // Update last clicked node
+
+                        // Fetch transitions for the clicked node
+                        displayNode(nodeName);
+                    });
+
+                // Add click event listener to the node
+                node.on("click", function() {
+                    // Highlight the node when clicked
+                    console.log("Clicked node: " + nodeName);
+                    if (lastClickedNode) {
+                        lastClickedNode.select("polygon,path,circle,ellipse").style("fill", "white"); // Reset color
+                    }
+                    node.select("polygon,path,circle,ellipse").style("fill", "red"); // Change color of current node
+                    lastClickedNode = node; // Update last clicked node
+
+                    // Fetch transitions for the clicked node
+                    displayNode(nodeName,nodeInfo);
+                });
+            });
+        }
+        // Function to display node information
+        function displayNode(node_name,nodeInfo) {
+            // Get the node information from the dictionary
+            var nodeStringWithBreaks = nodeInfo[node_name].replace(/\n/g, '<br>');
+
+            // Create a styled <div> element to wrap the node string
+            var dialogueBox = document.createElement('div');
+            dialogueBox.className = 'dialogue-box'; // Add CSS class
+            dialogueBox.innerHTML = nodeStringWithBreaks;
+
+            // Display the node string in the right panel
+            var transitionsDiv = document.getElementById('transitions');
+            transitionsDiv.innerHTML = ''; // Clear existing content
+            transitionsDiv.appendChild(dialogueBox);
+}
+
+
+        function fetchDotString(dotData) {
+            // Render the graph using the received DOT string
+            graphviz.attributer(attributer).renderDot(dotData.dot_string);
+
+            // Add click event listener to nodes after rendering is complete
+            graphviz.on('end', attachClickListener);
+        }
+        const scale = 0.8;
+
+        function attributer(datum, index, nodes) {
+            var selection = d3.select(this);
+            if (datum.tag == "svg") {
+                datum.attributes = {
+                    ...datum.attributes,
+                    width: '100%',
+                    height: '100%',
+                };
+                // svg is constructed by hpcc-js/wasm, which uses pt instead of px, so need to convert
+                const px2pt = 3 / 4;
+
+                // get graph dimensions in px. These can be grabbed from the viewBox of the svg
+                // that hpcc-js/wasm generates
+                const graphWidth = datum.attributes.viewBox.split(' ')[2] / px2pt;
+                const graphHeight = datum.attributes.viewBox.split(' ')[3] / px2pt;
+
+                // new viewBox width and height
+                const w = graphWidth / scale;
+                const h = graphHeight / scale;
+
+                // new viewBox origin to keep the graph centered
+                const x = -(w - graphWidth) / 2;
+                const y = -(h - graphHeight) / 2;
+
+                const viewBox = `${x * px2pt} ${y * px2pt} ${w * px2pt} ${h * px2pt}`;
+                selection.attr('viewBox', viewBox);
+                datum.attributes.viewBox = viewBox;
+            }
+        }
+                // Call the function to fetch the DOT string from the Flask backend
+        // Call the function to fetch the DOT string from the Flask backend
+        
+
+        fetchDotString(dotData);
+    </script>
+</body>
+</html>

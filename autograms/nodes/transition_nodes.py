@@ -6,7 +6,7 @@ from .base_node import BaseNode
 class TransitionNode(BaseNode):
     """
     Action-less node that allows for an extra transition question. 
-    Corresponds to action: "transition" in the spreasheet
+    Corresponds to action = "transition" 
     Allows for additional branching in the graph. Behavior is very similar to BaseNode.
     """
     def __init__(self,autogram_config,statement_interpreter=None,**kwargs):

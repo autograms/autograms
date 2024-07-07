@@ -1,11 +1,11 @@
 # How an autogram works
 
-An autogram is defined by an object of type Autogram(). An autogram stores a collection of nodes as an OrderedDict type that form a graph that will define how the program is executed. Autograms can either be executed by the autogram.reply() or autogram.apply_fn() method. autogram.reply() is meant to get a reply from a chatbot, and autogram.apply_fn() is meant to call a specific module within the autogram and return a result, and can be used for non-conversational autograms.
+An autogram is defined by a an object of type Autogram. An autogram stores a collection of nodes as an OrderedDict type that form a graph that will define how the program is executed. Autograms can either be executed by the autogram.reply() or autogram.apply_fn() method. autogram.reply() is meant to get a reply from a chatbot, and autogram.apply_fn() is meant to call a specific module within the autogram and return a result, and can be used for non-conversational autograms.
 
-## initlaizing the autogram
+## initializing the autogram
 
 ```
-from autograms import Autogram, AutogramConfig, AutogramCompiler
+from autograms import Autogram, AutogramConfig, AutogramCompiler, read_autogram
 ```
 
 
@@ -32,12 +32,20 @@ autogram = AutogramCompiler(code,autogram_config)
 To initialize the autogram directly in python, use the autogram.add_node() method to add nodes one at a time.
 
 ```
-autogram = Autogram(autogram_config,allow_incomplete=False)
+autogram = Autogram(autogram_config)
 #very simple autogram that has 1 chat node that transitions to itself
 autogram.add_node(name="node1",action="chat",instruction="respond to the user with prompt xyz",transitions=["node1])
 autogram.allow_incomplete=False
 autogram.update_autogram()
 ```
+
+Lastly, autograms coded in a separate file (.py or .csv) can be initialized using the read_autogram method. For instance, 
+
+
+```
+autogram = read_autogram(autogram_file)
+```
+
 
 
 
@@ -85,10 +93,10 @@ exec_node(name="ask_math",transitions=["ask_math_problem","ask_user_pref"],actio
 
 
 A nodes behavior is governed by it's [action](actions.md), [instruction](#instruction), and [transitions](transitions.md)
-## Transtions
+## Transitions
 
 
-There are several ways to have transitions in the LM sheets. The most commonly used transitions for chatbots are transitions predicted by the autogram's classifier, you need to initialize a node with a list of transitions, a transition question, and a list of transition answers with a one to one correspondence to the transitions. For instance 
+There are several ways to have transitions in the AutoGRAMS. The most commonly used transitions for chatbots are transitions predicted by the autogram's classifier, you need to initialize a node with a list of transitions, a transition question, and a list of transition answers with a one to one correspondence to the transitions. For instance 
 
 ```
 exec_node(name="ask_math_problem",
@@ -109,17 +117,15 @@ There are other types of transitions that are described in the main article on [
 
 
 
-
-
 ## Instructions
 
-Instructions execute the main operation of the node. The way an instruction is interpretted varies depending on the action of the node. The main actions at a high level are:
+Instructions execute the main operation of the node. The way an instruction is interpreted varies depending on the action of the node. The main actions at a high level are:
 
 1. Chat ("chat","chat_exact","chat_suffix") Write a response to the user. The instruction tells the model how to respond.
 2. Thought ("thought","thought_exact","thought_qa") Write a response internally. In this case, an instruction tells the model what to think
-3. Transtion ("transition") - node that does not execute instruction but allows for additional branching 
-4. function ("function","local_function","global_function") A node that calls another AutoGRAMS function and gets result. the action is an LM sheets function. When coding in LM sheets compiled from python, you have the option to call the function directly which creates a node with a function calling instruction implictely
-5. Python function ("python_fuction") - used to call a python statement, function, or api. In this case the instruction is python code.  When coding in LM sheets compiled from python, you have the option to write the python code directly which creates a node with a python instruction implictely
+3. Transition ("transition") - node that does not execute instruction but allows for additional branching 
+4. function ("function","local_function","global_function") A node that calls another AutoGRAMS function and gets result. the action is an AutoGRAMS function. When coding in AutoGRAMS compiled from python, you have the option to call the function directly which creates a node with a function calling instruction implicitly
+5. Python function ("python_function") - used to call a python statement, function, or api. In this case the instruction is python code.  When coding in AutoGRAMS compiled from python, you have the option to write the python code directly which creates a node with a python instruction implicitly
 6. prompt setting ("set_prompt","set_user_prompt","append_prompt","append_user_prompt"). These actions modify  the starting prompt of the model. The instruction specifies the new prompt or addition to the prompt depending on the specific action type.
 
 
@@ -129,22 +135,41 @@ See the [actions](actions.md) documentation for a more detailed overview.
 
 
 
-## calling function modules
 
-Nodes in an autogram can be made callable--which allows them to be called within an autogram or directly from python using the autogram.apply_fn() method. Nodes that are callable must have a name defined with "()" and any arguments the node expects. The AutoGRAMS apply_fn() for calling AutoGRAMS modules from python accepts the following arguments:
-
-`entry_node` (required) - name of callable node that begins the function
-`args_list` (required)  - list of the python variables that will be passed as arguments to the module
-`memory_object` - Memmory object to initialize the function call with. Defaults to `None`, generally isn't needed for local functions
-`memory_dict`- dictionary representation of memory object, defaults to `None`
-`function_type` - type of AutoGRAMS function to call as, defaults to "local"
 
 
 
 ## Internal functions and scopes
 
-LM sheets functiions are sub graphs that execute and return a result. When a function is called, it propagates though the graph until a special `return` transition is encountered. Functions allow for graph modules to be resused. They also allow for the scope of the conversational history to be better controlled--for instance, if you'd like to compute something using a chain of thought, but then hide the intermediate steps of the chain of thought from the prompt once it is finished executing, AutoGRAMS functions allow you to do this. See the main documentation of [AutoGRAMS functions](actions.md#function-actions) for a full overview. 
+Nodes in an autogram can be made callable--which allows them to be called within an autogram or directly from python using the autogram.apply_fn() method. Nodes that are callable must have a name defined with "()" and any arguments the node expects.
 
+AutoGRAMS functions are sub graphs that execute and return a result. When a function is called, the autogram temporarily jumps to a callable node, and it propagates though the graph until a special `return` transition is encountered. Functions allow for graph modules to be reused. For instance, consider an AI tutor autogram with the following graph:
+
+<iframe src="/images/chat_fun.png" max-width="100%" height="540px" width="100%"></iframe>
+
+The graph contains a subgraph that asks the user a question to quiz them. This routine could be called from different branches of the conversation tree, and always returns to the node that calls it when it hits a special return transition. This allows subgraphs to be reused at multiple points in an autogram. 
+
+
+AutoGRAMS functions also allow for the scope of the conversational history to be better controlled--for instance, if you'd like to compute something using a multiple reasoning steps, but then hide the intermediate steps of the reasoning from the prompt once it is finished executing, AutoGRAMS functions allow you to do this. 
+
+
+
+
+
+
+
+
+See the main documentation of [AutoGRAMS functions](actions.md#function-actions) for a full overview. 
+
+## calling AutoGRAMS functions from python
+
+AutoGRAMS functions can be called both from within an autogram and externally from python. The AutoGRAMS apply_fn() for calling AutoGRAMS modules from python accepts the following arguments:
+
+`entry_node` (required) - name of callable node that begins the function
+`args_list` (required)  - list of the python variables that will be passed as arguments to the module
+`memory_object` - Memory object to initialize the function call with. Defaults to `None`, generally isn't needed for local functions
+`memory_dict`- dictionary representation of memory object, defaults to `None`
+`function_type` - type of AutoGRAMS function to call as, defaults to "local"
 
 
 
@@ -159,17 +184,17 @@ See the main documentation of [python functions](actions.md#python-actions) for 
 
 ## Variables
 
-Variables in LM sheets can be any python object. Variables are set when AutoGRAMS instructions are executed. To define a variable, include an equals sign in the instruction to assign the output of the node to the variable. For instance:
+Variables in AutoGRAMS can be any python object. Variables are set when AutoGRAMS instructions are executed. To define a variable, include an equals sign in the instruction to assign the output of the node to the variable. For instance:
 ```
 exec_node(action="thought",instruction="summary=Write down a summary of the conversation so far.")
 ```
-Will execute an internal dialogue where the model will respond to the instruction, and save the resulting model output into the variable `summary`. IN LM sheets compiled from python, it's also possible to use regular assigments outside of the instruction:
+Will execute an internal dialogue where the model will respond to the instruction, and save the resulting model output into the variable `summary`. In AutoGRAMS compiled from python, it's also possible to use regular assignments outside of the instruction:
 ```
 summary=exec_node(action="thought",instruction="Write down a summary of the conversation so far.")
 ```
-And the AutoGRAMS compiler will infer the correct instruction syntax to cause the variable assignment to be executed.  Variables can be used in 2 ways--by passing them in python function nodes, or by incorporating them as a string into an instruction (which could be for any node type). To use a variable in a python function, you simply use the variable as you would in any python statement. for instance `'here is a summary: '+summary` (or equivlently `exec_node(action="python_function",instruction="'here is a summary:' +summary"`) will result in a string that concatenates the prefix 'here is a summary:' with the sumamry string output by the model at the previous node. 
+And the AutoGRAMS compiler will infer the correct instruction syntax to cause the variable assignment to be executed.  Variables can be used in 2 ways--by passing them in python function nodes, or by incorporating them as a string into an instruction (which could be for any node type). To use a variable in a python function, you simply use the variable as you would in any python statement. for instance `summary_str='here is a summary: '+summary` (or equivalently `exec_node(action="python_function",instruction="summary_str='here is a summary:' +summary"`) will result in a string that concatenates the prefix 'here is a summary:' with the summary string output by the model at the previous node. 
 
-The second way to incoporate the variable is the the syntax `$summary`, which results in an instruction that is dynamically formed based on the value of the summary when the node is assigned. this syntax only works for python strings, or other python objects that have the `__str__` method to be converted to strings. This is mainly used for chat and thought type nodes that are passed to the model. For instance, later in the conversation we might use a node like this:
+The second way to incorporate the variable is the the syntax `$summary`, which results in an instruction that is dynamically formed based on the value of the summary when the node is assigned. this syntax only works for python strings, or other python objects that have the `__str__` method to be converted to strings. This is mainly used for chat and thought type nodes that are passed to the model. For instance, later in the conversation we might use a node like this:
 
 
 ```
@@ -193,7 +218,7 @@ Will omit the bracket text and simply be "Respond to the user." if the summary v
 
 ## Memory Object
 
-The AutoGRAMS memory object stores everything assosiated with a specific run of the program. The two main compnents are the function stack, and model turns (optional, mainly used for logging model inputs/outputs). Each layer of the memory stack stores the chatbots conversation turns, as well as any variables set at that layer of the stack. The memory object can be saved and reloaded using jsonpickle to save and load the state of a program or chatbot. 
+The AutoGRAMS memory object stores everything associated with a specific run of the program. The two main components are the function stack, and model turns (optional, mainly used for logging model inputs/outputs). Each layer of the memory stack stores the chatbots conversation turns, as well as any variables set at that layer of the stack. The memory object can be saved and reloaded using jsonpickle to save and load the state of a program or chatbot. 
 
 ```
 autogram_reply,memory_object = autogram.reply(user_reply,memory_object)

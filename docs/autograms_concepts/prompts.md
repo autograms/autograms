@@ -26,7 +26,7 @@ for each past thought or chat node visited:
 
         - otherwise,the chat node's instruction will appear in the input for that turn
 
-The initial prompt set by "set_prompt" and "append_prompt" actions, or by the AgentConfig prompt, is preappended to the first input.
+The initial prompt set by "set_prompt" and "append_prompt" actions, or by the AutogramConfig prompt, is preappended to the first input.
 
 For the last input, corresponding to the end of the prompt, the string is determined by the instruction template. The default instruction template is "\<last_response\>\n\nInstruction for \<agent_name\>: \<instruction\>", where\<last_response\>, \<agent_name\>, and \<instruction\> are special place holder tokens for the instruction, agent name, and last response. Sometimes the last response will be the empty string if the last user response is already in one of the past inputs (which will happen if there is at least 1 thought node before replying with a chat node).
 

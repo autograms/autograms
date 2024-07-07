@@ -12,6 +12,11 @@ Actions in AutoGRAMS can be set by using the "action" argument exec_node() or ag
 6. prompt setting ("set_prompt","set_user_prompt","append_prompt","append_user_prompt"). These actions modify  the starting prompt of the model
 
 
+
+Here is a diagram of how instructions are executed, depending on the action.
+<iframe src="/images/autograms_actions.png" max-width="100%" height="550px" width="100%"></iframe>
+
+
 ## Prompt Actions
 
 Prompt actions are nodes that set or modify the starting prompt of the model. By default, starting prompts are set in the AgentConfig that is passed to the model, and prompt actions can be used to change this. Note that every 'local_function' and 'function' resets the starting prompt inside the function call, so if you'd like to change the starting prompt from the default inside function scopes you will need to use these actions.
@@ -247,4 +252,4 @@ def check_answer(problem):
 ```
 
 ### global_function
-The `local_function` action works similarly to `function`, but it can see the entire state of the autogram, and new conversation turns or variables defined in a global function will stay in memory after the function returns
+The `local_function` action works similarly to `function`, but it can see the entire state of the autogram, and new conversation turns or variables defined in a global function will stay in memory after the function returns.

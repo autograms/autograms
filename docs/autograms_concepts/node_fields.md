@@ -49,6 +49,7 @@ unique name of node
 `boolean_condition` -- either variable or python statement that is evaluated as boolean, used for .* transitions. If True, select this node, otherwise go to next node in .* list
 
 `required_revisit` -- list of states used to block function execution if states haven't been reached since last time function was called
+
 `conv_scope` -- only view states corresponding to user defined state types in state category. If used, conv_scope should match the state_category of some of the nodes
 
 `transition_context` --number of turns of context to use for transition prediction with classifier. Defaults to 1 if using default AutogramConfig

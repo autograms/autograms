@@ -2,7 +2,7 @@ from .base_node import BaseNode
 from ..autogram_utils import set_variables, apply_chatbot
 class ThoughtNode(BaseNode):
     """
-    corresponds to action = 'thought' in the spreadsheet
+    corresponds to action = 'thought'
 
     This is useful when we want the model to set a variable or use internal dialgoue to reason. 
     Model follows instruction, but result is not output to user
@@ -53,7 +53,7 @@ class ThoughtNode(BaseNode):
 class ThoughtQANode(ThoughtNode):
     """
     Inherits from most behavior ThoughtNode
-    corresponds to action = 'thought_qa' in the spreadsheet
+    corresponds to action = 'thought_qa' 
 
     Similar to thought, but variable output includes instruction. 
     This makes it useful for cases where we want to store a question and an answer in a variable
@@ -84,10 +84,10 @@ class ThoughtExactNode(ThoughtNode):
 
     """
 
-    Corresponds to action = 'thought_exact' in the spreadsheet
+    Corresponds to action = 'thought_exact' 
 
     Like the thought node, but output is forced instead of decided by model.
-    Mostly useful for setting variables to fixed values.
+    Mostly useful for setting variables to fixed values. Slightly different from setting string with python_function node as it appends conversation turns.
     """
 
     def apply_instruction(self,user_reply,memory_object,chatbot,nodes):

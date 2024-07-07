@@ -1,6 +1,6 @@
 # AutoGRAMS interpreter
 
-This section goes into a greater depth on how autograms programs are actually interpreted
+This section goes into a greater depth on how autograms are actually interpreted
 
 
 ## Detailed overview of autogram.reply()
@@ -34,6 +34,11 @@ The outer loop of autogram.reply() has 6 main steps
 6. return a result if the new node is a chat node, continue the loop otherwise
 
 
+Here is a diagram of the outerloop of the autogram.reply() method:
+
+<iframe src="/images/autograms_loop.png" max-width="100%" height="600px" width="100%"></iframe>
+
+
 ## Detailed overview of autogram.apply_fn()
 
 The outer loop of autogram.apply_fn() is very similar to autogram.reply(), other than the last step to check the exit criteria
@@ -60,7 +65,7 @@ The outer loop of autogram.apply_fn() is very similar to autogram.reply(), other
 
 ## Post processing the transtion
 
-The `process_node_id()` function in autograms/autogram_utils.py is used to post process `new_nod_id` variable. If the new_node_id is the name of ta node, then no post processing is needed. However certain special transitions require post processing, including:
+The `process_node_id()` function in autograms/autogram_utils.py is used to post process `new_node_id` variable. If the new_node_id is the name of the node, then no post processing is needed. However certain special transitions require post processing, including:
 
 
 '.n' transitions -- a transition name with the suffix .n (for instance 'state1.n') is assumed to have a different version of state for the nth visit to that state. 
@@ -78,7 +83,7 @@ dynamic transitions  -- transitions that use $ syntax to set the transition dyna
 
 ## interpreting python statements
 
-Python statements (as well as the `boolean_condition` field of nodes with .a/.b/.c suffixes) are interpreted by the StatementInterpreter class `/autograms/statement_interpreter.py`. At initialization, the StatementInterpreter uses the AgentConfig to load all python imports that will be allowed within the scope of the program. It also overrides any python builtins that are not explicitly listed in the AgentConfig to prevent them from being called. 
+Python statements (as well as the `boolean_condition` field of nodes with .a/.b/.c suffixes, and arguments to AutoGRAMS functions) are interpreted by the StatementInterpreter class `/autograms/statement_interpreter.py`. At initialization, the StatementInterpreter uses the AutogramConfig to load all python imports that will be allowed within the scope of the program. It also overrides any python builtins that are not explicitly listed in the AutogramConfig to prevent them from being called. 
 
 
 When the StatementInterpreter called from a PythonNode (action="python_function"), it first parses out any variable assignments that are in the code. It then executes the code using the python `eval` command, which unlike the `exec` command, returns the resulting value of the code expression it evaluates. The python `eval` command takes in 3 argument
@@ -100,7 +105,15 @@ FunctionNodes in AutoGRAMS have special behavior during ApplyTransition() and Ap
 
 ## returning from an AutoGRAMS function
 
-The start of the return process first happens when the `process_node_id()` function in `autograms/autogram_utils.py` encounters a return transition. The `new_node_id` will be set to the node name of the calling `FunctionNode`. The `MemoryObject.manage_return()` function will pop the stack to facilitate the reduction in scope depth. Depending on the type of the function (global, local, regular function) different information will be saved to the previous layer of the stack from the layer being popped. the return of the function, if any, will be saved to a temporary variable in the previous layer of the stack. The return is finalized when we revisit the FunctionNode that called the function, and hit it's get_variable_output() method, which will return the temporary return variable and delete it from the memory object. It will be saved in a new variable if the function calling node used a variable assignment in its instruction. 
+The start of the return process first happens when the `process_node_id()` function in `autograms/autogram_utils.py` encounters a return transition. The `new_node_id` will be set to the node name of the calling `FunctionNode`. The `memory_object.manage_return()` function will pop the stack to facilitate the reduction in scope depth. Depending on the type of the function (global, local, regular function) different information will be saved to the previous layer of the stack from the layer being popped. the return of the function, if any, will be saved to a temporary variable in the previous layer of the stack. The return is finalized when we revisit the FunctionNode that called the function, and hit its get_variable_output() method, which will return the temporary return variable and delete it from the memory object. It will be saved in a new variable if the function calling node used a variable assignment in its instruction. 
+
+
+
+An diagram showing the memory object's stack during the calling, execution, and returning of a function is given below.
+
+<iframe src="/images/memory_object.png" max-width="100%" height="500px" width="100%"></iframe>
+
+
 
 
 

@@ -1,5 +1,6 @@
 
 from .graph import get_graph, Graph
+from .visualizations import visualize_autogram
 import os
 
 # Get the current directory of the Python script

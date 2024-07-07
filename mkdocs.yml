@@ -6,16 +6,16 @@
 site_name: AutoGRAMS Docs
 nav:
   - AutoGRAMS concepts: 
-      - Autograms: autograms_concepts/autograms.md
-      - Actions: autograms_concepts/actions.md
+      - Autograms overview: autograms_concepts/autograms.md
+      - Nodes and actions: autograms_concepts/actions.md
+      - Transitions: autograms_concepts/transitions.md
+      - Interjection nodes: autograms_concepts/interjection.md
       - Autogram configs: autograms_concepts/autogram_configs.md
-      - Special transitions: autograms_concepts/transitions.md
-      - Interjection Nodes: autograms_concepts/interjection.md
       - Prompt formation: autograms_concepts/prompts.md
       - Models and generation: autograms_concepts/models.md
-      - LM sheets compiled from python : autograms_concepts/compiled.md
+      - AutoGRAMS compiled from python : autograms_concepts/compiled.md
       - Glossary of node fields: autograms_concepts/node_fields.md
-      - Advanced Concepts: 
+      - Advanced concepts: 
           - Node subtypes: autograms_concepts/advanced_concepts/node_subtypes.md
           - Understanding the interpreter: autograms_concepts/advanced_concepts/interpreter.md
           - Autogram Compiler: autograms_concepts/advanced_concepts/compiler.md
@@ -23,13 +23,11 @@ nav:
 
   - Tutorials: 
     - Fraction tutor chatbot: tutorials/fractions.md
-    - Recruiter agent: tutorials/recruiter_agent.md
 
       
   - Contribution Guide: 
     - Contributing agents: contribution_guide/contribute_agents.md
-    - Contributing gui tools: contribution_guide/contribute_gui.md
-    - Contributing apis: contribution_guide/contribute_api.md
+    - Contributing python modules: contribution_guide/contribute_api.md
     - Contributing to core autograms: contribution_guide/contribute_code.md
 
 

@@ -22,7 +22,7 @@ class Graph():
         else:
             transition_edges=[]
             function_call_edges=[]
-            graph_nodes=[] #copy.deepcopy(self.graph_nodes)
+            graph_nodes=[] 
             all_used = set()
 
             for edge in self.transition_edges:
@@ -99,7 +99,6 @@ class Graph():
 def get_graph(nodes,allow_undefined=True,include_inst=False):
     """
     Simulate transitions.
-    As of initial version, still need to fix for .* and .n states
     """
     graph_nodes=[]
     transition_edges=[]
@@ -148,7 +147,7 @@ def get_graph(nodes,allow_undefined=True,include_inst=False):
         
         if isinstance(node,FunctionNode):
             ind = node.instruction.find("(")
-            #revisit this, may be pased on old way of passing arguments
+   
             if ind<0 and "$" in node.instruction:
                 func = "Function call: "+node.instruction
                 graph_nodes.append([func,func])

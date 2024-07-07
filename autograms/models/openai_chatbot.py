@@ -3,7 +3,12 @@ import time
 import tiktoken
 import numpy as np
 from .chatbot import Chatbot
+import pkg_resources
 
+
+openai_version = pkg_resources.get_distribution("openai").version
+
+legacy_openai= [int(x) for x in openai_version.split('.')][0]==0
 
 
 class OpenAIChatbot(Chatbot):
@@ -14,9 +19,16 @@ class OpenAIChatbot(Chatbot):
 
 
         if "openai" in api_keys.keys():
-            openai.api_key = api_keys["openai"]
+            if legacy_openai:
+                self.client = openai
+                self.client.api_key = api_keys["openai"]
+            else:
+                from openai import OpenAI
+                self.client =  OpenAI(api_key=api_keys["openai"])
         else:
-            raise Exception("missing Open AI API key")
+            raise Exception("missing Open AI API key") 
+        
+
 
         self.generation_args=autogram_config.chatbot_generation_args
         self.max_input_len = autogram_config.chatbot_max_input_len
@@ -67,10 +79,7 @@ class OpenAIChatbot(Chatbot):
                     inputs[0] = self.tokenizer.decode(self.tokenizer.encode(inputs[0])[-self.max_input_len:])
 
         return inputs,outputs,prefix
-    # def truncate_input(self,inputs,outputs,prefix=None):
-    #     if not prefix is None:
-    #         print("WARNING, fixing the generation response prefix is not enabled for open ai models")
-    #     return inputs,outputs,prefix
+
 
     def generate_reply(self, inputs,outputs,prefix=None):
 
@@ -134,17 +143,30 @@ class OpenAIChatbot(Chatbot):
         for i in range(self.max_tries):
 
             try:
+            
+
+                if legacy_openai:
+                    response = self.client.ChatCompletion.create(
+                        model=self.model_name,
+                        messages=messages,
+                        temperature=temperature,
+                        **input_args
+                    )
+                
+                    responses = [response.choices[i]['message']['content'] for i in range(input_args['n'])]
 
 
-                response = openai.ChatCompletion.create(
-                    model=self.model_name,
-                    messages=messages,
-                    temperature=temperature,
-                    **input_args
-                )
+                else:
+                    response = self.client.chat.completions.create(
+                        model=self.model_name,
+                        messages=messages,
+                        temperature=temperature,
+                        **input_args
+                    )
+                
 
 
-                responses = [response.choices[i]['message']['content'] for i in range(input_args['n'])]
+                    responses = [response.choices[i].message.content for i in range(input_args['n'])]
                 
 
                 if len(self.banned_phrases)>0 and i < (self.max_tries-1):

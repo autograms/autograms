@@ -15,7 +15,9 @@ To start, let's add nodes that give the initial prompts for the autogram and for
 exec_node(
       action = 'set_prompt',
       name = 'start1',
-      instruction = 'You are tutor for the subject of fractions. Your goal is to teach the student what fractions are, as well as how to reduce, add, multiply and divide fractions. Follow all instructions and be sure to make sure the user understands before continuing with each step.',
+      instruction = ('You are tutor for the subject of fractions. Your goal is to teach the student what fractions are,' 
+      'as well as how to reduce, add, multiply and divide fractions.' 
+      'Follow all instructions and be sure to make sure the user understands before continuing with each step.'),
       )
 
 exec_node(
@@ -33,7 +35,8 @@ Now let's code the first chat node where the tutor introduces itself. We give an
 exec_node(
       action = 'chat',
       name = 'intro',
-      instruction = 'Introduce yourself as a tutor named fractobot. Ask the user how they are and how much they have previously learned about the subject',
+      instruction = ('Introduce yourself as a tutor named fractobot.'
+      'Ask the user how they are and how much they have previously learned about the subject'),
       user_instruction_transitions = ["tell the tutor you don't know much about it but are excited to learn"],
       )
 ```
@@ -48,7 +51,8 @@ exec_node(
       instruction = 'respond to the user and ask if they are ready to begin',
       transition_question = 'Does the user have any questions yet?',
       transition_choices = ['no', 'yes'],
-      user_instruction_transitions = ['say you are ready', 'say that before you begin you have a question, and ask the question'],
+      user_instruction_transitions = ['say you are ready',\
+      'say that before you begin you have a question, and ask the question'],
       )
 ```
 Next, let's add the node to handle when the user isn't ready. As long as the user has more questions, we keep revisiting this node to answer them, otherwise we proceed to the next step in the conversation
@@ -80,7 +84,8 @@ exec_node(
       action = 'chat',
       name = 'intro3',
       transitions = ['start_units', 'intro3b'],
-      instruction = 'describe what a fraction is at a high level, adding on to anything the user has previously said. Ask the user if they have any questions',
+      instruction = ('describe what a fraction is at a high level,'
+      'adding on to anything the user has previously said. Ask the user if they have any questions'),
       transition_question = 'Does the user have any questions?',
       transition_choices = ['no', 'yes'],
       user_instruction_transitions = ['say that sounds good so far', 'ask a question'],
@@ -129,17 +134,23 @@ Each unit will use similar logic, but will have a different prompt at the first 
 ```
 unit_prompts=[]
 #add unit for reducing fractions
-unit_prompts.append("Give a detailed description of how to reduce a fraction to its simplest form, with examples. Ask the user if they have any questions so far")
+unit_prompts.append(('Give a detailed description of how to reduce a fraction to its simplest form,'
+'with examples. Ask the user if they have any questions so far'))
 
 #add unit for adding fractions
-unit_prompts.append("give the user a detailed description of how to add fractions with examples, including with the common denominator method (add and then reduce) and the least common denominator method (find smallest denominator before adding). then ask the user if they have any questions so far.")
+unit_prompts.append(('give the user a detailed description of how to add fractions with examples,'
+'including with the common denominator method (add and then reduce)'
+' and the least common denominator method (find smallest denominator before adding).'
+' Then ask the user if they have any questions so far.'))
 
 #add unit for multiplying fractions
-unit_prompts.append("give the user a detailed description of how to multiply fractions, with examples. Then ask the user if they have any questions so far.")
+unit_prompts.append(('give the user a detailed description of how to multiply fractions, with examples.'
+' Then ask the user if they have any questions so far.'))
 
 
 #add unit for dividing fractions
-unit_prompts.append("give the user a detailed description of how to divide fractions, including examples. then ask the user if they have any questions.")
+unit_prompts.append(('give the user a detailed description of how to divide fractions, including examples.'
+' Then ask the user if they have any questions.'))
 
 ```
 
@@ -272,8 +283,10 @@ Now that we have created the problem and gotten the answer, we will present this
         transitions = ['answer_correct', 'answer_wrong', 'give_hint', 'answer_prob_question'],
         instruction = '$problem',
         transition_question = 'The correct answer to the question is $answer. Which of the following is true?',
-        transition_choices = ['The user gave a correct answer', 'The user gave an incorrect answer', "The user wasn't sure and didn't give an answer", "The user asked a question and didn't give an answer"],
-        user_instruction_transitions = ['give the correct answer', 'give a wrong answer', "say you aren't sure", 'ask a question about the problem without answering'],
+        transition_choices = ['The user gave a correct answer', 'The user gave an incorrect answer',\
+        "The user wasn't sure and didn't give an answer", "The user asked a question and didn't give an answer"],
+        user_instruction_transitions = ['give the correct answer', 'give a wrong answer', "say you aren't sure",\
+        'ask a question about the problem without answering'],
         )
 ```
 
@@ -299,8 +312,10 @@ We now need to make the nodes corresponding to the transitions we just defined. 
         transitions = ['answer_correct', 'answer_wrong', 'answer_prob_question'],
         instruction = 'answer any questions the user has about the problem, without directly giving the answer',
         transition_question = 'The correct answer to the question is $answer. Which of the following is true?',
-        transition_choices = ['The user gave a correct answer', 'The user gave an incorrect answer', "The user asked a question and didn't give an answer"],
-        user_instruction_transitions = ['give the correct answer', 'give a wrong answer', 'ask another question about what the tutor said without trying to get the answer'],
+        transition_choices = ['The user gave a correct answer', 'The user gave an incorrect answer',\
+        "The user asked a question and didn't give an answer"],
+        user_instruction_transitions = ['give the correct answer', 'give a wrong answer',\
+        'ask another question about what the tutor said without trying to get the answer'],
         )
 ```
 
@@ -310,10 +325,15 @@ If the user gives an incorrect answer, we explain why the users answer is wrong 
         action = 'chat',
         name = 'answer_wrong',
         transitions = ['answer_correct', 'answer_wrong', 'answer_prob_question', 'try_again', 'give_answer'],
-        instruction = 'explain to the user why the answer is wrong without giving away the correct answer. Ask user if they would like to try again or would like to see the answer.',
-        transition_question = 'The correct answer to the question is $answer.Which of the following is true?',
-        transition_choices = ['The user gave a correct answer', 'The user gave an incorrect answer', "The user asked a question and didn't give an answer", "The user said they'd like to try again but didn't give an answer yet", 'The user said they want to see the answer'],
-        user_instruction_transitions = ['give the correct answer', 'give another wrong answer', 'ask a question', "say you'd like to try again", "say you'd like to see the answer"],
+        instruction = ('explain to the user why the answer is wrong without giving away the correct answer.'
+        'Ask user if they would like to try again or would like to see the answer.'),
+        transition_question = 'The correct answer to the question is $answer. Which of the following is true?',
+        transition_choices = ['The user gave a correct answer', 'The user gave an incorrect answer',\
+        "The user asked a question and didn't give an answer",\
+        "The user said they'd like to try again but didn't give an answer yet",\
+        'The user said they want to see the answer'],
+        user_instruction_transitions = ['give the correct answer', 'give another wrong answer', 'ask a question',\
+        "say you'd like to try again", "say you'd like to see the answer"],
         )
 ```
 
@@ -325,7 +345,8 @@ When the user says they aren't sure how to solve the problem ,we give a them a h
         transitions = ['answer_correct', 'answer_wrong', 'answer_prob_question'],
         instruction = 'give the user a hint',
         transition_question = 'The correct answer to the question is $answer. Which of the following is true?',
-        transition_choices = ['The correct answer to the question is $answer. The user gave a correct anwer', 'The user gave an incorrect answer', "The user asked a question and didn't give an answer"],
+        transition_choices = ['The correct answer to the question is $answer. The user gave a correct answer',\
+        'The user gave an incorrect answer', "The user asked a question and didn't give an answer"],
         user_instruction_transitions = ['give the correct answer', 'give another wrong answer', 'ask a question'],
         )
 ```
@@ -373,7 +394,8 @@ This node is for the earlier transition where the user said they would like to t
         transitions = ['answer_correct', 'answer_wrong', 'answer_prob_question'],
         instruction = 'respond to the user',
         transition_question = 'The correct answer to the question is $answer. Which of the following is true?',
-        transition_choices = ['The user gave a correct answer', 'The user gave an incorrect answer', "The user asked a question and didn't give an answer"],
+        transition_choices = ['The user gave a correct answer', 'The user gave an incorrect answer',\
+        "The user asked a question and didn't give an answer"],
         user_instruction_transitions = ['give the correct answer', 'give another wrong answer', 'ask a question'],
         )
 ```
@@ -384,7 +406,8 @@ When the user gets the answer correct, we ask them if they would like to try ano
         action = 'chat',
         name = 'answer_correct',
         transitions = ['get_problem', 'return'],
-        instruction = 'Tell the user the answer is correct, and talk about the answer in more detail. Ask the user if they would like to try a new problem or move onto the next unit',
+        instruction = ('Tell the user the answer is correct, and talk about the answer in more detail.'
+        ' Ask the user if they would like to try a new problem or move onto the next unit'),
         transition_question = 'Which would the user prefer?',
         transition_choices = ['Try another problem', 'Move onto the next unit'],
         user_instruction_transitions = ['say you would like to try another', 'say you are ready to move on'],
@@ -437,13 +460,38 @@ Here is the visualization of the full autogram now that we have finished.
 <iframe src="/agent_graphs/fraction_tutor/example7.html" width="100%" height="500px"></iframe>
 Click on any node to see details. However over the graph and scroll to zoom in or out.
 
-Remember you can compile it yourself with `python make_interactive_graph.py --autogram_file tutorial_examples/fractions/fraction_tutorial.py`.
+You can compile the graph yourself `python make_interactive_graph.py --autogram_file tutorial_examples/fractions/fraction_tutorial.py`.
 
 Now that you have created the autogram, you can converse with it using 
 
 `python run_autograms.py --api_key_file api_keys.json --autogram_file tutorial_examples/fractions/fraction_tutorial.py --interactive`
 
 
-This tutorial covered many features of LM sheets, including both types of variable references, all 3 types of AutoGRAMS functions, and python-style loops wrapped around complex graph logic. If you can understand this example well you should be ready to start making your own advanced autograms!
+Alternatively, you can use the code below to save visualizations and converse with the autogram
+
+```
+from autograms.graph_utils import visualize_autogram
+from autograms import read_autogram
+import json
+
+API_KEY_FILE = "api_keys.json"
+with open(API_KEY_FILE) as f:
+      api_keys = json.load(f)
+
+
+autogram = read_autogram("tutorial_examples/fractions/fraction_tutorial.py",api_keys=api_keys)
+
+visualize_autogram(autogram,root_path="tutorial_examples/fractions/fraction_tutorial")
+
+memory_object=None
+user_reply=""
+while True:
+      reply,memory_object = autogram.reply(user_reply,memory_object=memory_object)
+      print("Agent: " + reply)
+      user_reply = input("User: ")
+
+```
+
+This tutorial covered many features of AutoGRAMS, including both types of variable references, all 3 types of AutoGRAMS functions, and python-style loops wrapped around complex graph logic. If you can understand this example well you should be ready to start making your own advanced autograms!
 
 

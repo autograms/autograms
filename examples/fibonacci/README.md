@@ -1,0 +1,1 @@
+This is a simple example of recursion in AutoGRAMS for illustrative purposes only. The AutoGRAMS compiler can convert recursive code for computing the fibonacci sequence into an AutoGRAMS graph that can be executed to perform the same operations and give the same result.
