@@ -4,6 +4,8 @@
 
 
 site_name: AutoGRAMS Docs
+site_url: https://autograms.github.io
+docs_dir: docs
 nav:
   - AutoGRAMS concepts: 
       - Autograms overview: autograms_concepts/autograms.md
