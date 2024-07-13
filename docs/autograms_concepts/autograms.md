@@ -109,7 +109,7 @@ exec_node(name="ask_math_problem",
 In this case, there are 4 possible transitions, and 4 corresponding transition choices. The classifier chooses which transition choice most applies based on the user response, and this decides the transition. 
 
 
-There are other types of transitions that are described in the main article on [transitions](transitions.md). This includes `.*` and `.n` transitions, which can be used to implement traditional conditions (if else statements) as well as other types of rule based behavior. Using special transition nodes can break down complex transition questions into a series of simpler ones. (Interjection nodes)[interjection.md] allow for certain nodes to be reachable after any conversational turn, and can be useful for unexpected user behavior. Lastly, while this feature is still experimental and not fully tested, it is possible to have dynamic transitions that use a [variable](variables) as a transition, allowing the graph to be modified during the execution of the program.
+There are other types of transitions that are described in the main article on [transitions](transitions.md). This includes `.*` and `.n` transitions, which can be used to implement traditional conditions (if else statements) as well as other types of rule based behavior. Using special transition nodes can break down complex transition questions into a series of simpler ones. (Interjection nodes)[interjection.md] allow for certain nodes to be reachable after any conversational turn, and can be useful for unexpected user behavior. Lastly, while this feature is still experimental and not fully tested, it is possible to have dynamic transitions that use a [variable](#variables) as a transition, allowing the graph to be modified during the execution of the program.
 
 
 
@@ -137,7 +137,7 @@ Nodes in an autogram can be made callable--which allows them to be called within
 
 AutoGRAMS functions are sub graphs that execute and return a result. When a function is called, the autogram temporarily jumps to a callable node, and it propagates though the graph until a special `return` transition is encountered. Functions allow for graph modules to be reused. For instance, consider an AI tutor autogram with the following graph:
 
-<iframe src="/images/chat_fun.png" max-width="100%" height="540px" width="100%"></iframe>
+<iframe src="../images/chat_fun.png" max-width="100%" height="540px" width="100%"></iframe>
 
 The graph contains a subgraph that asks the user a question to quiz them. This routine could be called from different branches of the conversation tree, and always returns to the node that calls it when it hits a special return transition. This allows subgraphs to be reused at multiple points in an autogram. 
 

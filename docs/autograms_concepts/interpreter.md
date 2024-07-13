@@ -36,7 +36,7 @@ The outer loop of autogram.reply() has 6 main steps
 
 Here is a diagram of the outerloop of the autogram.reply() method:
 
-<iframe src="/images/autograms_loop.png" max-width="100%" height="600px" width="100%"></iframe>
+<iframe src="../images/autograms_loop.png" max-width="100%" height="600px" width="100%"></iframe>
 
 
 ## Detailed overview of autogram.apply_fn()
@@ -111,7 +111,8 @@ The start of the return process first happens when the `process_node_id()` funct
 
 An diagram showing the memory object's stack during the calling, execution, and returning of a function is given below.
 
-<iframe src="/images/memory_object.png" max-width="100%" height="500px" width="100%"></iframe>
+
+<iframe src="../images/memory_object.png" max-width="100%" height="500px" width="100%"></iframe>
 
 
 

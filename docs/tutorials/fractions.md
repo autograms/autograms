@@ -74,7 +74,7 @@ Let's save our file and visualize what we have so far. It can useful to be perio
 
 This should save 3 files, including a file called `tutorial_examples/fractions/fraction_tutorial_full_graph.html`. The graph should look like this:
 
-<iframe src="/agent_graphs/fraction_tutor/example1.html" width="100%" height="500px"></iframe>
+<iframe src="../../agent_graphs/fraction_tutor/example1.html" width="100%" height="500px"></iframe>
 Click on any node to see details. However over the graph and scroll to zoom in or out.
 
 There is an undefined note in the graph for "intro3" since we referenced that in transitions but haven't defined that yet. so let's make "intro3". We will start to dive into the material in intro3 by describing what a fraction is at a high level. We will have 2 transitions, one that moves onto the first unit, and one that addresses any questions the user has
@@ -124,7 +124,7 @@ This is a good time to double check the graph of our autogram. So let's compile 
 Viewing the updated graph it should look like this
 
 
-<iframe src="/agent_graphs/fraction_tutor/example2.html" width="100%" height="500px"></iframe>
+<iframe src="../../agent_graphs/fraction_tutor/example2.html" width="100%" height="500px"></iframe>
 Click on any node to see details. However over the graph and scroll to zoom in or out.
 
 
@@ -190,7 +190,7 @@ Let's visualize the updated graph with the loop we have just created:
 Viewing the updated graph it should look like this
 
 
-<iframe src="/agent_graphs/fraction_tutor/example3.html" width="100%" height="500px"></iframe>
+<iframe src="../../agent_graphs/fraction_tutor/example3.html" width="100%" height="500px"></iframe>
 Click on any node to see details. However over the graph and scroll to zoom in or out.
 
 In the above graph we can see the nodes that were automatically generated to facilitate the forloop in our code.
@@ -298,7 +298,7 @@ Let's visualize the updated graph now that we have made some progress on the do_
 Viewing the updated graph it should look like this
 
 
-<iframe src="/agent_graphs/fraction_tutor/example4.html" width="100%" height="500px"></iframe>
+<iframe src="../../agent_graphs/fraction_tutor/example4.html" width="100%" height="500px"></iframe>
 Click on any node to see details. However over the graph and scroll to zoom in or out.
 
 The function call to do_unit() is represented as a dashed edge in the graph. You should be able to zoom into this part of the graph to visualize what the function looks like so far.
@@ -354,7 +354,7 @@ Here is another visualization of the graph up to this point in the autogram:
 
 
 
-<iframe src="/agent_graphs/fraction_tutor/example5.html" width="100%" height="500px"></iframe>
+<iframe src="../../agent_graphs/fraction_tutor/example5.html" width="100%" height="500px"></iframe>
 Click on any node to see details. However over the graph and scroll to zoom in or out.
 
 
@@ -419,7 +419,7 @@ Here is another visualization of the graph up to this point in the autogram:
 
 
 
-<iframe src="/agent_graphs/fraction_tutor/example6.html" width="100%" height="500px"></iframe>
+<iframe src="../../agent_graphs/fraction_tutor/example6.html" width="100%" height="500px"></iframe>
 Click on any node to see details. However over the graph and scroll to zoom in or out.
 
 ## Implementing other functions
@@ -457,7 +457,7 @@ Here is the visualization of the full autogram now that we have finished.
 
 
 
-<iframe src="/agent_graphs/fraction_tutor/example7.html" width="100%" height="500px"></iframe>
+<iframe src="../../agent_graphs/fraction_tutor/example7.html" width="100%" height="500px"></iframe>
 Click on any node to see details. However over the graph and scroll to zoom in or out.
 
 You can compile the graph yourself `python make_interactive_graph.py --autogram_file tutorial_examples/fractions/fraction_tutorial.py`.

@@ -14,7 +14,7 @@ Actions in AutoGRAMS can be set by using the "action" argument exec_node() or ag
 
 
 Here is a diagram of how instructions are executed, depending on the action.
-<iframe src="/images/autograms_actions.png" max-width="100%" height="550px" width="100%"></iframe>
+<iframe src="../images/autograms_actions.png" max-width="100%" height="550px" width="100%"></iframe>
 
 
 ## Prompt Actions

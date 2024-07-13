@@ -102,7 +102,7 @@ Should transition to the node identified by the variable `node_name`, which can 
 
 All full process for selecting a transition is shown in the diagram below
 
-<iframe src="/images/autograms_apply_transtion.png" max-width="100%" height="500px" width="100%"></iframe>
+<iframe src="../images/autograms_apply_transtion.png" max-width="100%" height="500px" width="100%"></iframe>
 
 
 
