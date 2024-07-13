@@ -16,11 +16,10 @@ nav:
       - Prompt formation: autograms_concepts/prompts.md
       - Models and generation: autograms_concepts/models.md
       - AutoGRAMS compiled from python : autograms_concepts/compiled.md
-      - Glossary of node fields: autograms_concepts/node_fields.md
-      - Advanced concepts: 
-          - Node subtypes: autograms_concepts/advanced_concepts/node_subtypes.md
-          - Understanding the interpreter: autograms_concepts/advanced_concepts/interpreter.md
-          - Autogram Compiler: autograms_concepts/advanced_concepts/compiler.md
+      - Node subtypes: autograms_concepts/node_subtypes.md
+      - Understanding the interpreter: autograms_concepts/interpreter.md
+      - Autogram Compiler: autograms_concepts/compiler.md
+      - Glossary of node fields: autograms_concepts/node_fields.md 
 
 
   - Tutorials: 

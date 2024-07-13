@@ -113,10 +113,6 @@ There are other types of transitions that are described in the main article on [
 
 
 
-
-
-
-
 ## Instructions
 
 Instructions execute the main operation of the node. The way an instruction is interpreted varies depending on the action of the node. The main actions at a high level are:
@@ -135,10 +131,6 @@ See the [actions](actions.md) documentation for a more detailed overview.
 
 
 
-
-
-
-
 ## Internal functions and scopes
 
 Nodes in an autogram can be made callable--which allows them to be called within an autogram or directly from python using the autogram.apply_fn() method. Nodes that are callable must have a name defined with "()" and any arguments the node expects.
@@ -151,12 +143,6 @@ The graph contains a subgraph that asks the user a question to quiz them. This r
 
 
 AutoGRAMS functions also allow for the scope of the conversational history to be better controlled--for instance, if you'd like to compute something using a multiple reasoning steps, but then hide the intermediate steps of the reasoning from the prompt once it is finished executing, AutoGRAMS functions allow you to do this. 
-
-
-
-
-
-
 
 
 See the main documentation of [AutoGRAMS functions](actions.md#function-actions) for a full overview. 
