@@ -2,6 +2,7 @@
 from .classifier import Classifier
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
+import numpy as np
 
 class HuggingfaceClassifier(Classifier):
     def __init__(self,autogram_config,api_keys,chatbot=None):
@@ -35,12 +36,15 @@ class HuggingfaceClassifier(Classifier):
 
         return content
     
-    def predict_class(self,content,answer_choices):
+    def predict_class(self,content,answer_choices,class_biases=None):
 
 
 
 
         allowed_tokens =[]
+
+        if not class_biases is None:
+            class_biases = np.array(class_biases) -np.max(class_biases)
         
         for answer in answer_choices:
             token=self.tokenizer.encode(answer)[1]
@@ -56,6 +60,12 @@ class HuggingfaceClassifier(Classifier):
             outputs = self.model(input_ids=input_ids)
             logits = outputs[0][0,-1]
 
-            class_pred_id = torch.argmax(logits[allowed_tokens]).item()
+            class_logits = logits[allowed_tokens].cpu().numpy() + class_biases
+
+            if not class_biases is None:
+                class_logits += class_biases
+
+
+            class_pred_id = np.argmax(class_logits) #torch.argmax(logits[allowed_tokens]).item()
         
         return answer_choices[class_pred_id],True

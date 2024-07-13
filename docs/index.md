@@ -28,13 +28,7 @@ For many users, the above usecase of designing trees or graphs of situational in
 
 
 
-## AutoGRAMS as a programming language
 
-When computer programs run, they execute instructions and facilitate the transitions (loops, conditionals, sequential statements etc.) between these instructions. A programming language in the traditional sense executes exact instructions and facilitates transitions that use exact boolean logic. However, for many complex applications, executing exact instructions can be intractable since it requires writing logic to describe any situation. Generative language models have developed the ability to follow complex human language instructions such as "Write a paragraph about X" or "write code the does Y" that would be intractable to implement using the basic logical instructions of a programming language. One of our main goals with AutoGRAMS was to develop a programming language that allows for execution of both traditional machine instructions as well as human language instructions as primitive operations in the programming language, as well as to use both traditional boolean logic and language model predictions to facilitate the transition between instructions in a program.
-
-In AutoGRAMS, each each autogram is represented as a graph--each node executes an instruction, and facilitates a transition to another node that it connects to. Loops can be implemented with into these graphs by having the graph circle back on itself, and by ensuring that there is a transition in the loop that exits that graph if the right conditions are met. AutoGRAMS also supports basic python statements as well as any predefined python function call that is passed to the agent at initialization. This mechanism allows for external API calls. Variables in AutoGRAMS are allowed to be any python object--calls to the chatbot yield string variables, whereas calls to python statements or functions can potentially be any object. These variables can then be used in later instructions, or passed into other external python functions.
-
- AutoGRAMS also allows function calls, where the calling node jumps to another graph, and that graph is traversed until it hits a special return node, which returns a result back to the calling node. These graph functions can also call themselves recursively, allowing for recursive logic to be built around an LLMs instruction following capabilities. There are several different kinds of functions in AutoGRAMS, which have different rules about variable scope, which is maintained using a function stack.
 
 ## Installation and Requirements
 
@@ -54,15 +48,55 @@ You can install with `pip install autograms` or clone the repository and use `pi
 
 
 
+## Programming an autogram
 
-## Writing the code
-
-Programs in AutoGRAMS are represented as a list of nodes, each which contain a series of fields. There are several ways to program these nodes. If you'd like to get started coding directly in python may seem most familiar. If you'd like to code very advanced programs, AutoGRAMS compiled from python allows for more advanced features like combining interconnected nodes with standard python code and loops, although these more advanced features aren't necessary to use it. The 3 options for implementing an autogram right now are:
-
+Programs in AutoGRAMS are represented as a set of nodes, each which contain a series of fields. Most importantly, each node has an action, node, instruction, transition question, and transition choices.
 
 
+1. name -- unique identifier for the node
+2. instruction -- instruction for executing node
+3. action -determines how the instruction should be interpreted. For instance, depending on the action, the instruction could be 
+      - a prompt for a language model that gives a conversational reply
+      - a prompt for a language model that reasons internally
+      - code that sets a variable or calls an external api, 
+4. transitions -- a list of references to the `name` identifiers of other nodes. These are nodes that can be selected next after executing a node 
+5. transition_question -- multiple choice question that will help govern which transition to pick
+6. transition_choices - list of possible answers to the multiple choice question that will help govern which transition to pick
 
-1. code directly in pure python
+
+
+For each node that is visited
+
+1. Executing the node to apply the instruction. Depending on the action, this may result ina  conversation reply
+2. Chose what node to visit next using the transitions, transition question, and transition choices. 
+
+
+
+
+There are several ways to program these nodes. When coding in pure python, nodes can be added using the autogram.add_node() method
+
+```
+autogram.add_node(
+      action = "chat",
+      name = "ask_problem",
+      transitions = ['answer_right', 'answer_wrong'],
+      instruction = "Ask the user a simple 1 digit multiplication problem.",
+      transition_question = "Is the users answer correct?",
+      transition_choices = ['yes', 'no'],
+      )
+```
+The above node could be used in an AI tutor that asks the user questions, and goes to a different part of the graph depending on whether the user's answer is right or wrong. When the node executes, the language model will generate text with a prompt that incorporates `"Ask the user a simple 1 digit multiplication problem."`. After the user's answer, the language model will ask itself the `transition_question`, and if based on the user's answer, the language model thinks the user got the problem right (the language model predicts yes when asked the `transition_question`), it will go to a node called `answer_right`, and if the language model thinks the user got the problem wrong (the language model predicts "no" when asked the `transition_question`), it will got to the node `answer_wrong`. Nodes for `answer_right` and `answer_wrong` could then be implemented to handle how the designer wants the chatbot to reply in those scenarios.
+
+
+### Methods of implementation
+
+
+ There are several ways to design AutoGRAMS nodes. If you'd like to get started, coding directly in python like the example above may seem most familiar. If you'd like to code very advanced programs, AutoGRAMS compiled from python allows for more advanced features like combining interconnected nodes with standard python code and loops, although these more advanced features aren't necessary to use it. The 3 options for implementing an autogram right now are:
+
+
+
+
+1. Code directly in pure python
 
       One straightforward way to code nodes is to program nodes it to just define them add them one by one to to the autogram. This has the upside that it manipulates the data structure representing the AutoGRAM directly--all other methods are eventually converted to the pure python representation. Coding directly in python is also going to be most familiar to most users.
 
@@ -71,12 +105,12 @@ Programs in AutoGRAMS are represented as a list of nodes, each which contain a s
 
 
 
-2. AutoGRAMS compiled from python
+2. AutoGRAMS compiled from Python
 
-      This approach gives the flexibility of writing code--including loops, python statements, and variable assignments, directly in python, while also incorporating AutoGRAMS graph nodes. The .py file is read and compiled into an AutoGRAMS graph automatically--So for instance if you write a forloop around an AutoGRAMS node, the AutoGRAMS compiler will make new nodes automatically to handle the forloop and the resulting AutoGRAMS graph will loop back on itself. 
+      This approach gives the flexibility of writing code--including loops, Python statements, and variable assignments, directly in Python, while also incorporating AutoGRAMS graph nodes. The .py file is read and compiled into an AutoGRAMS graph automatically--So for instance if you write a forloop around an AutoGRAMS node, the AutoGRAMS compiler will make new nodes automatically to handle the forloop and the resulting AutoGRAMS graph will loop back on itself. 
 
 
-3. code in a spreadsheet
+3. Code in a spreadsheet
 
 
       Spreadsheets are potentially useful since most programs in AutoGRAMS consist mainly of string fields such as instructions, questions, and answers, and defining each node as a row in a spreadsheet, and each field as a cell in a spreadsheet, could be convenient for this. Describing the tree of a simple chatbot is fairly straightforward spreadsheet--you need to define the node names in one column and comma separated transitions in another field.
@@ -87,7 +121,7 @@ In the future, we also plan to have a graphical interface that allows autograms 
 
 ## Simple "getting started" example
 
-We will start with a simple example in pure python. We start with pure python because other methods of implementation are mapped to a pure python, making it the most useful starting point for understanding AutoGRAMS.
+We will start with a simple example in pure Python. We start with pure Python because other methods of implementation are mapped to a pure Python, making it the most useful starting point for understanding AutoGRAMS.
 
 
 Let's say we have an agent that offers to tell the user about recent advances in AI. If the user wants this, it continues with this. Otherwise it asks the user what they would prefer to talk about.
@@ -126,7 +160,7 @@ autogram = Autogram(api_keys = api_keys,autogram_config = config)
 
 
 
-Nodes can be coded in python directly by adding them to an autogram object one by one using the autogram.add_node() method. 
+Nodes can be coded in Python directly by adding them to an autogram object one by one using the autogram.add_node() method. 
 
 
 
@@ -224,9 +258,9 @@ should create an interactive terminal to run the chatbot. Notice how the chatbot
 
 
 
-## compiling AutoGRAMS from python
+## Compiling AutoGRAMS from Python
 
-In order to allow python code, loops, and conditionals to be directly implemented in combination with AutoGRAMS nodes, we created a compiler that converts python code into AutoGRAMS graph, allowing python code and AutoGRAMS nodes to be interleaved. This code is not true python, but behaves identically for simple python programs in most cases, other than the AutoGRAMS nodes which behave differently. The idea is that pure python statements and external function calls are treated as special "python_function" nodes that call the python interpreter, and loops and conditionals can be used to form an AutoGRAMS graph automatically. Each (non-python) AutoGRAMS node is implemented using a special built in method called exec_node(), which takes the same arguments as autogram.add_node(). The main difference is that in compiled AutoGRAMS, the order of nodes can be used to infer transitions. If nodes do not have transitions, nodes are executed in the order they appear in the code. nodes can also use a special "next" transition that simply goes to the next node or line of code. AutoGRAMS compiled from python need to be implemented in a separate file from the code that runs the autogram, so let's create a new file called `simple_example_compiled.py`.
+In order to allow Python code, loops, and conditionals to be directly implemented in combination with AutoGRAMS nodes, we created a compiler that converts Python code into AutoGRAMS graph, allowing Python code and AutoGRAMS nodes to be interleaved. This code is not true Python, but behaves identically for simple Python programs in most cases, other than the AutoGRAMS nodes which behave differently. The idea is that pure Python statements and external function calls are treated as special "python_function" nodes that call the Python interpreter, and loops and conditionals can be used to form an AutoGRAMS graph automatically. Each (non-Python) AutoGRAMS node is implemented using a special built in method called exec_node(), which takes the same arguments as autogram.add_node(). The main difference is that in compiled AutoGRAMS, the order of nodes can be used to infer transitions. If nodes do not have transitions, nodes are executed in the order they appear in the code. nodes can also use a special "next" transition that simply goes to the next node or line of code. AutoGRAMS compiled from Python need to be implemented in a separate file from the code that runs the autogram, so let's create a new file called `simple_example_compiled.py`.
 
 
 
@@ -266,7 +300,7 @@ exec_node(
       )
 ```
 
-Another equivalent way to code in AutoGRAMS compiled form python uses a while loop for the last node instead of a self-transition.
+Another equivalent way to code in AutoGRAMS compiled from Python uses a while loop for the last node instead of a self-transition.
 
 ```
 exec_node(
@@ -349,10 +383,10 @@ We can also use a spreadsheet to define 4 nodes, where each row in the spreadshe
 
 <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vSgcJiEpGXvXcxCppisqXtx2PAyBrj28_tJKeIUf_Thi1IR_YG4Wg3lfwlQWqSWNrUZ53YBScZmjM3P/pubhtml?gid=0&amp;single=true&amp;widget=true&amp;headers=false" width="100%" height="300px"></iframe>
 
- The fields are the same as in python, except that fields associated with transitions are comma separated lists. Instead of having a list for transition transition choices, transition choices are defined as separate fields (`transition_choice_a`, `transition_choice_b`, ..., etc.). Fields in spreadsheets (unlike in python) are case insensitive and can use spaces and underscores interchangeably--both are converted to underscores when mapping to fields in python.
+ The fields are the same as in Python, except that fields associated with transitions are comma separated lists. Instead of having a list for transition transition choices, transition choices are defined as separate fields (`transition_choice_a`, `transition_choice_b`, ..., etc.). Fields in spreadsheets (unlike in Python) are case insensitive and can use spaces and underscores interchangeably--both are converted to underscores when mapping to fields in Python.
 
 
-The csv autogram can be visualized and interacted with from python as follows:
+The csv autogram can be visualized and interacted with from Python as follows:
 
 ```
 from autograms.graph_utils import visualize_autogram
@@ -379,7 +413,7 @@ while True:
 ## Visualizing autograms with `make_interactive_graph.py`
 
 
-The `make_interactive_graph.py` script in the root directory of the repository can generate interactive graphs for any AutoGRAMS agent coded in a spreadsheet or in python. To generate the graph for the above example, you can run
+The `make_interactive_graph.py` script in the root directory of the repository can generate interactive graphs for any AutoGRAMS agent coded in a spreadsheet or in Python. To generate the graph for the above example, you can run
 
 python ``make_interactive_graph.py --autogram_file tutorial_examples/simple_example/simple_example.csv``
 
@@ -393,7 +427,7 @@ Here is a full list of the arguments for `make_interactive_graph.py`
 `--filter_category` - only graph nodes defined by `state_category` and their transitions. `state_category` is a node field that you can use to categorize nodes. This allows for partial graphs of complex programs to be used. the output files will be named after that state category instead of `full_graph` if this argument is used.
 `--label_by_inst` instead of using node names to label nodes, use an abbreviation of the node instruction.
 `--graph_format` for the graph image file, what image format should be saved (png, pdf, etc.)
---read_from_pure_python - if passing in a .py file, this specifies whether it is AutoGRAMS compiled from python (default) or AutoGRAMS implemented in pure python. In the case of pure python, it will load the autogram initialized in the provided .py file, assuming it is named "autogram".
+--read_from_pure_python - if passing in a .py file, this specifies whether it is AutoGRAMS compiled from Python (default) or AutoGRAMS implemented in pure Python. In the case of pure Python, it will load the autogram initialized in the provided .py file, assuming it is named "autogram".
 
 
 

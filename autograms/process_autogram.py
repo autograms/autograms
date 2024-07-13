@@ -46,6 +46,8 @@ def read_autogram(autogram_file,read_as_pure_python=False,autogram_config=None,a
                 autogram_config=AutogramConfig()
 
             autogram = autogram_compiler(code,config=autogram_config)
+         
+          
 
             if not api_keys=={}:
                 autogram.update_api_keys(api_keys)

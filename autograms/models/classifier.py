@@ -14,7 +14,7 @@ class Classifier():
         self.test_mode=False
 
 
-    def __call__(self,content,answer_choices,sim_probs):
+    def __call__(self,content,answer_choices,sim_probs,class_biases=None):
 
 
         if self.test_mode:
@@ -25,16 +25,18 @@ class Classifier():
             
         else:
             #otherwise call classifier subclass to predict probabilities
-            return self.predict_class(content,answer_choices)
+            return self.predict_class(content,answer_choices,class_biases)
 
     def set_test_mode(self,test_mode):
         self.test_mode=test_mode
 
-    def predict_class(self,content,answer_choices):
+    def predict_class(self,content,answer_choices,class_biases=None):
         """
         args:
             content - string of text to be passed to classifier
             answer_choices - answer options, typically multiple choice (A,B,C etc.) or Yes/No 
+            class_biases - biases for classifier, can be used to upweight/downweight transitions
+
         returns:
             prediction - class that was predicted
             success - whether model gave result without errors

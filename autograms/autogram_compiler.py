@@ -30,7 +30,7 @@ def extract_function_definitions(node,function_dict):
             func_type="local_function"
 
 
-        func_chain=AutogramCompilerChain(prefix=func_name+"_")
+        func_chain=AutogramCompilerChain(prefix="_"+func_name+"_")
 
         func_chain.add_node(name=func_name+"("+",".join(func_args)+")",action="transition")
 

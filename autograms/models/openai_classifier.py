@@ -3,7 +3,7 @@ import openai
 import tiktoken
 import time
 import pkg_resources
-
+import numpy as np
 
 openai_version = pkg_resources.get_distribution("openai").version
 
@@ -41,7 +41,7 @@ class OpenAIClassifier(Classifier):
         return content
 
 
-    def predict_class(self,content,answer_choices):
+    def predict_class(self,content,answer_choices,class_biases=None):
 
 
         messages = [{"role":"user", "content": content}]
@@ -51,9 +51,17 @@ class OpenAIClassifier(Classifier):
         """
         logit biases are used to prevent model from generated token outside of the answer choices
         """
-        for answer in answer_choices:
+
+        if not class_biases is None:
+            class_biases = np.array(class_biases) -np.max(class_biases)
+
+        for i in range(len(answer_choices)):
+            answer = answer_choices[i]
             token=self.tokenizer.encode(answer)
-            answer_dict[str(token[0])]=100
+            if class_biases is None:
+                answer_dict[str(token[0])]=100
+            else:
+                answer_dict[str(token[0])]=int(100+class_biases[i])
 
         for i in range(self.max_tries):
 

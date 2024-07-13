@@ -1,1 +1,0 @@
-We welcome contributions for graphical editors for autograms 

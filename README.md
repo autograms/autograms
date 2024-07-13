@@ -4,13 +4,18 @@
 
 AutoGRAMS (Autonomous Graphical Agent Modeling Software) is a framework and high level programming language for designing AI agents and chatbots using a combination of graphical and programming elements.
 
-The full documentation and tutorials are available in our [web docs](https://github.autograms.io). 
+The full documentation and tutorials are available in our [web docs](https://github.autograms.io/autograms). 
 
 AutoGRAMS can be installed with:
 
 `pip install autograms` 
 
-If you make local modifications, you can install them with `pip install .` from the root directory of your copy of the [github repository](https://github.com/autograms/autograms)
+If you make local modifications, you can install them with
+```
+ git clone https://github.com/autograms/autograms.git
+ cd autograms
+ pip install .
+ ```
 
 To be able visualize AutoGRAMS graphs, install graphviz, which can be done in linux with:
 

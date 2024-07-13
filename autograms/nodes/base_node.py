@@ -243,10 +243,12 @@ class BaseNode():
         self.conv_context=conv_context
 
         if transition_context is None:
-
-            self.transition_context=transition_context
-        else:
             self.transition_context=autogram_config.default_transition_context
+
+            
+        else:
+            self.transition_context=transition_context
+            
 
         self.agent_name = autogram_config.agent_name
 

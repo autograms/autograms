@@ -50,7 +50,7 @@ class AutogramConfig():
             chatbot_generation_args=None, 
             chatbot_max_tries=3,
             chatbot_wait_per_try=5,
-            chatbot_max_input_len=4096,
+            chatbot_max_input_len=3500,
             classifier_max_tries=2,
             classifier_wait_per_try=5,
             classifier_max_input_len=2048,
@@ -69,6 +69,7 @@ class AutogramConfig():
             default_transition_context=1,
             interjection_question=None,
             interjection_default_answer=None,
+            interjection_down_weight=1,
             default_probability_interjection=0.01,
             default_primary_prob_detla=0.3,
             chat_exact_inst_conversion=None,
@@ -119,6 +120,7 @@ class AutogramConfig():
             default_transition_context -- number of turns of context for predicting transitions
             interjection_question -- question to ask for predicting interjections
             interjection_default_answer -- default answer that leads to no interjection, usually meaning that none of the interjection conditions are true
+            interjection_down_weight - classifier bias that makes interjections less likely, favoring default answer. Recommended to use between 0 and 3.
             default_probability_interjection -- probability of simulating each interjection state
             default_primary_prob_detla -- how much more likely should first (default) transition be than all other transitions, which are uniform
             chat_exact_inst_conversion -- template for how modify instructions of chat_exact nodes
@@ -208,6 +210,7 @@ class AutogramConfig():
         self.default_transition_context = default_transition_context
         self.interjection_question =interjection_question
         self.interjection_default_answer =interjection_default_answer
+        self.interjection_down_weight=interjection_down_weight
         self.default_probability_interjection=default_probability_interjection
         self.default_primary_prob_detla=default_primary_prob_detla
         if chat_exact_inst_conversion is None:

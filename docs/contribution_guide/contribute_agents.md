@@ -1,3 +1,5 @@
+### Contributing agents
+
 We welcome contributions of agents to AutoGRAMS in the examples folder. If you come up with a useful or illustrative agent chatbot or function, feel free to submit a pull request adding a new sub folder in the /examples folder with your agent. 
 
 The agent can either be a csv agent, a pure python agent, or an autogram compiled from python. Include the appropriate .csv or .py file for the agent in the folder.

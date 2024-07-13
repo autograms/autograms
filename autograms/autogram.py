@@ -80,6 +80,7 @@ class Autogram():
         self.statement_interpreter = StatementInterpreter(autogram_config,self.api_keys)
 
         if allow_incomplete:
+
             try:
             #dictionaries CHATBOT_TYPES and CLASSIFIER_TYPES store the allowable chatbots and classifier classes
                 self.chatbot = CHATBOT_TYPES[autogram_config.chatbot_type](autogram_config,self.api_keys)

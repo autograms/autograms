@@ -4,7 +4,7 @@
 
 
 site_name: AutoGRAMS Docs
-site_url: https://autograms.github.io
+site_url: https://autograms.github.io/autograms
 docs_dir: docs
 nav:
   - AutoGRAMS concepts: 
@@ -28,8 +28,9 @@ nav:
 
       
   - Contribution Guide: 
+    - Contributing: contribution_guide/contribute.md
     - Contributing agents: contribution_guide/contribute_agents.md
-    - Contributing python modules: contribution_guide/contribute_api.md
-    - Contributing to core autograms: contribution_guide/contribute_code.md
+    - Contributing python modules: contribution_guide/contribute_apis.md
+    
 
 

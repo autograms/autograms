@@ -157,7 +157,7 @@ def apply_chatbot(chatbot,memory_object,inputs,outputs,prefix,required_text,stat
     return response,req_satisfied
 
 
-def apply_classifier(classifer,text,choices,memory_object,state,transition_probs):
+def apply_classifier(classifer,text,choices,memory_object,state,transition_probs,transition_biases=None):
     """
     Applies Classifier object
     Calls classifier.truncate_input() to check and truncate input length
@@ -168,7 +168,7 @@ def apply_classifier(classifer,text,choices,memory_object,state,transition_probs
 
     text = classifer.truncate_input(text)
     #choices are either yes/no, or ABCD. Classifier logits are restricted to only allow tokens in choices
-    answer_pred,success = classifer(text,answer_choices=choices,sim_probs=transition_probs)
+    answer_pred,success = classifer(text,answer_choices=choices,sim_probs=transition_probs,class_biases=transition_biases)
 
     if answer_pred in choices:
 
@@ -257,7 +257,15 @@ def predict_interjection_state(node_dict,inputs,outputs,classifier,memory_object
 
     choices=abcde
 
-    class_id,success=apply_classifier(classifier,content,choices=choices,memory_object=memory_object,state=state,transition_probs=probs)  
+
+    transition_biases = [0]*len(choices)
+
+    transition_biases[-1]=autogram_config.interjection_down_weight 
+
+    
+
+
+    class_id,success=apply_classifier(classifier,content,choices=choices,memory_object=memory_object,state=state,transition_probs=probs,transition_biases=transition_biases)  
 
 
     return transitions[class_id]
@@ -455,14 +463,14 @@ def check_node_req(node,memory_object,include_last=False):
         
     return True
 
-def matching_brackets(string):
+# def matching_brackets(string):
 
-    op= [] 
-    dc = { 
-        op.pop() if op else -1:i for i,c in enumerate(string) if 
-        (c=='{' and op.append(i) and False) or (c=='}' and op)
-    }
-    return False if dc.get(-1) or op else dc
+#     op= [] 
+#     dc = { 
+#         op.pop() if op else -1:i for i,c in enumerate(string) if 
+#         (c=='{' and op.append(i) and False) or (c=='}' and op)
+#     }
+#     return False if dc.get(-1) or op else dc
 
 def find_occurrences(text, ch):
     occurrences = [i for i, letter in enumerate(text) if letter == ch]
@@ -470,8 +478,25 @@ def find_occurrences(text, ch):
         occ = occurrences[i]
 
 
-        if occ>0 and text[occ-1:occ+1]=='\$':
+        if occ>0 and text[occ-1:occ+1]=="\\"+ch:
             occurrences = occurrences[:i]+occurrences[i+1]
+
+    return occurrences
+
+
+def find_bichar_occurrences(text, str2):
+
+    occurrences=[]
+    
+    for i in range(len(text)-1):
+        if text[i]==str2[0] and text[i+1]==str2[1]:
+            if i>0 and text[i-1]=="\\":
+                continue
+            else:
+                occurrences.append(i)
+
+
+    
 
     return occurrences
 
@@ -555,7 +580,7 @@ def set_variables(instruction ,variable_dict,is_inst=True):
         instruction=remove_assignment(instruction)
 
 
-    lb = find_occurrences(instruction,"{")
+    lb = find_bichar_occurrences(instruction,"?{")
     rb = find_occurrences(instruction,"}")
 
     if len(lb)>0 and len(rb)>0:
@@ -573,7 +598,7 @@ def set_variables(instruction ,variable_dict,is_inst=True):
        
         for start in bracket_list:
             fin = bracket_dict[start]
-            bracketed_text = instruction[start+1:fin]
+            bracketed_text = instruction[start+2:fin]
             replaced_text = process_variable_string(bracketed_text,variable_dict)
 
 
@@ -589,11 +614,15 @@ def set_variables(instruction ,variable_dict,is_inst=True):
             raise Exception("The following instruction has undefined variables: "+instruction)
         else:
             instruction=new_instruction
-    
-    
 
 
-                
+        instruction = instruction.replace("\$","$")
+        instruction = instruction.replace("\?{","?{")
+        instruction = instruction.replace("\}","}")
+
+        
+    
+
 
 
 
@@ -612,9 +641,9 @@ def check_contains_variables(instruction ,memory_object,is_inst=True):
         instruction=remove_assignment(instruction)
 
 
-    lb = find_occurrences(instruction,"{")
+    lb = find_bichar_occurrences(instruction,"?{")
     rb = find_occurrences(instruction,"}")
-    bracket_dict = matching_brackets(instruction)
+   # bracket_dict = matching_brackets(instruction)
 
     if len(lb)>0 and len(rb)>0:
         if len(lb)>len(rb):
@@ -624,6 +653,9 @@ def check_contains_variables(instruction ,memory_object,is_inst=True):
 
 
         bracket_dict=dict(zip(lb,rb))
+    else:
+        bracket_dict=None
+
 
 
 
@@ -635,7 +667,7 @@ def check_contains_variables(instruction ,memory_object,is_inst=True):
             bracket_list = reversed(sorted(list(bracket_dict.keys())))
             for start in bracket_list:
                 fin = bracket_dict[start]
-                bracketed_text = instruction[start+1:fin]
+                bracketed_text = instruction[start+2:fin]
                 replaced_text = process_variable_string(bracketed_text,memory_object)
                 if len(replaced_text)>0:
                     return True
