@@ -20,13 +20,20 @@ function initialize() {
 document.addEventListener("DOMContentLoaded", function() {
   console.log("DOM fully loaded and parsed");
   initialize();
-});
 
-if (typeof $ !== 'undefined' && $.events && $.events.on) {
-  $.events.on('navigation.done', function() {
-    console.log("Navigation done");
-    initialize();
+  // Create a MutationObserver to detect changes in the DOM
+  const observer = new MutationObserver(function(mutations) {
+    mutations.forEach(function(mutation) {
+      if (mutation.type === 'childList') {
+        console.log("Content updated");
+        initialize();
+      }
+    });
   });
-} else {
-  console.log("MkDocs Material events not available");
-}
+
+  // Observe the body for changes
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true
+  });
+});
