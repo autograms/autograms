@@ -1,0 +1,9 @@
+/* Hide the sidebar on the home page */
+body.home-page .md-sidebar--primary {
+    display: none;
+  }
+  
+  /* Adjust the content width when sidebar is hidden */
+  body.home-page .md-content {
+    margin-left: 0;
+  }

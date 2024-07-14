@@ -1,3 +1,7 @@
+---
+title: Home
+---
+
 # AutoGRAMS
 
 This is the official documentation of the [AutoGRAMS framework](https://github.com/autograms/autograms). AutoGRAMS, or autonomous graphical agent modeling software, is an agent framework and a high level programming language that combines machine instructions with language instructions, and supports concepts such as function calls and memory within the language. AutoGRAMS programs, which we refer to as "autograms" or autonomous programs, are represented as graphs, allowing users to easily program tree or graph networks of prompts into chatbots. The long term vision of AutoGRAMS is to become a language that AI uses to program AI (or re-program itself). This section includes the introduction and guide to getting started.
