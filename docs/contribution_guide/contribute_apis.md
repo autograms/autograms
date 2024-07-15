@@ -70,7 +70,9 @@ result = autogram.apply_fn("get_image()",function_args)
 print(result.url)
 ```
 
-In the above example, a block of code (in AutoGRAMS compiled from python) is defined to wrap the function in the module, and the code is tested using the `autogram.apply_fn()` method. For modules with multiple functions, define each of the functions in the code block and test them seperately one by one with autogram.apply_fn() statements for each function.
+In the above example, a block of code (in AutoGRAMS compiled from python) is defined to wrap the function in the module, and the code is tested using the `autogram.apply_fn()` method. For modules with multiple functions, define each of the functions in the code block and test them separately one by one with autogram.apply_fn() statements for each function.
+
+Lastly, if your python module uses python packages that aren't AutoGRAMS dependencies, include a separate requirements.txt file with the dependencies for your package.
 
 We welcome pull requests that define new modules, or add new functions to existing modules, provided the pull request also includes the appropriate additions to the unit tests and init files.
 

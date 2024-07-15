@@ -14,6 +14,8 @@ Include a file called `run.sh` to run an example of your agent as intended. The 
 
 Also include a README.md file in your folder. At the minimum, include a description of what the agent does. Feel free to also include a link if you have another repository that also uses the agent.
 
+Lastly, if your agent imports python packages (using the AutogramConfig) that aren't AutoGRAMS dependencies, include a separate requirements.txt file with the dependencies for your agent.
+
 
 You can also define any other files needed, potentially including a json config file, in the directory you create for the agent.
 
