@@ -4,7 +4,7 @@
 
 AutoGRAMS (Autonomous Graphical Agent Modeling Software) is a framework and high level programming language for designing AI agents and chatbots using a combination of graphical and programming elements.
 
-The full documentation and tutorials are available in our [web docs](https://github.autograms.io/autograms). 
+The full documentation and tutorials are available in our [web docs](https://autograms.github.io/autograms). 
 
 AutoGRAMS can be installed with:
 
