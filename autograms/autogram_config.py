@@ -129,8 +129,8 @@ class AutogramConfig():
             python_built_ins -- allowable python built ins, any built in not listed is disabled
             python_imports -- python import statements to be applied to autogram
             self_referential -- allow the autogram to access and modify its own code via python nodes by passing a reference to itself using the variable name 'self'
-            reference_memory_object -- allows the autogram to access its own memory object from python nodes using the variable '_memory_object'
-            include_default_python_modules -- autromatically include all autograms python modules
+            reference_memory_object -- allows the autogram to access its own memory object from python nodes using the variable 'memory_object'
+            include_default_python_modules -- automatically include all autograms python modules
             python_modules -- dictionary mapping names to python functions that will be addressable from within autogram
         
         

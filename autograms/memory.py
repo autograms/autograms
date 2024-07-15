@@ -61,6 +61,7 @@ class MemoryObject():
 
         self.default_prompt = autogram_config.default_prompt
         self.default_user_prompt = autogram_config.default_user_prompt
+        self.reference_memory_object = autogram_config.reference_memory_object
 
 
 
@@ -298,6 +299,9 @@ class MemoryObject():
             if scope=="local":
                 break
 
+        if self.reference_memory_object:
+            variable_dict['memory_object']=self
+
         return variable_dict
       
         
@@ -428,7 +432,7 @@ class MemoryObject():
 
 
 
-    def manage_return(self,return_statement):
+    def manage_return(self,return_statement,statement_interpreter):
 
         """
         Handles returns from function calls. Pops the top level of the stack. Has different behavior depending on function_scope of stack layer.
@@ -442,8 +446,17 @@ class MemoryObject():
         
         if len(return_statement.split(" "))>1:
             #assumes a variable name in return statement, return this variable
-            var_name=return_statement.split(" ")[1] 
-            self.memory_dict['stack'][-2]['variables']['_return_variable_output'] =  self.memory_dict['stack'][-1]['variables'][var_name]
+            ind = return_statement.find(" ")
+            statement = return_statement[ind+1:]
+
+
+            try:
+                return_value= statement_interpreter.execute_expression(statement,self.get_variable_dict())
+            except Exception as e:
+                message = "Evaluating return statement failed due to following error:\n"+str(e)
+                raise Exception(message) 
+
+            self.memory_dict['stack'][-2]['variables']['_return_variable_output'] =  return_value
         
         
         elif "_last_variable_output" in self.memory_dict['stack'][-1]['variables']:

@@ -1,8 +1,10 @@
-# How an autogram works
+# AutoGRAMS basics
 
 An autogram is defined by a an object of type Autogram. An autogram stores a collection of nodes as an OrderedDict type that form a graph that will define how the program is executed. Autograms can either be executed by the autogram.reply() or autogram.apply_fn() method. autogram.reply() is meant to get a reply from a chatbot, and autogram.apply_fn() is meant to call a specific module within the autogram and return a result, and can be used for non-conversational autograms.
 
-## initializing the autogram
+## Initializing the autogram
+
+
 
 ```
 from autograms import Autogram, AutogramConfig, AutogramCompiler, read_autogram
@@ -52,7 +54,7 @@ autogram = read_autogram(autogram_file)
 
 
 
-## getting replies
+## Getting replies
 when calling autogram.reply() with no arguments, the program starts from either the first node in it's ordered dict, or a node with the name "start1" if any such node is defined. At each iteration of the main loop of the program, autogram executes an instruction associated with each node, and applies transition behavior defined by each node. It does this until it hits a chat type node, in which case it will return a reply, along with the current state of the program, defined by the memory object. So let's say at the first turn we call
 
 ```
@@ -92,7 +94,27 @@ exec_node(name="ask_math",transitions=["ask_math_problem","ask_user_pref"],actio
 ```
 
 
-A nodes behavior is governed by it's [action](actions.md), [instruction](#instruction), and [transitions](transitions.md)
+A nodes behavior is governed by it's [action](actions.md), [instruction](#instructions), and [transitions](transitions.md)
+
+
+
+
+## Instructions
+
+Instructions execute the main operation of the node. The way an instruction is interpreted varies depending on the action of the node. The main actions at a high level are:
+
+1. Chat ("chat","chat_exact","chat_suffix") Write a response to the user. The instruction tells the model how to respond.
+2. Thought ("thought","thought_exact","thought_qa") Write a response internally. In this case, an instruction tells the model what to think
+3. Transition ("transition") - node that does not execute instruction but allows for additional branching 
+4. function ("function","local_function","global_function") A node that calls another AutoGRAMS function and gets result. the action is an AutoGRAMS function. When coding in AutoGRAMS compiled from python, you have the option to call the function directly which creates a node with a function calling instruction implicitly
+5. Python function ("python_function") - used to call a python statement, function, or api. In this case the instruction is python code.  When coding in AutoGRAMS compiled from python, you have the option to write the python code directly which creates a node with a python instruction implicitly
+6. prompt setting ("set_prompt","set_user_prompt","append_prompt","append_user_prompt"). These actions modify  the starting prompt of the model. The instruction specifies the new prompt or addition to the prompt depending on the specific action type.
+
+
+It is possible to embed [variables](#variables) in instructions so the exact instruction depends on a previous model or API output. 
+
+See the [actions](actions.md) documentation for a more detailed overview.
+
 ## Transitions
 
 
@@ -113,24 +135,6 @@ There are other types of transitions that are described in the main article on [
 
 
 
-## Instructions
-
-Instructions execute the main operation of the node. The way an instruction is interpreted varies depending on the action of the node. The main actions at a high level are:
-
-1. Chat ("chat","chat_exact","chat_suffix") Write a response to the user. The instruction tells the model how to respond.
-2. Thought ("thought","thought_exact","thought_qa") Write a response internally. In this case, an instruction tells the model what to think
-3. Transition ("transition") - node that does not execute instruction but allows for additional branching 
-4. function ("function","local_function","global_function") A node that calls another AutoGRAMS function and gets result. the action is an AutoGRAMS function. When coding in AutoGRAMS compiled from python, you have the option to call the function directly which creates a node with a function calling instruction implicitly
-5. Python function ("python_function") - used to call a python statement, function, or api. In this case the instruction is python code.  When coding in AutoGRAMS compiled from python, you have the option to write the python code directly which creates a node with a python instruction implicitly
-6. prompt setting ("set_prompt","set_user_prompt","append_prompt","append_user_prompt"). These actions modify  the starting prompt of the model. The instruction specifies the new prompt or addition to the prompt depending on the specific action type.
-
-
-It is possible to embed [variables](#variables) in instructions so the exact instruction depends on a previous model or API output. 
-
-See the [actions](actions.md) documentation for a more detailed overview.
-
-
-
 ## Internal functions and scopes
 
 Nodes in an autogram can be made callable--which allows them to be called within an autogram or directly from python using the autogram.apply_fn() method. Nodes that are callable must have a name defined with "()" and any arguments the node expects.
@@ -147,7 +151,7 @@ AutoGRAMS functions also allow for the scope of the conversational history to be
 
 See the main documentation of [AutoGRAMS functions](actions.md#function-actions) for a full overview. 
 
-## calling AutoGRAMS functions from python
+## Calling AutoGRAMS functions from python
 
 AutoGRAMS functions can be called both from within an autogram and externally from python. The AutoGRAMS apply_fn() for calling AutoGRAMS modules from python accepts the following arguments:
 

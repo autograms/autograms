@@ -9,7 +9,8 @@ docs_dir: docs
 nav:
   - Home: index.md  
   - AutoGRAMS concepts: 
-      - Autograms overview: autograms_concepts/autograms.md
+      - Overview: autograms_concepts/overview.md
+      - AutoGRAMS basics: autograms_concepts/autograms_basics.md
       - Nodes and actions: autograms_concepts/actions.md
       - Transitions: autograms_concepts/transitions.md
       - Interjection nodes: autograms_concepts/interjection.md

@@ -155,7 +155,7 @@ def get_graph(nodes,allow_undefined=True,include_inst=False):
 
                 if ind<0:
 
-                    raise Exception("invalid function call in function node "+node.name)
+                    raise Exception("invalid function call in function node: "+str(node))
             
             
                 new_inst = node.instruction[:ind].replace(" ","")+"()"
@@ -174,7 +174,7 @@ def get_graph(nodes,allow_undefined=True,include_inst=False):
                         graph_nodes.append([func,func])
 
                     else:
-                        raise Exception("Undefined function call "+node.instruction+" at node " +node_name)
+                        raise Exception("Undefined function call "+node.instruction+" at node " +str(node))
 
             function_call_edges.append([node_name,func])
 
@@ -214,7 +214,7 @@ def get_graph(nodes,allow_undefined=True,include_inst=False):
                                 transition_edges.append([node_name,'undefined_node_'+state_name])
                                 graph_nodes.append(['undefined_node_'+state_name,'Undefined Node: '+state_name])
                             else:
-                                raise Exception(".* transition for state " + node_name + " must have at least 2 possible transitions.")
+                                raise Exception("invalid .* transition must have at least 2 possible transitions for node: "+str(node))
                         else:
                             break
 
@@ -232,7 +232,7 @@ def get_graph(nodes,allow_undefined=True,include_inst=False):
                                 transition_edges.append([node_name,'undefined_node_'+state_name])
                                 graph_nodes.append(['undefined_node_'+state_name,'Undefined Node: '+state_name])
                             else:
-                                raise Exception(".n transition for state " + node_name + " must have at least 2 possible transitions.")
+                                raise Exception("invalid .n transition. Must have at least 2 possible transitions for node: "+str(node))
                         else:
                             break
             else:
@@ -242,7 +242,7 @@ def get_graph(nodes,allow_undefined=True,include_inst=False):
                         transition_edges.append([node_name,'undefined_node_'+state])
                         graph_nodes.append(['undefined_node_'+state,'Undefined Node: '+state])
                     else:
-                        raise Exception("Error for state " + str(node_name ) + ". Invalid transition state: " +state)
+                        raise Exception("Error for state " + str(node_name ) + ". Invalid transition state: " +state + "\nNode information: "+str(node))
                 else:
                     transition_edges.append([node_name,state])
 

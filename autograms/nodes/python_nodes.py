@@ -64,15 +64,16 @@ class PythonFunctionNode(BaseNode):
        
        
         else:
-            if self.statement_interpreter.reference_memory_object:
-                variables["_memory_object"]=memory_object
 
-            result=self.statement_interpreter.execute_expression(instruction,variable_dict)
+            try:
+                result=self.statement_interpreter.execute_expression(instruction,variable_dict)
+            except Exception as e:
+                message = "Evaluating instruction of python_function node failed due to following error:\n"+str(e)
+                raise Exception(message) 
+            
+            
         
-        
-
-
-
+    
         memory_object.set_python_return(result)
 
         response_to_user=False

@@ -147,8 +147,11 @@ def main():
 
 
 
-
-    memory_object=simulate_nodes(autogram,interactive=interactive,user_id=user_id)
+    if not interactive:
+        max_turns=10
+    else:
+        max_turns = 9999
+    memory_object=simulate_nodes(autogram,interactive=interactive,user_id=user_id,max_turns=max_turns)
 
 
     out_strs=get_conv_turns(memory_object.memory_dict)

@@ -14,7 +14,7 @@ from ..autogram_utils import set_variables, predict_interjection_state, apply_cl
 
 
 #allowable fields in spreadsheet (actual spreadsheets are case insensitive and can use spaces in place of "_"), matches with __init__ function to base node
-EXPECTED_FIELDS = ['action','name','transitions','state_category','notes','transition_probs','instruction','instruction_short','user_instruction_transition_a','user_instruction_transition_b','user_instruction_transition_c','user_instruction_transition_d','user_instruction_transition_e','question_prompt','transition_question','transition_choice_a','transition_choice_b','transition_choice_c','transition_choice_d','transition_choice_e','user_interjection','condition_interjection','probability_interjection','example_interjection','prerequisite_states','blocking_states','up_weight_states','down_weight_states','boolean_condition','required_revisit','conv_scope','conv_context','transition_context','reply_start','instruction_template']
+EXPECTED_FIELDS = ['action','name','transitions','state_category','notes','transition_probs','instruction','instruction_short','user_instruction_transition_a','user_instruction_transition_b','user_instruction_transition_c','user_instruction_transition_d','user_instruction_transition_e','question_prompt','transition_question','transition_choice_a','transition_choice_b','transition_choice_c','transition_choice_d','transition_choice_e','user_interjection','condition_interjection','probability_interjection','example_interjection','prerequisite_states','blocking_states','up_weight_states','down_weight_states','boolean_condition','required_revisit','conv_scope','conv_context','transition_context','reply_start','instruction_template','lineno','def_type']
 
 class BaseNode():
     """
@@ -53,7 +53,9 @@ class BaseNode():
             conv_context=None,
             transition_context=None,
             reply_start=None,
-            instruction_template=None
+            instruction_template=None,
+            lineno=None,
+            def_type=None
             ):
         
         """
@@ -85,18 +87,23 @@ class BaseNode():
             conv_scope -- only view states corresponding to user defined state types in state category. If used, conv_scope should match the state_category of some of the nodes
             transition_context --number of turns of context to use for transition prediction with classifier. Defaults to 1 if using default AutogramConfig
             instruction_template --template for how instruction and last reply are displayed to model. Default is "<last_reponse>\n\nInstruction for <agent_name>: <instruction>" if using default AutogramConfig        
+            line_no -- line number in AutoGRAMS compiled from python, used for error messages
+            def_type -- how node was defined, used for error messages
         """
 
         """
         nodes that are callable by function nodes have naming convention  `node_name(arg1,arg2,...,argn)`
-        these names are parsed, name is stored as `node_name()` and args are stored in seperate list
+        these names are parsed, name is stored as `node_name()` and args are stored in separate list
         nodes that are not callable by function nodes do not have any processing done to their name
         """
         if "(" in name:
             ind = name.find("(")
             ind2 = name.find(")")
             if ind2 < ind:
-                raise Exception("invalid node name "+str(name))
+                if lineno is None:
+                    raise Exception("invalid node name "+str(name))
+                else:
+                    raise Exception("invalid node name "+str(name) + " defined on line "+lineno)
             else:
                 arg_str = name[ind+1:ind2]
                 if len(arg_str)==0:
@@ -109,6 +116,9 @@ class BaseNode():
         else:
             self.name  = name
             self.args=[]
+
+        self.lineno=lineno
+        self.def_type=def_type
         self.action = action
         self.statement_interpreter=statement_interpreter
     
@@ -145,6 +155,9 @@ class BaseNode():
         else:
             self.transitions = transitions
 
+        if len(self.user_sims)>0 and not(len(self.transitions)==len(self.user_sims)):
+            raise Exception("Error: when using user simulation prompts, `len(user_instruction_transitions)` must be equal to `len(transitions)` for node: "+str(self))
+
 
             
 
@@ -153,7 +166,7 @@ class BaseNode():
             
             delta_p = autogram_config.default_primary_prob_detla
             if delta_p>1 or delta_p<0:
-                Exception("invalid value for config parameter default_primary_prob_detla")
+                raise Exception("invalid value for config parameter default_primary_prob_detla for node: "+str(self))
 
             """
             solves sytem of equations to set probability of first transition to be higher than all other transitions by autogram_config.default_primary_prob_detla (or 1 if there is 1 transition)
@@ -165,8 +178,7 @@ class BaseNode():
             B = (1-d)/n
             A = d + (1-d)/n
             """
-            if len(self.transitions)==0:
-                import pdb;pdb.set_trace()
+
                 
             
             self.transition_probs = np.array([(1-delta_p)/(len(self.transitions))]*len(self.transitions))
@@ -179,7 +191,7 @@ class BaseNode():
     
             self.transition_probs = np.array(transition_probs)
             if not(np.sum(self.transition_probs)):
-                raise Exception("Transition probs for node "+str(self.name)+" must sum to 1.")
+                raise Exception("Transition probs must sum to 1 for node: "+str(self))
 
 
         if not question_prompt is None:
@@ -192,6 +204,11 @@ class BaseNode():
             
         else:
             self.transition_answers=transition_choices
+
+        if len(self.transitions)>1:
+            if  not(len(self.transitions)==len(self.transition_answers)):
+                raise Exception("Error: when using more than 1 transition, `len(transition_choices)` must be equal to `len(transitions)` for node: "+str(self))
+
             
         if transition_question is None:
             self.transition_question=None
@@ -308,6 +325,33 @@ class BaseNode():
             self.terminal=True
         else:
             self.terminal=False
+
+    def __str__(self):
+        message_str=self.name+"\n"
+        if not(self.def_type is None):
+            if self.def_type=="for":
+                message_str+="Auto generated for loop node\n" 
+            elif self.def_type=="while":
+                message_str+="Auto generated while loop node\n"  
+            elif self.def_type=="if":
+                message_str+="Auto generated if/else node\n" 
+            elif self.def_type=="exec_node":
+                message_str+="Defined with exec_node()\n" 
+
+            elif self.def_type=="statement":
+                message_str+="Defined with Python statement\n" 
+
+            elif self.def_type=="return":
+                message_str+="Defined with 'return' statement\n" 
+        
+
+        if not(self.lineno is None):
+            message_str+="From line: "+str(self.lineno) +"\n"
+
+        return message_str
+    
+    
+
 
 
     def predict_next_state(self,inputs,outputs,classifier,transition_question,memory_object):
@@ -440,13 +484,13 @@ class BaseNode():
 
         last_response_start = self.instruction_template.find(LAST_RESPONSE_TOKEN)
         if last_response_start<0:
-            raise Exception("last response token "+LAST_RESPONSE_TOKEN+" is missing in instruction_template in config or state "+self.name)
+            raise Exception("last response token "+LAST_RESPONSE_TOKEN+" is missing in instruction_template in config or node. ")
         else:
             last_response_finish = last_response_start+len(LAST_RESPONSE_TOKEN)
         
         instruction_start = self.instruction_template.find(INSTRUCTION_TOKEN)
         if instruction_start<0:
-            raise Exception("instruction token "+INSTRUCTION_TOKEN+" is missing in instruction_template in config or state "+self.nam)
+            raise Exception("instruction token "+INSTRUCTION_TOKEN+" is missing in instruction_template in config or node. ")
         else:
             instruction_finish = instruction_start+len(INSTRUCTION_TOKEN)
 
@@ -491,13 +535,13 @@ class BaseNode():
             
         last_response_start = self.user_instruction_template.find(LAST_RESPONSE_TOKEN)
         if last_response_start<0:
-            raise Exception("last response token "+LAST_RESPONSE_TOKEN+" is missing in instruction_template in config or state "+self.name)
+            raise Exception("last response token "+LAST_RESPONSE_TOKEN+" is missing in instruction_template in config or node.")
         else:
             last_response_finish = last_response_start+len(LAST_RESPONSE_TOKEN)
         
         instruction_start = self.user_instruction_template.find(INSTRUCTION_TOKEN)
         if instruction_start<0:
-            raise Exception("instruction token "+INSTRUCTION_TOKEN+" is missing in instruction_template in config or state "+self.nam)
+            raise Exception("instruction token "+INSTRUCTION_TOKEN+" is missing in instruction_template in config or node.")
         else:
             instruction_finish = instruction_start+len(INSTRUCTION_TOKEN)
 
@@ -714,13 +758,13 @@ class BaseNode():
 
             last_response_start = self.instruction_template.find(LAST_RESPONSE_TOKEN)
             if last_response_start<0:
-                raise Exception("last response token "+LAST_RESPONSE_TOKEN+" is missing in instruction_template in config or state "+self.name)
+                raise Exception("last response token "+LAST_RESPONSE_TOKEN+" is missing in instruction_template in config or node.")
             else:
                 last_response_finish = last_response_start+len(LAST_RESPONSE_TOKEN)
             
             instruction_start = self.instruction_template.find(INSTRUCTION_TOKEN)
             if instruction_start<0:
-                raise Exception("instruction token "+INSTRUCTION_TOKEN+" is missing in instruction_template in config or state "+self.nam)
+                raise Exception("instruction token "+INSTRUCTION_TOKEN+" is missing in instruction_template in config or node.")
             else:
                 instruction_finish = instruction_start+len(INSTRUCTION_TOKEN)
             starts = [last_response_start,instruction_start]

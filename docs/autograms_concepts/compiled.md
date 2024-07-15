@@ -228,7 +228,7 @@ visualize_autogram(autogram,root_path="examples/fibonacci/recursive_fib")
 
 This should produce an html visualization of the autogram compiled from the python code that looks like the following:
 
-<iframe src="/agent_graphs/fib/fib_full_graph.html" width="100%" height="300px"></iframe>
+<iframe src="../../agent_graphs/fib/fib_full_graph.html" width="100%" height="300px"></iframe>
 
 Note that the dashed edges represent function calls (recursive function calls in this case). 
 

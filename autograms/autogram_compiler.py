@@ -23,7 +23,7 @@ def extract_function_definitions(node,function_dict):
             func_type=ast.unparse(node.decorator_list[0])
 
             if func_type not in ["local_function","global_function","function"]:
-                raise Exception("invalid function type (decorator) for "+func_name)
+                raise Exception("invalid function type (decorator): `" + func_type +"` for function: "+func_name + " on line: "+ str(node.lineno))
 
 
         else:
@@ -56,7 +56,8 @@ def compile_from_ast(node,autogram_compiler_chain):
             compile_from_ast(stmt,autogram_compiler_chain)
 
     elif isinstance(node, (ast.ClassDef)):
-        raise Exception("no classes allowed")
+
+        raise Exception("\n\n"+ast.unparse(node) + "\n\nError compiling on line: " + str(node.lineno) +  "\nNo classes allowed in AutoGRAMS compiled from Python.")
     elif isinstance(node, (ast.FunctionDef)):
         #handled in extract_function_definitions and defined in autogram compiler. Nested functions not recognized
         pass
@@ -71,6 +72,8 @@ def compile_from_ast(node,autogram_compiler_chain):
 
   
         cond = ast.unparse(node.test)
+        line_nos = [node.lineno]
+        
      
         conds = [cond]
         sub_chains=[]
@@ -98,6 +101,8 @@ def compile_from_ast(node,autogram_compiler_chain):
                     node=node.orelse[0]
                     cond_elif = ast.unparse(node.test)
                     conds.append(cond_elif)
+
+                    line_nos.append(node.lineno)
                     temp_chain = autogram_compiler_chain.spawn_chain(prefix="conditional"+str(autogram_compiler_chain.num_conditionals+1)+ABCDE[count]+"_")
                 
                     for stmt in node.body:
@@ -114,11 +119,14 @@ def compile_from_ast(node,autogram_compiler_chain):
                     sub_chains.append(temp_chain)
 
 
+
                     
                     break
 
-
-        autogram_compiler_chain.add_conditional(sub_chains,conds)
+        try:
+            autogram_compiler_chain.add_conditional(sub_chains,conds,line_nos)
+        except Exception as e:
+            raise Exception("Error compiling conditional on line " +str(line_nos[0]) +"\n"+ str(e)) from e
 
         
         
@@ -137,6 +145,9 @@ def compile_from_ast(node,autogram_compiler_chain):
 
         iter = ast.unparse(node.iter).strip()
 
+        lineno=node.lineno
+
+
 
 
         temp_chain =autogram_compiler_chain.spawn_chain(prefix="forloop"+str(autogram_compiler_chain.num_for_loops+1)+"_")
@@ -144,7 +155,10 @@ def compile_from_ast(node,autogram_compiler_chain):
         for stmt in node.body:
             compile_from_ast(stmt,temp_chain)
 
-        autogram_compiler_chain.add_for_loop(temp_chain,target,iter)
+        try:
+            autogram_compiler_chain.add_for_loop(temp_chain,target,iter,lineno)
+        except Exception as e:
+            raise Exception("Error compiling for loop on line " +str(node.lineno) +"\n"+ str(e)) from e
         
 
     elif isinstance(node, ast.While):
@@ -164,8 +178,10 @@ def compile_from_ast(node,autogram_compiler_chain):
             compile_from_ast(stmt,temp_chain)
 
 
-
-        autogram_compiler_chain.add_while_loop(temp_chain,cond)
+        try:
+            autogram_compiler_chain.add_while_loop(temp_chain,cond,node.lineno)
+        except Exception as e:
+            raise Exception("Error compiling while loop on line " +str(node.lineno) +"\n"+ str(e)) from e
 
 
         
@@ -173,6 +189,7 @@ def compile_from_ast(node,autogram_compiler_chain):
         """
         if AST node is assignment, the assigned variable is parsed out and added to the node's instruction. This adds a single node and returns
         """
+        lineno = node.lineno
 
         if isinstance(node.value,ast.Call):
             if ast.unparse(node.value.func)=="exec_node":
@@ -180,11 +197,17 @@ def compile_from_ast(node,autogram_compiler_chain):
                 
                 kwargs=dict()
                 for arg in node.value.keywords:
-
-                    kwargs[arg.arg] = ast.literal_eval(ast.unparse(arg.value).strip())
+                    try:
+                        kwargs[arg.arg] = ast.literal_eval(ast.unparse(arg.value).strip())
+                    except:
+                        raise Exception("\nError with argument to exec_node(): "+str(ast.unparse(arg.value)) +"\nline number:"+str(lineno)+"\nAll arguments to exec_node() must be defined at compile time. They cannot be variables or include variables directly.\nVariables must be referenced in strings instead.\n$-variable syntax can be included in some string fields.\nVariables can be referenced directly in some other string fields.\nSee AutoGRAMS documentation on variables.")
+                     
 
                 if "instruction" in kwargs:
                     kwargs["instruction"]=ast.unparse(node.targets[0])+"="+kwargs["instruction"]
+
+                kwargs["lineno"]=lineno
+                kwargs["def_type"]="exec_node"
 
                 autogram_compiler_chain.add_node(**kwargs)
 
@@ -192,7 +215,7 @@ def compile_from_ast(node,autogram_compiler_chain):
                 func_name = ast.unparse(node.value.func)
 
                 if len(node.value.keywords)>0:
-                    raise Exception("Functions cannot have key words")
+                    raise Exception("Error on line "+str(lineno)+ "\nAutoGRAMS function calls cannot have key word arguments--only external Python function calls or exec_node() statements can have this.")
                 
                 args=list()
 
@@ -204,18 +227,21 @@ def compile_from_ast(node,autogram_compiler_chain):
                 instruction = ast.unparse(node.targets[0]).strip()+"="+func_name + "(" + ",".join(args) + ")"
 
 
-                autogram_compiler_chain.add_node(action=action,name="auto",instruction=instruction)
+                autogram_compiler_chain.add_node(action=action,name="auto",instruction=instruction,lineno=lineno,def_type="statement")
+
 
             else:
-                autogram_compiler_chain.add_node(action="python_function",name="auto",transitions=["next"],instruction= ast.unparse(node).strip())
+                autogram_compiler_chain.add_node(action="python_function",name="auto",transitions=["next"],instruction= ast.unparse(node).strip(),lineno=lineno,def_type="statement")
 
         else:
       
-            autogram_compiler_chain.add_node(action="python_function",name="auto",transitions=["next"],instruction= ast.unparse(node).strip())
+            autogram_compiler_chain.add_node(action="python_function",name="auto",transitions=["next"],instruction= ast.unparse(node).strip(),lineno=lineno,def_type="statement")
+
     elif isinstance(node, ast.Expr):
         """
         if AST node is expression, it is added to the graph. This adds a single to the current chain node and returns.
         """
+        lineno = node.lineno
         if isinstance(node.value,ast.Call):
            
             if ast.unparse(node.value.func)=="exec_node":
@@ -224,11 +250,14 @@ def compile_from_ast(node,autogram_compiler_chain):
 
 
                 for arg in node.value.keywords:
-    
-                    
 
-                    kwargs[arg.arg] = ast.literal_eval(ast.unparse(arg.value).strip())
-   
+                    try:
+                        kwargs[arg.arg] = ast.literal_eval(ast.unparse(arg.value).strip())
+                    except:
+                        raise Exception("\nError with argument to exec_node(): `"+str(ast.unparse(arg)) +"`\nline number: "+str(lineno)+"\nAll arguments to exec_node() must be defined at compile time. They cannot be variables or include variables directly.\nVariables must be referenced in strings instead.\n$-variable syntax can be included in some string fields\n\t--for instance `instruction=inst` should instead be `instruction=\"$inst\"`.\nVariables can be referenced directly in some other string fields.\nSee AutoGRAMS documentation on variables.")
+                     
+                kwargs["lineno"]=lineno
+                kwargs["def_type"]="exec_node"
 
                 autogram_compiler_chain.add_node(**kwargs)
 
@@ -238,7 +267,7 @@ def compile_from_ast(node,autogram_compiler_chain):
                 func_name = ast.unparse(node.value.func)
 
                 if len(node.value.keywords)>0:
-                    raise Exception("Functions cannot have key words")
+                    raise Exception("Error on line "+str(lineno)+ "\nAutoGRAMS function calls cannot have key word arguments--only external Python function calls or exec_node() statements can have this.")
                 
                 args=list()
 
@@ -249,44 +278,45 @@ def compile_from_ast(node,autogram_compiler_chain):
                 action = autogram_compiler_chain.functions[func_name]
                 instruction = func_name + "(" + ",".join(args) + ")"
 
-                autogram_compiler_chain.add_node(action=action,name="auto",instruction=instruction)
+                autogram_compiler_chain.add_node(action=action,name="auto",instruction=instruction,lineno=lineno,def_type="statement")
 
 
             else:
                 
-                autogram_compiler_chain.add_node(action="python_function",name="auto",instruction= ast.unparse(node).strip())
+                autogram_compiler_chain.add_node(action="python_function",name="auto",instruction= ast.unparse(node).strip(),lineno=lineno,def_type="statement")
         else:
       
-            autogram_compiler_chain.add_node(action="python_function",name="auto",transitions=["next"],instruction= ast.unparse(node).strip())
+            autogram_compiler_chain.add_node(action="python_function",name="auto",transitions=["next"],instruction= ast.unparse(node).strip(),lineno=lineno,def_type="statement")
 
     elif isinstance(node, ast.AugAssign):
 
         target = ast.unparse(node.target).strip()
         value = ast.unparse(node.value).strip()
         op = node.op
+        lineno=node.lineno
       
         if isinstance(op, ast.Add):
             instruction = target+"="+target +"+"+ value
-            autogram_compiler_chain.add_node(action="python_function",name="auto",transitions=["next"],instruction= instruction)
+            autogram_compiler_chain.add_node(action="python_function",name="auto",transitions=["next"],instruction= instruction,lineno=lineno,def_type="statement")
         else:
-            raise Exception("augmented assignment not fully handled")
+            raise Exception("Error on line "+str(lineno) + "\naugmented assignment not fully handled, try writing statement out fully (e.g. x*=2 -> x=x*2)")
         
     elif isinstance(node,ast.Return):
         """
         Return statements are converted to a return transition from the final node of the function
         """
 
-
+        lineno=node.lineno
 
         if node.value is None:
-            autogram_compiler_chain.add_node(action="transition",name="auto",transitions=["return"])
+            autogram_compiler_chain.add_node(action="transition",name="auto",transitions=["return"],lineno=lineno,def_type="return")
 
         elif isinstance(node.value,ast.Name):
-            autogram_compiler_chain.add_node(action="transition",name="auto",transitions=["return "+ ast.unparse(node.value).strip()])
+            autogram_compiler_chain.add_node(action="transition",name="auto",transitions=["return "+ ast.unparse(node.value).strip()],lineno=lineno,def_type="return")
 
 
         else:
-            autogram_compiler_chain.add_node(action="python_function",name="auto",transitions=["return"],instruction= ast.unparse(node.value).strip())
+            autogram_compiler_chain.add_node(action="python_function",name="auto",transitions=["return"],instruction= ast.unparse(node.value).strip(),lineno=lineno,def_type="return")
 
 
 
@@ -295,7 +325,19 @@ def compile_from_ast(node,autogram_compiler_chain):
         """
         Could reach this if there is an unhandled node
         """
-        raise Exception("unhandled abstract syntax tree node type, python code may not be supported by AutoGRAMS compiler")
+
+        node_type = str(type(node))
+
+        code = "\n\n"+ast.unparse(node)
+
+
+        if hasattr(node,"lineno"):
+            lineno=node.lineno
+
+            raise Exception(code+"\n\nError: Unhandled abstract syntax tree node type: "+node_type+"\nCompiled from line " +str(lineno)+ "\nPython code may not be supported by AutoGRAMS compiler.")
+        else:
+            raise Exception(code+"\n\nError: Unhandled abstract syntax tree node type: "+node_type+"\nPython code may not be supported by AutoGRAMS compiler.")
+
         
      
 
@@ -358,7 +400,7 @@ class AutogramCompilerChain():
         """
         return AutogramCompilerChain(prefix=self.prefix+prefix,functions=self.functions)
 
-    def add_conditional(self,sub_chains,conds):
+    def add_conditional(self,sub_chains,conds,line_nos):
         """
         sub_chains - list of chains corresponding to the bodies of each condition in branch
         conds- list of each condition in the branch
@@ -381,7 +423,7 @@ class AutogramCompilerChain():
                 if not conditional_entrace in self.node_args[-1]['transitions']:
                     print("Warning!!!! Unreachable conditional after node: "+self.node_args[-1]['name'])
 
-        self.add_node(action="transition",name=conditional_entrace,transitions=[self.prefix+"conditional"+str(self.num_conditionals)+".*"])
+        self.add_node(action="transition",name=conditional_entrace,transitions=[self.prefix+"conditional"+str(self.num_conditionals)+".*"],lineno=line_nos[0],def_type="if")
 
         for i in range(len(conds)):
             sub_chain = sub_chains[i].node_args
@@ -391,7 +433,7 @@ class AutogramCompilerChain():
             
             
    
-            self.add_node(action="transition",name=self.prefix+"conditional"+str(self.num_conditionals)+"."+abcde[i],transitions=[first_node['name']],boolean_condition=conds[i])
+            self.add_node(action="transition",name=self.prefix+"conditional"+str(self.num_conditionals)+"."+abcde[i],transitions=[first_node['name']],boolean_condition=conds[i],lineno=line_nos[i],def_type="if")
             for node in sub_chain:
                 self.add_node(**node)
             if "next" in self.node_args[-1]['transitions']:
@@ -406,7 +448,7 @@ class AutogramCompilerChain():
             first_node = sub_chain[0]
             
             
-            self.add_node(action="transition",name=self.prefix+"conditional"+str(self.num_conditionals)+"."+abcde[len(conds)],transitions=[first_node['name']])
+            self.add_node(action="transition",name=self.prefix+"conditional"+str(self.num_conditionals)+"."+abcde[len(conds)],transitions=[first_node['name']],lineno=line_nos[0],def_type="if")
             for node in sub_chain:
                 self.add_node(**node)
 
@@ -415,14 +457,15 @@ class AutogramCompilerChain():
                 self.node_args[-1]['transitions'][index]=end_if_name
 
         else:
-            self.add_node(action="transition",name=self.prefix+"conditional"+str(self.num_conditionals)+"."+abcde[len(conds)],transitions=[end_if_name])
+  
+            self.add_node(action="transition",name=self.prefix+"conditional"+str(self.num_conditionals)+"."+abcde[len(conds)],transitions=[end_if_name],lineno=line_nos[0],def_type="if")
 
 
         
-        self.add_node(action="transition",name=end_if_name)
+        self.add_node(action="transition",name=end_if_name,lineno=line_nos[0],def_type="if")
 
 
-    def add_while_loop(self,body_chain,cond):
+    def add_while_loop(self,body_chain,cond, lineno):
         """
         body_chain - chain corresponding to body of while loop
         cond - exit condition of while loop
@@ -448,9 +491,9 @@ class AutogramCompilerChain():
                     print("Warning!!!! Unreachable while loop after node: "+self.node_args[-1]['name'])
 
 
-        self.add_node(action="transition",name=while_loop_entrace,transitions=[loop_decision_name])
+        self.add_node(action="transition",name=while_loop_entrace,transitions=[loop_decision_name],lineno=lineno,def_type="while")
         first_node = body_chain.node_args[0]
-        self.add_node(action="transition",name=start_loop_name,transitions=[first_node['name']],boolean_condition=cond)
+        self.add_node(action="transition",name=start_loop_name,transitions=[first_node['name']],boolean_condition=cond,lineno=lineno,def_type="while")
 
 
         for node in body_chain.node_args:
@@ -462,9 +505,9 @@ class AutogramCompilerChain():
              if not loop_decision_name in self.node_args[-1]['transitions']:
                 print("Warning!!!! Will exit while loop after first iteration after reaching: "+self.node_args[-1]['name'])
 
-        self.add_node(action="transition",name=exit_loop_name)
+        self.add_node(action="transition",name=exit_loop_name,lineno=lineno,def_type="while")
 
-    def add_for_loop(self,body_chain,target,iter):
+    def add_for_loop(self,body_chain,target,iter,lineno):
 
         """
         body_chain - chain corresponding to body of for loop
@@ -495,10 +538,10 @@ class AutogramCompilerChain():
                 print("Warning!!!! Unreachable while loop after node: "+self.node_args[-1]['name'])
 
         first_node = body_chain.node_args[0]
-        self.add_node(action="python_function",name=init_loop_counter,transitions=[init_loop_iterable],instruction=loop_prefix+"_forloop_counter=0")
-        self.add_node(action="python_function",name=init_loop_iterable,transitions=[decision_loop_name],instruction=loop_prefix+"_forloop_iterable="+iter)
-        self.add_node(action="transition",name=start_loop_name,transitions=[get_loop_iterator],boolean_condition=loop_prefix+"_forloop_counter<len(" + loop_prefix+"_forloop_iterable)")
-        self.add_node(action="python_function",name=get_loop_iterator,transitions=[first_node['name']],instruction=target+"="+loop_prefix+"_forloop_iterable["+loop_prefix+ "_forloop_counter]")
+        self.add_node(action="python_function",name=init_loop_counter,transitions=[init_loop_iterable],instruction=loop_prefix+"_forloop_counter=0",lineno=lineno,def_type="for")
+        self.add_node(action="python_function",name=init_loop_iterable,transitions=[decision_loop_name],instruction=loop_prefix+"_forloop_iterable="+iter,lineno=lineno,def_type="for")
+        self.add_node(action="transition",name=start_loop_name,transitions=[get_loop_iterator],boolean_condition=loop_prefix+"_forloop_counter<len(" + loop_prefix+"_forloop_iterable)",lineno=lineno,def_type="for")
+        self.add_node(action="python_function",name=get_loop_iterator,transitions=[first_node['name']],instruction=target+"="+loop_prefix+"_forloop_iterable["+loop_prefix+ "_forloop_counter]",lineno=lineno,def_type="for")
 
         for node in body_chain.node_args:
             self.add_node(**node)
@@ -510,8 +553,8 @@ class AutogramCompilerChain():
              if not iterate_loop in self.node_args[-1]['transitions']:
                 print("Warning!!!! Will exit for loop after first iteration after reaching: "+self.node_args[-1]['name'])
 
-        self.add_node(action="python_function",name=iterate_loop,instruction=loop_prefix+"_forloop_counter=" + loop_prefix+"_forloop_counter+1",transitions=[decision_loop_name])
-        self.add_node(action="transition",name=exit_loop_name)
+        self.add_node(action="python_function",name=iterate_loop,instruction=loop_prefix+"_forloop_counter=" + loop_prefix+"_forloop_counter+1",transitions=[decision_loop_name],lineno=lineno,def_type="for")
+        self.add_node(action="transition",name=exit_loop_name,lineno=lineno,def_type="for")
 
         
 
@@ -599,14 +642,33 @@ class AutogramCompiler():
 
 
             for node_arg in compiler_chain.node_args:
-                autogram.add_node(**node_arg)
+                try:
+                    autogram.add_node(**node_arg)
     
+                except Exception as e:
+                    message="\n\n"+str(e) + "\n\nError defining node.\n"
+                    if "name" in node_arg:
+                        message +="Node: " + node_arg["name"]+"\n"
 
+                    if "lineno" in node_arg:
+                        message +="Line number: " + str(node_arg["lineno"])+"\n"
+
+                    raise Exception(message)
             for key in function_dict.keys():
 
                 function_chain = function_dict[key]["function_chain"]
                 for node_arg in function_chain.node_args:
-                    autogram.add_node(**node_arg)
+                    try:
+                        autogram.add_node(**node_arg)
+                    except  Exception as e:
+                        message="\n\n"+str(e) + "\n\nError defining node in function "+key + "\n"
+                        if "name" in node_arg:
+                            message +="Node: " + node_arg["name"]+"\n"
+
+                        if "lineno" in node_arg:
+                            message +="Line number: " + str(node_arg["lineno"])+"\n"
+                        raise Exception(message)
+
 
 
             return autogram

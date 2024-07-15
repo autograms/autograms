@@ -80,7 +80,7 @@ class StatementInterpreter():
             output=eval(code, {}, locals_dict)
         except Exception as exc:
             
-            raise Exception("Python function node with code: "+str(code) +" failed with exception "+str(exc))
+            raise Exception("Statement Interpreter Error. Python code: `"+str(code) +"` failed with Exception: "+str(exc))
 
 
         return output

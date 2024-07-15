@@ -1,34 +1,30 @@
 
 # Glossary of node fields
 
-## Action
 
-Type of action performed by node, also corresponds to node sub type
+`name` -- unique name of node
 
-
-## Name
-unique name of node
-
-## other fields 
-
+`action` -- type of action performed by node, also corresponds to node sub type
 
 `transitions` -- list of allowable transitions
 
-`notes` -- comments about what the node does
-
-`state_category` -- user defined type of state. Names can be matched with `conv_scope` to view only states of that type when applying instruction
-
-`transition_probs` --list of floats used for simulation probabilities of each possible transition
-
 `instruction` -- instruction associated with node
+
+`transition_question` -- question asked to determine which state to transition to.
+
+`transition_choices` -- list of answers choices for transition question. If n'th transition choice is picked by model, autogram selects n'th transition. Should be same length as transitions
+
+`boolean_condition` -- either variable or python statement that is evaluated as boolean, used for .* transitions. If True, select this node, otherwise go to next node in .* list
 
 `user_instruction_transitions` -- list of user instruction for when user simulates each transition. Should be same length as transitions
 
 `question_prompt` -- prompt for transition question
 
-`transition_question` -- question asked to determine which state to transition to.
+`state_category` -- user defined type of state. Names can be matched with `conv_scope` to view only states of that type when applying instruction
 
-`transition_choices` -- list of answers choices for transition question. If n'th transition choice is picked by model, autogram selects n'th transition. Should be same length as transitions
+`notes` -- comments about what the node does
+
+`transition_probs` --list of floats used for simulation probabilities of each possible transition
 
 `user_interjection` -- user instruction when simulating interjection. Only interjection states use this. See predict_interjection() function
 
@@ -46,7 +42,7 @@ unique name of node
 
 `down_weight_states` -- list of states used for special .* transitions, when choosing between possible transitions, slightly downweight if these states are in stored states in memory object. Can be used to penalize visiting the same state too often.
 
-`boolean_condition` -- either variable or python statement that is evaluated as boolean, used for .* transitions. If True, select this node, otherwise go to next node in .* list
+
 
 `required_revisit` -- list of states used to block function execution if states haven't been reached since last time function was called
 

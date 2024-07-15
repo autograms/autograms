@@ -8,10 +8,11 @@ import json
 from collections import OrderedDict
 from .memory import MemoryObject
 from .graph_utils import get_graph
-from .autogram_utils import  process_node_id, post_process_user_responses, process_cell, simulate_interjections, get_interjection_states,python2df,df2python
+from .autogram_utils import  process_node_id, post_process_user_responses, process_cell, simulate_interjections, get_interjection_states,python2df,df2python,get_exception_message
 from .statement_interpreter import StatementInterpreter
 from .models import CHATBOT_TYPES, CLASSIFIER_TYPES
 from .nodes import NODE_TYPES, EXPECTED_FIELDS
+
 import os
 
 
@@ -241,25 +242,44 @@ class Autogram():
                 each node type can have different get_variable_output function, with base behavior defined in BaseNode
                 most common is to output the reply from the model or output of a function. Some node types have no/empty variable output
                 """
-                variable_output = node.get_variable_output(user_reply,memory_object)
+                try:
+                    variable_output = node.get_variable_output(user_reply,memory_object)
+                except Exception as e:
+                    message = get_exception_message("Error getting variable output for node: " + str(node),e)
+                    raise RuntimeError(message) from e
+
+
 
 
                 #temporarily assigns variable output to variable 'last_variable_output'. Will also asisgn it to any variables defined in the node's instruction
-                memory_object.assign_variables(node,variable_output)
+                try:
+                    memory_object.assign_variables(node,variable_output)
+                except Exception as e:
+                    message = get_exception_message("Error assigning variables to memory for node: " + str(node),e)
+                    raise RuntimeError(message) from e
 
                 """
                 Get the next node id using the nodes transition function. Each node type can have a different apply_transition, with base behavior defined in BaseNode
                 if only 1 transition is defined, will usually return this
                 if multiple transitions are defined, will use classifier model to answer a multiple choice question defined for previously executed the node to determine new node
                 """
-                new_node_id = node.apply_transition(user_reply,memory_object,self.classifier,self.nodes,self.config)
+                try:
+                    new_node_id = node.apply_transition(user_reply,memory_object,self.classifier,self.nodes,self.config)
+                except Exception as e:
+                    message = get_exception_message("Error applying transition for node: " + str(node),e)
+                    raise RuntimeError(message) from e
 
                 """
                 certain node names need additional processing
                 for instance "return" transitions go back to the function that called them
                 transitions that end in .* implement wildcard transitions
                 """
-                new_node_id = process_node_id(new_node_id,memory_object,self.nodes,self.statement_interpreter)
+                try:
+                    new_node_id = process_node_id(new_node_id,memory_object,self.nodes,self.statement_interpreter)
+                except Exception as e:
+                    message = get_exception_message("Error applying post-processing transition for node: " + str(node),e)
+                    raise RuntimeError(message) from e
+                
                 
                 
                 if new_node_id=="quit":
@@ -275,9 +295,14 @@ class Autogram():
 
             """
             execute nodes instruction. This involves getting replies from model and updating the memory object to include the turn. 
-            Most nodes have their own apply_instruction function, so behavor will vary by node subclass
+            Most nodes have their own apply_instruction function, so behavior will vary by node subclass
             """
-            response,new_user_reply,response_to_user=node.apply_instruction(user_reply,memory_object,self.chatbot,self.nodes)
+            try:
+                response,new_user_reply,response_to_user=node.apply_instruction(user_reply,memory_object,self.chatbot,self.nodes)
+            except Exception as e:
+                message = get_exception_message("Error applying instruction for node: " + str(node),e)
+                raise RuntimeError(message) from e
+            
 
 
 
@@ -313,34 +338,39 @@ class Autogram():
         node = self.nodes[memory_object.get_last_state()]
         ai_replies = memory_object.get_agent_replies()
         human_replies = memory_object.get_user_replies()
+
+        try:
   
-        inter_node = simulate_interjections(self.nodes,len(ai_replies),max_turns=max_turns)
-        self.user_bot.set_test_mode(test_mode)
-       
-        if inter_node is None:
-
-            new_node_id = node.simulate_transition()
-            inputs,outputs,prefix = node.make_user_prompt(ai_replies ,human_replies,memory_object.get_user_prompt(),new_node_id)
-
-            user_instruction = node.user_sims[node.transitions.index(new_node_id)]
-        else:
-            new_node_id = inter_node
-            inputs,outputs,prefix = self.nodes[new_node_id].make_interjection_prompt(ai_replies ,human_replies,memory_object.get_user_prompt())
-            user_instruction = self.nodes[new_node_id].user_interjection
-
+            inter_node = simulate_interjections(self.nodes,len(ai_replies),max_turns=max_turns)
+            self.user_bot.set_test_mode(test_mode)
         
-        if user_instruction==self.config.end_signal:
-            return user_instruction,new_node_id,True
+            if inter_node is None:
+
+                new_node_id = node.simulate_transition()
+                inputs,outputs,prefix = node.make_user_prompt(ai_replies ,human_replies,memory_object.get_user_prompt(),new_node_id)
+
+                user_instruction = node.user_sims[node.transitions.index(new_node_id)]
+            else:
+                new_node_id = inter_node
+                inputs,outputs,prefix = self.nodes[new_node_id].make_interjection_prompt(ai_replies ,human_replies,memory_object.get_user_prompt())
+                user_instruction = self.nodes[new_node_id].user_interjection
+
+            
+            if user_instruction==self.config.end_signal:
+                return user_instruction,new_node_id,True
 
 
-        responses,success = self.user_bot(inputs,outputs,prefix)
-       
+            responses,success = self.user_bot(inputs,outputs,prefix)
+        
 
-        if success:
-            response = post_process_user_responses(responses)
-        else:
-            response = responses[0]
-
+            if success:
+                response = post_process_user_responses(responses)
+            else:
+                response = responses[0]
+        except Exception as e:
+            message = get_exception_message("Error getting user response for: " + str(node),e)
+            raise RuntimeError(message) from e
+            
 
         return response,new_node_id,success
     
@@ -401,10 +431,17 @@ class Autogram():
                 each node type can have different get_variable_output function, with base behavior defined in BaseNode
                 most common is to output the reply from the model or output of a function. Some node types have no/empty variable output
                 """
-                variable_output = node.get_variable_output(user_reply,memory_object)
-
+                try:
+                    variable_output = node.get_variable_output(user_reply,memory_object)
+                except Exception as e:
+                    message = get_exception_message("Error getting variable output for node: " + str(node),e)
+                    raise RuntimeError(message) from e
                 #temporarily assigns variable output to variable 'last_variable_output'. Will also asisgn it to any variables defined in the node's instruction
-                memory_object.assign_variables(node,variable_output)
+                try:
+                    memory_object.assign_variables(node,variable_output)
+                except Exception as e:
+                    message = get_exception_message("Error assigning variables to memory for node: " + str(node),e)
+                    raise RuntimeError(message) from e
 
 
 
@@ -417,15 +454,22 @@ class Autogram():
                 if only 1 transition is defined, will usually return this
                 if multiple transitions are defined, will use classifier model to answer a multiple choice question defined in the previously executed node to determine new node
                 """
-
-                new_node_id = node.apply_transition(user_reply,memory_object,self.classifier,self.nodes,self.config)
-
+                try:
+                    new_node_id = node.apply_transition(user_reply,memory_object,self.classifier,self.nodes,self.config)
+                except Exception as e:
+                    message = get_exception_message("Error applying transition for node: " + str(node),e)
+                    raise RuntimeError(message) from e
+                
                 """
                 certain node names need additional processing
                 for instance "return" transitions go back to the function that called them
                 transitions that end in .* implement wildcard transitions for if/else logic
                 """
-                new_node_id = process_node_id(new_node_id,memory_object,self.nodes,self.statement_interpreter)
+                try:
+                    new_node_id = process_node_id(new_node_id,memory_object,self.nodes,self.statement_interpreter)
+                except Exception as e:
+                    message = get_exception_message("Error applying post-processing transition for node: " + str(node),e)
+                    raise RuntimeError(message) from e
                 
                 if new_node_id=="quit":
                     self.remove_node("temp_function_node")
@@ -442,9 +486,13 @@ class Autogram():
             execute nodes instruction. This involves getting replies from model and updating the memory object to include the turn. 
             Most nodes have their own apply_instruction function, so behavior will vary by node subclass
             """
-            response,new_user_reply,response_to_user=node.apply_instruction(user_reply,memory_object,self.chatbot,self.nodes)
+            try:
+                response,new_user_reply,response_to_user=node.apply_instruction(user_reply,memory_object,self.chatbot,self.nodes)
+            except Exception as e:
+                message = get_exception_message("Error applying instruction for node: " + str(node),e)
+                raise RuntimeError(message) from e
             if response_to_user:
-                raise Exception("nodes that respond to user (ex: chat nodes) are disabled in function calls from python")
+                raise Exception("Error: nodes that respond to user (ex: chat nodes) are disabled in function calls from python. Error occurred at node:"+str(node))
 
 
 
@@ -474,7 +522,7 @@ class Autogram():
             names = df["name"]
             
         else:
-            raise Exception("must have name in df")
+            raise Exception("Error: must have `name` in data frame. `Name` field may be missing from csv.")
 
         
 
@@ -525,11 +573,11 @@ class Autogram():
 
                     self.nodes[node.name] = node
             else:
-                raise Exception("each new node needs a name")
+                raise Exception("Error: Node missing a name. Each new node needs a name")
 
 
         else:
-            raise Exception("each new node needs an action")
+            raise Exception("Error: Node missing an action. Each new node needs an action")
 
 
     def convert_to_pure_python(self):

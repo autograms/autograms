@@ -4,10 +4,20 @@ import random
 import numpy as np
 import ast
 import operator
+import traceback
 
 
 
+def get_exception_message(message,exc,print_stacktrace=False):
+    
 
+    message ="\n\n"+message+"\n\n"
+    message += str(exc)
+    if print_stacktrace:
+        original_exception_trace = traceback.format_exc()
+        stack_trace = "\n\nAutoGRAMS Interpreter stack trace:\n"+original_exception_trace
+        message= stack_trace+"\n\n"+message
+    return message
 
 
 def longest_common_substring(string1, string2):
@@ -327,7 +337,7 @@ def process_node_id(new_node_id,memory_object,nodes,statement_interpreter):
             
             new_node_id = memory_object.get_last_state_above() 
 
-            memory_object.manage_return(return_statement)
+            memory_object.manage_return(return_statement,statement_interpreter)
 
             return new_node_id
 
@@ -388,9 +398,14 @@ def process_node_id(new_node_id,memory_object,nodes,statement_interpreter):
                 best=node_name
                 
 
-                if (counter<len(allowed_nodes)-1) and statement_interpreter.execute_expression(nodes[allowed_nodes[counter]].boolean_condition,memory_object.get_variable_dict()):
-                    
-                    break
+                if (counter<len(allowed_nodes)-1): 
+                    try:
+                        condition = statement_interpreter.execute_expression(nodes[allowed_nodes[counter]].boolean_condition,memory_object.get_variable_dict())
+                    except Exception as e:
+                        message = "Evaluating boolean_condition attribute failed due to following error:\n"+str(e)
+                        raise Exception(message) 
+                    if condition:
+                        break
 
             else:
 
@@ -463,25 +478,37 @@ def check_node_req(node,memory_object,include_last=False):
         
     return True
 
-# def matching_brackets(string):
 
-#     op= [] 
-#     dc = { 
-#         op.pop() if op else -1:i for i,c in enumerate(string) if 
-#         (c=='{' and op.append(i) and False) or (c=='}' and op)
-#     }
-#     return False if dc.get(-1) or op else dc
 
 def find_occurrences(text, ch):
-    occurrences = [i for i, letter in enumerate(text) if letter == ch]
-    for i in reversed(range(len(occurrences))):
-        occ = occurrences[i]
+
+    occurrences=[]
+    
+    for i in range(len(text)):
+        if text[i]==ch: 
+            if i>0 and text[i-1]=="\\":
+                continue
+            else:
+
+                if ch =="$":
+                    if i+1==len(text):
+                        continue
+
+                    if text[i+1] in "0123456789. ":
+                        if text[i+1]==" ":
+                            raise Exception("Space after `$` not allowed. If you intended this, use `\$` instead")
+                        continue
+                    else:
+                        occurrences.append(i)
+
+                else:
+                    occurrences.append(i)
 
 
-        if occ>0 and text[occ-1:occ+1]=="\\"+ch:
-            occurrences = occurrences[:i]+occurrences[i+1]
+    
 
     return occurrences
+
 
 
 def find_bichar_occurrences(text, str2):
@@ -562,7 +589,7 @@ def remove_assignment(instruction):
 
 def set_variables(instruction ,variable_dict,is_inst=True):
     """
-    Assings variables to an instruction.
+    Assigns variables to an instruction.
     As of initial version, variables can be in between brackets and must start with $ sign
     For instance, and instruction might say
 
@@ -622,8 +649,6 @@ def set_variables(instruction ,variable_dict,is_inst=True):
 
         
     
-
-
 
 
     return instruction
@@ -843,7 +868,13 @@ def parse_function(statement,variable_dict,statement_interpreter):
             new_args.append(variable_dict[arg.id])
         else:
             code = ast.unparse(arg)
-            new_args.append(statement_interpreter.execute_expression(code, variable_dict))
+            try:
+                new_arg = statement_interpreter.execute_expression(code, variable_dict)
+
+            except Exception as e:
+                message = "Evaluating argument of AutoGRAMS function call failed due to following error:\n"+str(e)
+                raise Exception(message) 
+            new_args.append(new_arg)
 
 
 
