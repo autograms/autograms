@@ -5,8 +5,9 @@ We welcome community contributions to AutoGRAMS
 
 
 We particularly encourage:
-    * [Agents](contribute_agents.md) -- additional AutoGRAMS agents to go in the examples folder
-    * [Python modules](contribute_apis.md) -- additional python modules that can be loaded and called from within an autogram    
+
+- [Agents](contribute_agents.md) -- additional AutoGRAMS agents to go in the examples folder
+- [Python modules](contribute_apis.md) -- additional python modules that can be loaded and called from within an autogram    
 
 See the respective instructions on how to contribute these.
 
