@@ -6,6 +6,8 @@ AutoGRAMS (Autonomous Graphical Agent Modeling Software) is a framework and high
 
 The full documentation and tutorials are available in our [web docs](https://autograms.github.io/autograms). 
 
+Also see [our paper](https://arxiv.org/abs/2407.10049) on AutoGRAMS.
+
 AutoGRAMS can be installed with:
 
 `pip install autograms` 
