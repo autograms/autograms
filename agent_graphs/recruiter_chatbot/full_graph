@@ -1,0 +1,33 @@
+// Agent
+digraph {
+	start1 [label=start1]
+	start2 [label=start2]
+	ask_ready [label=ask_ready]
+	ask_exp [label=ask_exp]
+	tell_exp [label=tell_exp]
+	reask_exp [label=reask_exp]
+	check_exp [label=check_exp]
+	exp_okay [label=exp_okay]
+	exp_too_high [label=exp_too_high]
+	tell_exp_after_ask [label=tell_exp_after_ask]
+	conv_over [label=conv_over]
+	start1 -> start2
+	start2 -> ask_ready
+	ask_ready -> ask_exp
+	ask_ready -> ask_ready
+	ask_exp -> tell_exp
+	ask_exp -> reask_exp
+	ask_exp -> check_exp
+	tell_exp -> exp_okay
+	tell_exp -> exp_too_high
+	reask_exp -> tell_exp
+	reask_exp -> tell_exp_after_ask
+	reask_exp -> check_exp
+	check_exp -> exp_okay
+	check_exp -> tell_exp
+	exp_okay -> conv_over
+	exp_too_high -> conv_over
+	tell_exp_after_ask -> exp_okay
+	tell_exp_after_ask -> exp_too_high
+	conv_over -> conv_over
+}

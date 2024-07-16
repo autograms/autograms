@@ -1,0 +1,1098 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://autograms.github.io/autograms/autograms_concepts/autogram_configs/">
+      
+      
+        <link rel="prev" href="../interjection/">
+      
+      
+        <link rel="next" href="../prompts/">
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.29">
+    
+    
+      
+        <title>Autogram configs - AutoGRAMS Docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.76a95c52.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#autogram-configs" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="AutoGRAMS Docs" class="md-header__button md-logo" aria-label="AutoGRAMS Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AutoGRAMS Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Autogram configs
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var media,input,key,value,palette=__md_get("__palette");if(palette&&palette.color){"(prefers-color-scheme)"===palette.color.media&&(media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']"),palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent"));for([key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../overview/" class="md-tabs__link">
+          
+  
+  AutoGRAMS concepts
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../tutorials/fractions/" class="md-tabs__link">
+          
+  
+  Tutorials
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../contribution_guide/contribute/" class="md-tabs__link">
+          
+  
+  Contribution Guide
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="AutoGRAMS Docs" class="md-nav__button md-logo" aria-label="AutoGRAMS Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    AutoGRAMS Docs
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    AutoGRAMS concepts
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            AutoGRAMS concepts
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../overview/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../autograms_basics/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AutoGRAMS basics
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../actions/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Nodes and actions
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../transitions/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Transitions
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../interjection/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Interjection nodes
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Autogram configs
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Autogram configs
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#controlling-the-python-imports" class="md-nav__link">
+    <span class="md-ellipsis">
+      Controlling the python imports
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#setting-the-models" class="md-nav__link">
+    <span class="md-ellipsis">
+      Setting the models
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#controlling-generations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Controlling generations
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#setting-prompts-and-prompt-templates" class="md-nav__link">
+    <span class="md-ellipsis">
+      Setting prompts and prompt templates
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#all-other-arguments" class="md-nav__link">
+    <span class="md-ellipsis">
+      All other arguments
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../prompts/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Prompt formation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../models/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Models and generation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../compiled/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AutoGRAMS compiled from python
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../node_subtypes/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Node subtypes
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../interpreter/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Understanding the interpreter
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../compiler/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Autogram Compiler
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../node_fields/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Glossary of node fields
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Tutorials
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Tutorials
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/fractions/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Fraction tutor chatbot
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Contribution Guide
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Contribution Guide
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contribution_guide/contribute/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Contributing
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contribution_guide/contribute_agents/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Contributing agents
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contribution_guide/contribute_apis/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Contributing python modules
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#controlling-the-python-imports" class="md-nav__link">
+    <span class="md-ellipsis">
+      Controlling the python imports
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#setting-the-models" class="md-nav__link">
+    <span class="md-ellipsis">
+      Setting the models
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#controlling-generations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Controlling generations
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#setting-prompts-and-prompt-templates" class="md-nav__link">
+    <span class="md-ellipsis">
+      Setting prompts and prompt templates
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#all-other-arguments" class="md-nav__link">
+    <span class="md-ellipsis">
+      All other arguments
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+<h1 id="autogram-configs">Autogram configs</h1>
+<p>The AutogramConfig Class is important for controlling settings of the autogram, including many settings that can't currently be set from inside the program. Some important choices are setting the models to be used, setting the prompt templates, and setting the python imports and APIs that will be visible from the AutoGRAMS code.</p>
+<h2 id="controlling-the-python-imports">Controlling the python imports</h2>
+<p>Autogram configs allow you to set what python functions and APIs will be visible from the scope of the autogram. 3 arguments for initializing the autogram config control this. </p>
+<p><code>python_builtins</code> set what python built ins are available. All other python built ins are disabled. By default, python built ins that allow imports or system manipulation are disabled. To allow all built ins, you can pass <code>dir(globals()['__builtins__'])</code> as this argument</p>
+<p><code>python_imports</code> this arguments allows you to specify imports by string. For instance passing <code>["import numpy as np"]</code> will import the module numpy so that it is usable with np from python_function nodes within an autogram</p>
+<p><code>python_modules</code> you can pass any python function or module to the autogram config to make it usable. </p>
+<p>If you'd like to pass a function that requires an API key, include a keyword argument called "api_key" in the function you pass. (Or wrap the function you'd like to use with another function that includes this argument and handles the api key appropriately).
+You will also need to include the api key in your <code>api_keys.json</code> file--the key should match the name of the function, and the value should match the api key or the environment variable were the api key is stored, depending on how "load_from_env" is set in your json file.</p>
+<p><code>include_default_python_modules</code> -- True or False - automatically include the autograms built in python modules in autograms/python_modules folder</p>
+<p><code>self_referential</code> -- True or False - allows AutoGRAM to reference its own object using <code>self</code> from within <code>python_function</code> instructions </p>
+<p><code>reference_memory_object</code> -- True or False - Allows memory object variable to be referenced directly using <code>memory_object</code> from within <code>python_function</code> instructions </p>
+<h2 id="setting-the-models">Setting the models</h2>
+<p>An autogram uses 3 models A chatbot, a classifier and a userbot (used to simulate user). These models can be set to an API, or a huggingface model running locally on your machine. The userbot and chatbot currently use the same model, while the classifier has the option of using a different model. Use the following arguments to AutogramConfig to specify the chatbot and classifier.</p>
+<p><code>chatbot_type</code> - currently accepts "openai" or "huggingface"
+<code>chatbot_path</code>
+    - If huggingface, should be the huggingface path or local path to huggingface model. 
+    - If openai, should be Open AI chat completion model you want to use
+<code>classifier_type</code> - currently accepts "openai" or "huggingface"</p>
+<p><code>classifier_path</code>
+    - If huggingface, should be the huggingface path or local path to huggingface model. Will reuse model if path is the same as chatbot
+    - If openai, should be Open AI chat completion model you want to use</p>
+<h2 id="controlling-generations">Controlling generations</h2>
+<p><code>max_response_len</code></p>
+<div class="codehilite"><pre><span></span><code><span class="n">max</span><span class="w"> </span><span class="n">response</span><span class="w"> </span><span class="n">length</span><span class="w"> </span><span class="k">from</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">model</span><span class="p">.</span><span class="w"> </span><span class="k">If</span><span class="w"> </span><span class="n">you</span><span class="w"> </span><span class="n">have</span><span class="w"> </span><span class="n">longer</span><span class="w"> </span><span class="n">templated</span><span class="w"> </span><span class="n">responses</span><span class="p">,</span><span class="w"> </span><span class="n">you</span><span class="w"> </span><span class="n">can</span><span class="w"> </span><span class="n">still</span><span class="w"> </span><span class="k">use</span><span class="w"> </span><span class="n n-Quoted">`chat_exact`</span><span class="w"> </span><span class="k">or</span><span class="w"> </span><span class="n n-Quoted">`chat_suffix`</span><span class="w"> </span><span class="n">actions</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">generate</span><span class="w"> </span><span class="n">longer</span><span class="w"> </span><span class="n">replies</span>
+</code></pre></div>
+
+<p><code>chatbot_generation_args</code></p>
+<div class="codehilite"><pre><span></span><code><span class="nv">A</span><span class="w"> </span><span class="nv">dictionary</span><span class="w"> </span><span class="nv">of</span><span class="w"> </span><span class="nv">generation</span><span class="w"> </span><span class="nv">arguments</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nv">the</span><span class="w"> </span><span class="nv">model</span>
+</code></pre></div>
+
+<p><code>banned_phrases</code></p>
+<div class="codehilite"><pre><span></span><code><span class="k">If</span><span class="w"> </span><span class="nv">model</span><span class="w"> </span><span class="nv">attempts</span><span class="w"> </span><span class="nv">to</span><span class="w"> </span><span class="nv">generate</span><span class="w"> </span><span class="nv">banned</span><span class="w"> </span><span class="nv">phrases</span>,<span class="w"> </span><span class="nv">it</span><span class="w"> </span><span class="nv">will</span><span class="w"> </span><span class="nv">attempt</span><span class="w"> </span><span class="nv">to</span><span class="w"> </span><span class="nv">generate</span><span class="w"> </span><span class="nv">again</span><span class="w"> </span><span class="nv">by</span><span class="w"> </span><span class="nv">penalizing</span><span class="w"> </span><span class="nv">previous</span><span class="w"> </span><span class="nv">response</span>.<span class="w"> </span><span class="nv">Most</span><span class="w"> </span><span class="nv">useful</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nv">when</span><span class="w"> </span><span class="nv">OpenAI</span><span class="w"> </span><span class="nv">refuses</span><span class="w"> </span><span class="nv">to</span><span class="w"> </span><span class="nv">respond</span><span class="w"> </span><span class="ss">(</span><span class="nv">e</span>.<span class="nv">x</span>.:<span class="w"> </span><span class="nv">Sorry</span>,<span class="w"> </span><span class="nv">as</span><span class="w"> </span><span class="nv">a</span><span class="w"> </span><span class="nv">language</span><span class="w"> </span><span class="nv">model</span><span class="w"> </span><span class="nv">I</span><span class="w"> </span><span class="nv">am</span><span class="w"> </span><span class="nv">unable</span><span class="w"> </span><span class="nv">to</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="nv">that</span><span class="ss">)</span>
+</code></pre></div>
+
+<h2 id="setting-prompts-and-prompt-templates">Setting prompts and prompt templates</h2>
+<p><code>default_prompt</code> 
+    default starting prompt for chatbot that appears before any conversational turns. Every new function call reinitializes to default prompt</p>
+<p><code>default_user_prompt</code> 
+    default starting prompt for userbot. Every new function call reinitializes to default user prompt</p>
+<p><code>agent_name</code> 
+    name of agent in the turn-wise prompts</p>
+<p><code>user_name</code> 
+    name of user in the turn-wise prompts</p>
+<p><code>instruction_name</code> 
+    name of instruction in the turn-wise prompt, </p>
+<p><code>default_question_prompt</code>
+    prompt given before the transition_question question for classifier bot, can be overriden by question_prompt setting at each node</p>
+<p><code>default_transition_context</code> 
+    number of turns of context used for predicting transitions</p>
+<p><code>instruction_template</code> 
+    Uses special tokens \&lt;last_response&gt;, \&lt;agent_name&gt;, and \&lt;instruction&gt; . Controls how turn wise instructions appear in the prompt, relative to the last response and agent name. default is
+    "\&lt;last_response&gt;\n\nInstruction for \&lt;agent_name&gt;: \&lt;instruction&gt;"</p>
+<p><code>user_instruction_template</code>
+    instruction template for user simulations</p>
+<p><code>reply_start_template</code> 
+    controls the very final part of the prompt that start's the agent's reply. Default is \&lt;agent_name&gt;'s reply</p>
+<p><code>reply_start_type</code>
+    Should the reply start appear at the end of the last turn (reply_start_type="suffix") or beginning of the model's turn "prefix". Prefix is only supported for huggingface models. For chat completion model behind at api it isn't possible to control this.</p>
+<p><code>chat_suffix_inst_conversion</code>
+    A special instruction template for chat suffix nodes, affects how the instruction is passed to the model and shows up in turn history. Since chat_suffix node instructions define text that should be in the reply, the actual prompt to the language model needs to be refined to tell it to include that text in its reply.</p>
+<p><code>chat_exact_inst_conversion</code>
+    A special instruction template for chat exact nodes, affects how the instruction shows up in turn history</p>
+<p><code>thought_exact_inst_conversion</code>
+    A special instruction template for thought exact nodes, affects how the instruction shows up in turn history</p>
+<h2 id="all-other-arguments">All other arguments</h2>
+<p><code>error_response</code> -- response if chatbot has error</p>
+<p><code>chatbot_max_tries</code> -- max tries for chatbot</p>
+<p><code>chatbot_wait_per_try</code> -- number of seconds to wait between tries for chatbot</p>
+<p><code>classifier_max_tries</code> -- max tries for classifier</p>
+<p><code>classifier_wait_per_try</code> -- number of seconds to wait between tries for classifier</p>
+<p><code>banned_phrases</code> -- phrases we try to strongly discourage chatbot from generating, usually corresponding to refusal to follow 
+instruction.</p>
+<p><code>post_process_response</code> -- apply post processing to response</p>
+<p><code>log_model_turns</code> -- log model turns in MemoryObject</p>
+<p><code>start_state</code> -- default start state</p>
+<p><code>end_signal</code> -- text signaling finish during user simulation</p>
+<p><code>default_transition_context</code> -- number of turns of context for predicting transitions</p>
+<p><code>interjection_question</code> -- question to ask for predicting interjections</p>
+<p><code>interjection_default_answer</code> -- default answer that leads to no interjection, usually meaning that none of the interjection conditions are true</p>
+<p><code>default_probability_interjection</code> -- probability of simulating each interjection state</p>
+<p><code>default_primary_prob_delta</code> -- how much more likely should first (default) transition be than all other transitions, which are uniform</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.instant", "navigation.tabs"], "search": "../../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.fe8b6f2b.min.js"></script>
+      
+        <script src="../../extra.js"></script>
+      
+    
+  </body>
+</html>

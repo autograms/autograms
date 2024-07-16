@@ -1,0 +1,115 @@
+// Agent
+digraph {
+	start1 [label="You are an agent that calls APIs to..."]
+	start2 [label="You are a user asking an agent to s..."]
+	i1 [label="Hello, please provide me a comma se..."]
+	i2 [label="user_list=write down the list and o..."]
+	i3 [label="sorted_list=merge_sort($user_list)"]
+	"merge_sort()" [label="merge_sort()
+len1=len(list1)"]
+	"merge_sort2.a" [label="trasition node"]
+	"merge_sort2.b" [label="l1=first_half(list1)"]
+	merge_sort3 [label="l2=last_half(list1)"]
+	merge_sort4 [label="l1_sorted = merge_sort(l1)"]
+	merge_sort5 [label="l2_sorted=merge_sort(l2)"]
+	merge_sort6 [label="l_sorted = merge(l1_sorted,l2_sorte..."]
+	i4 [label="The sorted list is $sorted_list"]
+	"merge()" [label="merge()
+i=0"]
+	merge2 [label="j=0"]
+	merge3 [label="merged_list=[]"]
+	merge4 [label="len1=len(list1)"]
+	merge5 [label="len2=len(list2)"]
+	loop1 [label="element1=list1[i]"]
+	loop2 [label="element2=list2[j]"]
+	loop3 [label="trasition node"]
+	"loop4.a" [label="list.append(merged_list,element1)"]
+	"loop4.b" [label="list.append(merged_list,element2)"]
+	loop6 [label="i=i+1"]
+	loop7 [label="j=j+1"]
+	loop8 [label="trasition node"]
+	"loop9.a" [label="trasition node"]
+	"loop9.b" [label="list.append(merged_list,element2)"]
+	loop10 [label="j=j+1"]
+	loop11 [label="trasition node"]
+	"loop12.a" [label="element2=list2[j]"]
+	"loop12.b" [label="trasition node"]
+	loop13 [label="trasition node"]
+	"loop14.a" [label="trasition node"]
+	"loop14.b" [label="list.append(merged_list,element1)"]
+	loop15 [label="i=i+1"]
+	loop16 [label="trasition node"]
+	"loop17.a" [label="element1=list1[i]"]
+	"loop17.b" [label="trasition node"]
+	"first_half()" [label="first_half()
+len1=len(list1)"]
+	first_half2 [label="n=math.floor(len1 /2)"]
+	first_half3 [label="list1[:n]"]
+	"last_half()" [label="last_half()
+len1=len(list1)"]
+	last_half2 [label="n=math.ceil(len1/2)"]
+	last_half3 [label="list1[-n:]"]
+	return0 [label="return list1"]
+	return1 [label="return l_sorted"]
+	return2 [label="return merged_list"]
+	return3 [label="return merged_list"]
+	return4 [label="return "]
+	return5 [label="return "]
+	start1 -> start2
+	start2 -> i1
+	i1 -> i2
+	i2 -> i3
+	i3 -> i4
+	"merge_sort()" -> "merge_sort2.a"
+	"merge_sort()" -> "merge_sort2.b"
+	"merge_sort2.a" -> return0
+	"merge_sort2.b" -> merge_sort3
+	merge_sort3 -> merge_sort4
+	merge_sort4 -> merge_sort5
+	merge_sort5 -> merge_sort6
+	merge_sort6 -> return1
+	i4 -> i1
+	"merge()" -> merge2
+	merge2 -> merge3
+	merge3 -> merge4
+	merge4 -> merge5
+	merge5 -> loop1
+	loop1 -> loop2
+	loop2 -> loop3
+	loop3 -> "loop4.a"
+	loop3 -> "loop4.b"
+	"loop4.a" -> loop6
+	"loop4.b" -> loop7
+	loop6 -> loop8
+	loop7 -> loop13
+	loop8 -> "loop9.a"
+	loop8 -> "loop9.b"
+	"loop9.a" -> loop1
+	"loop9.b" -> loop10
+	loop10 -> loop11
+	loop11 -> "loop12.a"
+	loop11 -> "loop12.b"
+	"loop12.a" -> "loop9.b"
+	"loop12.b" -> return2
+	loop13 -> "loop14.a"
+	loop13 -> "loop14.b"
+	"loop14.a" -> loop1
+	"loop14.b" -> loop15
+	loop15 -> loop16
+	loop16 -> "loop17.a"
+	loop16 -> "loop17.b"
+	"loop17.a" -> "loop14.b"
+	"loop17.b" -> return3
+	"first_half()" -> first_half2
+	first_half2 -> first_half3
+	first_half3 -> return4
+	"last_half()" -> last_half2
+	last_half2 -> last_half3
+	last_half3 -> return5
+	i3 -> "merge_sort()" [style=dashed]
+	"merge_sort2.b" -> "first_half()" [style=dashed]
+	merge_sort3 -> "last_half()" [style=dashed]
+	merge_sort4 -> "merge_sort()" [style=dashed]
+	merge_sort5 -> "merge_sort()" [style=dashed]
+	merge_sort6 -> "merge()" [style=dashed]
+}

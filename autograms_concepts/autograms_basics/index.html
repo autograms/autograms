@@ -1,0 +1,1222 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://autograms.github.io/autograms/autograms_concepts/autograms_basics/">
+      
+      
+        <link rel="prev" href="../overview/">
+      
+      
+        <link rel="next" href="../actions/">
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.29">
+    
+    
+      
+        <title>AutoGRAMS basics - AutoGRAMS Docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.76a95c52.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#autograms-basics" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="AutoGRAMS Docs" class="md-header__button md-logo" aria-label="AutoGRAMS Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AutoGRAMS Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              AutoGRAMS basics
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var media,input,key,value,palette=__md_get("__palette");if(palette&&palette.color){"(prefers-color-scheme)"===palette.color.media&&(media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']"),palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent"));for([key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../overview/" class="md-tabs__link">
+          
+  
+  AutoGRAMS concepts
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../tutorials/fractions/" class="md-tabs__link">
+          
+  
+  Tutorials
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../contribution_guide/contribute/" class="md-tabs__link">
+          
+  
+  Contribution Guide
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="AutoGRAMS Docs" class="md-nav__button md-logo" aria-label="AutoGRAMS Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    AutoGRAMS Docs
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    AutoGRAMS concepts
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            AutoGRAMS concepts
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../overview/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    AutoGRAMS basics
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    AutoGRAMS basics
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#initializing-the-autogram" class="md-nav__link">
+    <span class="md-ellipsis">
+      Initializing the autogram
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#getting-replies" class="md-nav__link">
+    <span class="md-ellipsis">
+      Getting replies
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#nodes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Nodes
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#instructions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Instructions
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#transitions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Transitions
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#internal-functions-and-scopes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Internal functions and scopes
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#calling-autograms-functions-from-python" class="md-nav__link">
+    <span class="md-ellipsis">
+      Calling AutoGRAMS functions from python
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#python-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Python functions
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#variables" class="md-nav__link">
+    <span class="md-ellipsis">
+      Variables
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#memory-object" class="md-nav__link">
+    <span class="md-ellipsis">
+      Memory Object
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../actions/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Nodes and actions
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../transitions/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Transitions
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../interjection/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Interjection nodes
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../autogram_configs/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Autogram configs
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../prompts/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Prompt formation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../models/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Models and generation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../compiled/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AutoGRAMS compiled from python
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../node_subtypes/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Node subtypes
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../interpreter/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Understanding the interpreter
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../compiler/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Autogram Compiler
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../node_fields/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Glossary of node fields
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Tutorials
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Tutorials
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/fractions/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Fraction tutor chatbot
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Contribution Guide
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Contribution Guide
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contribution_guide/contribute/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Contributing
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contribution_guide/contribute_agents/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Contributing agents
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contribution_guide/contribute_apis/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Contributing python modules
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#initializing-the-autogram" class="md-nav__link">
+    <span class="md-ellipsis">
+      Initializing the autogram
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#getting-replies" class="md-nav__link">
+    <span class="md-ellipsis">
+      Getting replies
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#nodes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Nodes
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#instructions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Instructions
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#transitions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Transitions
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#internal-functions-and-scopes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Internal functions and scopes
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#calling-autograms-functions-from-python" class="md-nav__link">
+    <span class="md-ellipsis">
+      Calling AutoGRAMS functions from python
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#python-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Python functions
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#variables" class="md-nav__link">
+    <span class="md-ellipsis">
+      Variables
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#memory-object" class="md-nav__link">
+    <span class="md-ellipsis">
+      Memory Object
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+<h1 id="autograms-basics">AutoGRAMS basics</h1>
+<p>An autogram is defined by a an object of type Autogram. An autogram stores a collection of nodes as an OrderedDict type that form a graph that will define how the program is executed. Autograms can either be executed by the autogram.reply() or autogram.apply_fn() method. autogram.reply() is meant to get a reply from a chatbot, and autogram.apply_fn() is meant to call a specific module within the autogram and return a result, and can be used for non-conversational autograms.</p>
+<h2 id="initializing-the-autogram">Initializing the autogram</h2>
+<div class="highlight"><pre><span></span><code>from autograms import Autogram, AutogramConfig, AutogramCompiler, read_autogram
+</code></pre></div>
+<p>Setting the arguments of the autogram config can control what chatbot model is used, to what prompt templates are used, to what python functions/imports are visible. An empty initialization gives the default settings, but to learn more about the options, see the section on autogram configs.
+<div class="highlight"><pre><span></span><code>config = AutogramConfig()
+</code></pre></div></p>
+<p>To initialize the autogram from a spreadsheet, use the following code to read the spreadsheet from a csv, get the pandas dataframe, and initialize the autogram from a data frame</p>
+<p><div class="highlight"><pre><span></span><code>autogram = Autogram(autogram_config,df=df)
+</code></pre></div>
+To initialize the autogram from AutoGRAMS compiled from python
+<div class="highlight"><pre><span></span><code>with f=open(autogram_file):
+    code = f.read()
+autogram = AutogramCompiler(code,autogram_config)
+</code></pre></div></p>
+<p>To initialize the autogram directly in python, use the autogram.add_node() method to add nodes one at a time.</p>
+<div class="highlight"><pre><span></span><code>autogram = Autogram(autogram_config)
+#very simple autogram that has 1 chat node that transitions to itself
+autogram.add_node(name=&quot;node1&quot;,action=&quot;chat&quot;,instruction=&quot;respond to the user with prompt xyz&quot;,transitions=[&quot;node1])
+autogram.allow_incomplete=False
+autogram.update_autogram()
+</code></pre></div>
+<p>Lastly, autograms coded in a separate file (.py or .csv) can be initialized using the read_autogram method. For instance, </p>
+<div class="highlight"><pre><span></span><code>autogram = read_autogram(autogram_file)
+</code></pre></div>
+<h2 id="getting-replies">Getting replies</h2>
+<p>when calling autogram.reply() with no arguments, the program starts from either the first node in it's ordered dict, or a node with the name "start1" if any such node is defined. At each iteration of the main loop of the program, autogram executes an instruction associated with each node, and applies transition behavior defined by each node. It does this until it hits a chat type node, in which case it will return a reply, along with the current state of the program, defined by the memory object. So let's say at the first turn we call</p>
+<p><div class="highlight"><pre><span></span><code>autogram_reply,memory_object = autogram.reply()
+user_reply = input(&quot;agent: &quot; +autogram_reply+&quot;\nuser: &quot;)
+</code></pre></div>
+And we will wait for the user reply. We can get the second reply from the model by calling 
+<div class="highlight"><pre><span></span><code>autogram_reply,memory_object = autogram.reply(user_reply,memory_object)
+</code></pre></div>
+The memory object keeps track of where we left off, so this time when we call <code>autogram.reply(user_reply,memory_object)</code>, the program will start by applying the transition behavior of the chat node at which the previously reply came from. It will then continue it's loop until it reaches another node of chat type, at which point it will return the autogram's reply and updated memory object. Since the entire state of the program is defined in the memory object, this allows programs to be saved and loaded later--for instance, using jsonpickle</p>
+<div class="highlight"><pre><span></span><code>import jsonpickle
+encoded= jsonpickle.encode(memory_object)
+with file = open(&quot;memory.json&quot;,&#39;w&#39;):
+    file.write(encoded) 
+
+with file = open(&quot;memory.json&quot;):
+    new_memory = file.read(encoded) 
+</code></pre></div>
+<p>Would allow us to continue an old conversation. This feature is especially useful for chat APIs where it is often necessary save and load the state of the conversation to a database.</p>
+<h2 id="nodes">Nodes</h2>
+<p>The behavior of an autogram is defined by nodes--where each node executes an instruction and applies a transition to another node. Each node has a series of fields that define it's behavior. We will give a more comprehensive overview of all the fields that a node has later, but will give an introduction here. A Node has a name, an action, and instruction, and a list of potential transitions. </p>
+<p>For instance, a node that asks the user if they would like to solve a math problem, and goes to a node called "ask_math_problem" if they say yes or a different node that says "ask_user_preference" if they say no could look like this.</p>
+<div class="highlight"><pre><span></span><code>exec_node(name=&quot;ask_math&quot;,transitions=[&quot;ask_math_problem&quot;,&quot;ask_user_pref&quot;],action=&quot;chat&quot;,&quot;instruction&quot;=&quot;ask user if they would like to try solving math problem&quot;,transition_question=&quot;Would the user like to solve a math problem?&quot;,transition_choices=[&quot;yes&quot;,&quot;no&quot;])
+</code></pre></div>
+<p>A nodes behavior is governed by it's <a href="../actions/">action</a>, <a href="#instructions">instruction</a>, and <a href="../transitions/">transitions</a></p>
+<h2 id="instructions">Instructions</h2>
+<p>Instructions execute the main operation of the node. The way an instruction is interpreted varies depending on the action of the node. The main actions at a high level are:</p>
+<ol>
+<li>Chat ("chat","chat_exact","chat_suffix") Write a response to the user. The instruction tells the model how to respond.</li>
+<li>Thought ("thought","thought_exact","thought_qa") Write a response internally. In this case, an instruction tells the model what to think</li>
+<li>Transition ("transition") - node that does not execute instruction but allows for additional branching </li>
+<li>function ("function","local_function","global_function") A node that calls another AutoGRAMS function and gets result. the action is an AutoGRAMS function. When coding in AutoGRAMS compiled from python, you have the option to call the function directly which creates a node with a function calling instruction implicitly</li>
+<li>Python function ("python_function") - used to call a python statement, function, or api. In this case the instruction is python code.  When coding in AutoGRAMS compiled from python, you have the option to write the python code directly which creates a node with a python instruction implicitly</li>
+<li>prompt setting ("set_prompt","set_user_prompt","append_prompt","append_user_prompt"). These actions modify  the starting prompt of the model. The instruction specifies the new prompt or addition to the prompt depending on the specific action type.</li>
+</ol>
+<p>It is possible to embed <a href="#variables">variables</a> in instructions so the exact instruction depends on a previous model or API output. </p>
+<p>See the <a href="../actions/">actions</a> documentation for a more detailed overview.</p>
+<h2 id="transitions">Transitions</h2>
+<p>There are several ways to have transitions in the AutoGRAMS. The most commonly used transitions for chatbots are transitions predicted by the autogram's classifier, you need to initialize a node with a list of transitions, a transition question, and a list of transition answers with a one to one correspondence to the transitions. For instance </p>
+<div class="highlight"><pre><span></span><code>exec_node(name=&quot;ask_math_problem&quot;,
+    transitions=[&quot;answer_correct&quot;,&quot;answer_incorrect&quot;,&quot;asked_question&quot;,&quot;user_not_sure&quot;],
+    action=&quot;chat&quot;,&quot;instruction&quot;=&quot;Make up an simple algebra problem for the user to solve, and include this in your reply.&quot;,
+    transition_question=&quot;What did the user do?&quot;,
+    transition_choices=[&quot;gave a correct answer&quot;,&quot;gave an incorrect answer&quot;,&quot;asked a question&quot;,&quot;wasn&#39;t sure where to start&quot;])
+</code></pre></div>
+<p>In this case, there are 4 possible transitions, and 4 corresponding transition choices. The classifier chooses which transition choice most applies based on the user response, and this decides the transition. </p>
+<p>There are other types of transitions that are described in the main article on <a href="../transitions/">transitions</a>. This includes <code>.*</code> and <code>.n</code> transitions, which can be used to implement traditional conditions (if else statements) as well as other types of rule based behavior. Using special transition nodes can break down complex transition questions into a series of simpler ones. (Interjection nodes)[interjection.md] allow for certain nodes to be reachable after any conversational turn, and can be useful for unexpected user behavior. Lastly, while this feature is still experimental and not fully tested, it is possible to have dynamic transitions that use a <a href="#variables">variable</a> as a transition, allowing the graph to be modified during the execution of the program.</p>
+<h2 id="internal-functions-and-scopes">Internal functions and scopes</h2>
+<p>Nodes in an autogram can be made callable--which allows them to be called within an autogram or directly from python using the autogram.apply_fn() method. Nodes that are callable must have a name defined with "()" and any arguments the node expects.</p>
+<p>AutoGRAMS functions are sub graphs that execute and return a result. When a function is called, the autogram temporarily jumps to a callable node, and it propagates though the graph until a special <code>return</code> transition is encountered. Functions allow for graph modules to be reused. For instance, consider an AI tutor autogram with the following graph:</p>
+<iframe src="../images/chat_fun.png" max-width="100%" height="540px" width="100%"></iframe>
+
+<p>The graph contains a subgraph that asks the user a question to quiz them. This routine could be called from different branches of the conversation tree, and always returns to the node that calls it when it hits a special return transition. This allows subgraphs to be reused at multiple points in an autogram. </p>
+<p>AutoGRAMS functions also allow for the scope of the conversational history to be better controlled--for instance, if you'd like to compute something using a multiple reasoning steps, but then hide the intermediate steps of the reasoning from the prompt once it is finished executing, AutoGRAMS functions allow you to do this. </p>
+<p>See the main documentation of <a href="../actions/#function-actions">AutoGRAMS functions</a> for a full overview. </p>
+<h2 id="calling-autograms-functions-from-python">Calling AutoGRAMS functions from python</h2>
+<p>AutoGRAMS functions can be called both from within an autogram and externally from python. The AutoGRAMS apply_fn() for calling AutoGRAMS modules from python accepts the following arguments:</p>
+<p><code>entry_node</code> (required) - name of callable node that begins the function
+<code>args_list</code> (required)  - list of the python variables that will be passed as arguments to the module
+<code>memory_object</code> - Memory object to initialize the function call with. Defaults to <code>None</code>, generally isn't needed for local functions
+<code>memory_dict</code>- dictionary representation of memory object, defaults to <code>None</code>
+<code>function_type</code> - type of AutoGRAMS function to call as, defaults to "local"</p>
+<h2 id="python-functions">Python functions</h2>
+<p>Python functions are calls to python code, functions, or apis, using the python interpreter to interpret the statement. The arguments passed to the <a href="../autogram_configs/">Autogram config</a> determines what python functions are available and in scope. Python functions can also return variables of any type. </p>
+<p>See the main documentation of <a href="../actions/#python-actions">python functions</a> for a full overview.</p>
+<h2 id="variables">Variables</h2>
+<p>Variables in AutoGRAMS can be any python object. Variables are set when AutoGRAMS instructions are executed. To define a variable, include an equals sign in the instruction to assign the output of the node to the variable. For instance:
+<div class="highlight"><pre><span></span><code>exec_node(action=&quot;thought&quot;,instruction=&quot;summary=Write down a summary of the conversation so far.&quot;)
+</code></pre></div>
+Will execute an internal dialogue where the model will respond to the instruction, and save the resulting model output into the variable <code>summary</code>. In AutoGRAMS compiled from python, it's also possible to use regular assignments outside of the instruction:
+<div class="highlight"><pre><span></span><code>summary=exec_node(action=&quot;thought&quot;,instruction=&quot;Write down a summary of the conversation so far.&quot;)
+</code></pre></div>
+And the AutoGRAMS compiler will infer the correct instruction syntax to cause the variable assignment to be executed.  Variables can be used in 2 ways--by passing them in python function nodes, or by incorporating them as a string into an instruction (which could be for any node type). To use a variable in a python function, you simply use the variable as you would in any python statement. for instance <code>summary_str='here is a summary: '+summary</code> (or equivalently <code>exec_node(action="python_function",instruction="summary_str='here is a summary:' +summary"</code>) will result in a string that concatenates the prefix 'here is a summary:' with the summary string output by the model at the previous node. </p>
+<p>The second way to incorporate the variable is the the syntax <code>$summary</code>, which results in an instruction that is dynamically formed based on the value of the summary when the node is assigned. this syntax only works for python strings, or other python objects that have the <code>__str__</code> method to be converted to strings. This is mainly used for chat and thought type nodes that are passed to the model. For instance, later in the conversation we might use a node like this:</p>
+<div class="highlight"><pre><span></span><code>exec_node(action=&quot;chat&quot;,instruction=&quot;Respond to the user. Based on a summary of the conversation so far $summary, relate your reply to the user with something you&#39;ve talked about previously&quot; )
+</code></pre></div>
+<p>Note that depending on your application, it may be unadvisable to use $ syntax in python_function nodes since this could be used to inject code or result in errors. So for instance, if you used the statement <code>exec_node(action="python_function",instruction="'here is a summary:' + $summary"</code>, it would set the value of summary in the instruction string before executing it as a python statement. This would result in an error because summary is not wrapped in quotes.</p>
+<p>There is an additional way to use the $syntax, which is to include brackets around where the variable is used, which omits this portion of the instruction if one or more variables is undefined.</p>
+<p>So for instance the instruction in</p>
+<p><div class="highlight"><pre><span></span><code>exec_node(action=&quot;chat&quot;,instruction=&quot;Respond to the user.{Based on a summary of the conversation so far $summary, relate your reply to the user with something you&#39;ve talked about previously}&quot; )
+</code></pre></div>
+Will omit the bracket text and simply be "Respond to the user." if the summary variable hasn't been set.</p>
+<h2 id="memory-object">Memory Object</h2>
+<p>The AutoGRAMS memory object stores everything associated with a specific run of the program. The two main components are the function stack, and model turns (optional, mainly used for logging model inputs/outputs). Each layer of the memory stack stores the chatbots conversation turns, as well as any variables set at that layer of the stack. The memory object can be saved and reloaded using jsonpickle to save and load the state of a program or chatbot. </p>
+<div class="highlight"><pre><span></span><code>autogram_reply,memory_object = autogram.reply(user_reply,memory_object)
+</code></pre></div>
+<p><code>memory_object.memory_dict['stack']</code> - contains the state of the program. It is represented as a list that starts of with length one when a program is initialized. It is appended by one everytime a function is called, and the top element is deleted everytime a function returns. <code>memory_object.memory_dict['stack'][i]</code> represents the ith innermost scope level of the program</p>
+<p><code>memory_object.memory_dict['model_turns']</code> - list that contains information about every turn that was processed by the chatbot or classifier, including enough information to recover the prompt, as well as the model's response or prediction. Each element of the list is a dictionary, with the 'model' field specifying whether it is a chatbot turn (that executes an instruction) or a classifier turn (that predicts a transition)</p>
+<p>Some useful methods are </p>
+<p><code>memmory_object.get_variable_dict()</code> -- returns the variables currently in scope for the top level of the stack. 
+<code>memmory_object.get_last_state()</code> -- returns the most recent state of the program </p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.instant", "navigation.tabs"], "search": "../../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.fe8b6f2b.min.js"></script>
+      
+        <script src="../../extra.js"></script>
+      
+    
+  </body>
+</html>
