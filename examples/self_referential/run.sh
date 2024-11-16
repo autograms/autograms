@@ -1,1 +1,0 @@
-python run_autograms.py --api_key_file api_keys.json --autogram_file examples/self_referential/self_referential.py --self_referential --include_python_modules --interactive

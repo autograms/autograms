@@ -1,5 +1,0 @@
-Name,Action,Instruction,Transitions,Transition question,Transition choice a,Transition choice b
-ask_question,chat_exact,Would you like me to tell you more about  the latest advances in AI?,"tell_about_ai,ask_user_preference",Does the user want to talk about ai?,yes,no
-tell_about_ai,chat,Tell the user more about the latest advances in AI. Mention that a new framework called AutoGRAMS was recently released that allows greater control over AI agents.,continue_conversation,,,
-ask_user_preference,chat,Confirm with the user the user what they would prefer to talk about.,continue_conversation,,,
-continue_conversation,chat,Respond to the user.,continue_conversation,,,

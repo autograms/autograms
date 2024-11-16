@@ -8,30 +8,21 @@ site_url: https://autograms.github.io/autograms
 docs_dir: docs
 nav:
   - Home: index.md  
-  - AutoGRAMS concepts: 
-      - Overview: autograms_concepts/overview.md
-      - AutoGRAMS basics: autograms_concepts/autograms_basics.md
-      - Nodes and actions: autograms_concepts/actions.md
-      - Transitions: autograms_concepts/transitions.md
-      - Interjection nodes: autograms_concepts/interjection.md
-      - Autogram configs: autograms_concepts/autogram_configs.md
-      - Prompt formation: autograms_concepts/prompts.md
-      - Models and generation: autograms_concepts/models.md
-      - AutoGRAMS compiled from python : autograms_concepts/compiled.md
-      - Node subtypes: autograms_concepts/node_subtypes.md
-      - Understanding the interpreter: autograms_concepts/interpreter.md
-      - Autogram Compiler: autograms_concepts/compiler.md
-      - Glossary of node fields: autograms_concepts/node_fields.md 
+  - Documentation: 
+      - Autogram class: documentation/autogram.md
+      - Autograms Decorators: documentation/decorators.md
+      - Managing memory: memory.md
+      - Nodes: nodes.md
+      - Reply functions: reply_functions.md
+      - Decision functions: decision_functions.md
+      - Generation functions: structured_generation_functions.md
+      - Control Flow functions: control_flow_functions.md
+      - Prompt functions: prompt_functions.md
+      - Models calling functions: model_functions.md
+      - Embedding functions: embeddings.md
+      - Logging functions: logging_functions.md
 
 
-  - Tutorials: 
-    - Fraction tutor chatbot: tutorials/fractions.md
-
-      
-  - Contribution Guide: 
-    - Contributing: contribution_guide/contribute.md
-    - Contributing agents: contribution_guide/contribute_agents.md
-    - Contributing python modules: contribution_guide/contribute_apis.md
 
 
 

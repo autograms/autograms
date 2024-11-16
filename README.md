@@ -1,71 +1,106 @@
-
 # AutoGRAMS
 
+AutoGRAMS (Autonomous Graphical Agent Modeling Software) is a Python library that represents chatbots as stateful, continuously running programs. Unlike traditional chatbots, which often treat conversation turns as isolated events, AutoGRAMS allows agents to function as dynamic programs that retain their full execution state, including variables and control flow, across conversation turns.
 
-AutoGRAMS (Autonomous Graphical Agent Modeling Software) is a framework and high level programming language for designing AI agents and chatbots using a combination of graphical and programming elements.
+By representing a chatbot as a running program, AutoGRAMS enables precise control over dialogue flow. Decisions made during conversations directly influence the program’s execution path, variables persist as the chatbot’s memory, and conversations seamlessly adapt based on the program’s current state.
 
-The full documentation and tutorials are available in our [web docs](https://autograms.github.io/autograms). 
+---
 
-Also see [our paper](https://arxiv.org/abs/2407.10049) on AutoGRAMS.
+## Key Features
 
-AutoGRAMS can be installed with:
+- **Continuously Running Programs**: AutoGRAMS lets you write chatbots as Python programs that maintain their state across interactions. Each user input resumes the program exactly where it left off, enabling highly dynamic, context-aware conversations. 
 
-`pip install autograms` 
+- **Save and Resume Program State**: Serialize the program’s entire state, including call stack, variables, and control flow. Reload it later to continue the program (and conversation) from its exact state.
 
-If you make local modifications, you can install them with
+- **Dynamic Control Flow**: Use advanced constructs like `GOTO` to move between different parts of your program that represent different states of your chatbot. This allows complex, non-linear dialogue paths that adapt dynamically to user inputs and decisions.
+
+- **LLM-Driven Decisions**: Integrate decision-making powered by LLMs to dynamically guide conversations based on user input, enabling sophisticated branching of the program
+
+- **Memory Management**: AutoGRAMS automatically manages memory, ensuring that variables and conversation history persist across turns.
+
+- **Visualize Conversation Flow**: Compile detailed graphs of your chatbot’s states and logic, helping you design, debug, and understand the flow of conversation at a glance.
+
+
+AutoGRAMS accomplishes many of these behaviors using a special @autograms_function decorator that enables non-standard python functionality such as saving and loading the state of a program mid-execution and jumping to a predefined location in the code.
+
+The full documentation and tutorials are available in our [web docs](https://autograms.github.io/autograms).
+
+## Installation
+
+You can install AutoGRAMS via pip:
+
 ```
- git clone https://github.com/autograms/autograms.git
- cd autograms
- pip install .
- ```
+pip install autograms
+```
 
-To be able visualize AutoGRAMS graphs, install graphviz, which can be done in linux with:
+If you make local modifications, you can install them with:
 
-`sudo apt install graphviz`
+```
+git clone https://github.com/autograms/autograms.git
+cd autograms
+pip install .
+```
 
-Python >=3.9 is needed. You will also need to install pytorch for huggingface language models.
+To visualize AutoGRAMS graphs, install Graphviz. On Linux:
 
+```
+sudo apt install graphviz
+```
 
-## Getting Started Demo
+Python >=3.9 is required. If you plan to use OpenAI models or other LLM APIs, ensure you set up the necessary dependencies and keys.
 
-To use openai language models, the fastest way to start is to set the api key in the in the environment, which can be done in linux with:
-`export OPENAI_API_KEY=<your key>` 
+## Getting Started
 
-If you'd prefer to store your api key in a file, you can open `api_keys.json`, change "load_from_env" to `false`, and set the value of "openai" to be equal to your api key. 
+AutoGRAMS makes it easy to build structured, stateful chatbots. To get started with a recruiter chatbot demo, you can run:
 
+```
+python run_autogram.py --api_key_file api_keys.json --example_name recruiter
+```
 
-To get started with a recruiter agent demo, run `bash examples/recruiter/run.sh`
+This will launch an interactive chatbot in the terminal, simulating a virtual recruiter.
 
+### API Keys
 
-Running this will trigger an interactive chatbot in the terminal with an ai recruiter agent
+To use OpenAI or other API-driven models, set your API key as an environment variable:
 
+```
+export OPENAI_API_KEY=<your key>
+```
 
+Alternatively, you can store your API key in `api_keys.json`. Simply change `"load_from_env"` to `false` and set the `"openai"` key to your API key.
 
 ## Visualization
-Autograms can be visualized with `make_interactive_graph.py`, with no api key required.
 
-For example:
-`python make_interactive_graph.py --autogram_file examples/recruiter/recruiter_agent_with_email.csv`
-creates an interactive html graph.
-In this example it is saved to `/examples/recruiter/recruiter_agent_with_email/full_graph.html`.
+AutoGRAMS includes tools to visualize the conversational flow as an interactive graph. For example, you can generate visualizations for the recruiter chatbot with:
 
-Additional information may be viewable by clicking on nodes in the interactive graph. This information may include the action, instruction, and/or transition question.
+```
+python visualize_autogram.py --example_name recruiter --save_folder recruiter_graph
+```
 
-## Utilities
-It is possible to convert back and forth between python and csv autograms using `convert_autogram.py`.
+This will create both a static and interactive graph in the specified folder. You can explore the chatbot flow and decision points by clicking on nodes in the interactive graph.
 
-For example:
-`python convert_autogram.py --autogram_file examples/recruiter/recruiter_agent_with_email.csv`
-will save a .py file by the same name in the same directory.
-The .py files created by `convert_autogram.py` can be used inplace of a .csv file when running most scripts
+## Demos and Examples
 
-## Demos
-See /examples folder for example autograms .csv and .py programs. Also see the /tutorial_examples folder for tutorials covered in the web documentation.
+Explore the `/examples` folder for more sample autograms. Each example demonstrates different capabilities of AutoGRAMS, from simple branching dialogues to complex, stateful agents.
 
+To run a demo:
 
-You can also run any of the examples in the example folder from the root repository directory with: 
+```
+python run_autogram.py --api_key_file api_keys.json --example_name <example_name>
+```
 
-`bash examples/example_name/run.sh`
+Replace `<example_name>` with the desired example (e.g., `simple_example`, `fraction_tutor`, `general_tutor`, or `recruiter`).
 
 
+## Citing AutoGRAMS
 
+If you use this work in research, please cite the following paper:
+
+```
+@article{krause2024autograms,
+  title={AutoGRAMS: Autonomous Graphical Agent Modeling Software},
+  author={Krause, Ben and Chen, Lucia and Kahembwe, Emmanuel},
+  journal={arXiv preprint arXiv:2407.10049},
+  year={2024}
+}
+```
