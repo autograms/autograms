@@ -21,6 +21,7 @@ nav:
       - Models calling functions: model_functions.md
       - Embedding functions: embeddings.md
       - Logging functions: logging_functions.md
+      - Code utility functions: helper.md
 
 
 

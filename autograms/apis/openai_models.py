@@ -111,14 +111,34 @@ def get_chatbot_messages(input_turns,output_turns,system_prompt,system_prompt_in
         model = config.chatbot_path
     tokenizer =tiktoken.encoding_for_model(model)
 
+
+
+
+
     if truncate_input:
         max_input_length = config.chatbot_max_input_len
+        system_tokens = tokenizer.encode(system_prompt)
+        if len(system_tokens)>max_input_length/2:
+            print(f"warning system prompt is too long({system_tokens} tokens). It is only allowed to be half of config.chatbot_max_input_len, which is set to {config.chatbot_max_input_len} tokens. truncating system prompt.")
+            system_prompt = tokenizer.decode(system_tokens[:max_input_length/2])+"..."
+
+        max_input_length = max_input_length-len(tokenizer.encode(system_prompt))
+
 
         input_turns,output_turns=truncate_turn_input(input_turns,output_turns,tokenizer,max_input_length)
+
+
+    
+
+
     
     messages=[]
-    if not system_prompt is None and not system_prompt_in_turns:
-        messages.append({"role":"system", "content": system_prompt})
+    if not system_prompt is None:
+    
+        if system_prompt_in_turns:
+             input_turns[0] = system_prompt+"\n\n"+input_turns[0]
+        else:
+            messages.append({"role":"system", "content": system_prompt})
     for i in range(len(output_turns)):
         messages.append({"role":"user", "content": input_turns[i]})
         messages.append({"role":"assistant", "content": output_turns[i]})
@@ -129,12 +149,13 @@ def get_chatbot_messages(input_turns,output_turns,system_prompt,system_prompt_in
         messages[0]['content'] = system_prompt+"\n\n"+messages[0]['content']
     return messages
 
-def call_openai_chatbot(messages,handle_errors=False,handle_refusal=False,model=None,**kwargs):
+def call_openai_chatbot(messages,handle_errors=False,handle_refusal=False,model=None,ignore_config=False,**kwargs):
     
-    memory = get_memory()
-    config=memory.config
+    if not ignore_config:
+        memory = get_memory()
+        config=memory.config
 
-    test_mode = memory.test_mode
+        test_mode = memory.test_mode
     
     if client is None:
         raise Exception("Open AI APIs not initialized. This is supposed to happen when autogram is defined.") 
@@ -216,6 +237,7 @@ def call_openai_chat_formatted(messages,obj_structure=None,model=None,**kwargs):
         )
 
         output_obj = result.choices[0].message
+  
 
         if output_obj.parsed:
             
@@ -225,11 +247,18 @@ def call_openai_chat_formatted(messages,obj_structure=None,model=None,**kwargs):
 
 
         else:
-        
             
+            #if isinstance(obj_structure,dict)
+                
             raw_str = result.choices[0].message.content
             output = raw_str
-            success=False
+            
+            if output_obj.refusal:
+                success=False
+            else:
+                success=True
+
+
 
     except Exception as e:
         print(e)
@@ -311,7 +340,7 @@ def get_classifier_messages(text,truncate=True,model=None):
 
     return messages
 
-def call_openai_classifier(messages,answer_choices,model=None,class_biases=None,**kwargs):
+def call_openai_classifier(messages,answer_choices,model=None,class_biases=None,return_logits=False,**kwargs):
         memory = get_memory()
         config = memory.config
         # if "model" in kwargs:
@@ -320,9 +349,9 @@ def call_openai_classifier(messages,answer_choices,model=None,class_biases=None,
         # else:
         #     model = config.chatbot_path
 
+
         if model is None:
             model = config.classifier_path
-
 
         tokenizer =tiktoken.encoding_for_model(model)
 
@@ -343,23 +372,58 @@ def call_openai_classifier(messages,answer_choices,model=None,class_biases=None,
             else:
                 answer_dict[str(token[0])]=int(100+class_biases[i])
 
+        if return_logits:
+            if memory.test_mode:
+                logits = np.random.randn(len(answer_dict))
+                return logits,True
 
-        if memory.test_mode:
-            pred_ind = np.random.choice(len(answer_choices),p=[1/len(answer_choices)]*len(answer_choices))
-            success=True
-            return answer_choices[pred_ind],success
+            else:
+                kwargs["logit_bias"]=answer_dict
+                kwargs["temperature"]=0.0
+                kwargs["max_tokens"]=1
+                kwargs["n"]=1
+                kwargs["logprobs"]=True
+                kwargs["top_logprobs"]= 20
+
+
+                response = client.chat.completions.create(model=model,messages=messages,**kwargs)
+
+                log_probs = response.choices[0].logprobs.content[0].top_logprobs
+
+                dict_mapping = {x.token:x.logprob for x in log_probs}
+                logits = []
+                for answer in answer_choices:
+                    if answer in dict_mapping:
+                        logits.append(dict_mapping[answer])
+                    else:
+                        if answer == response.choices[0].message.content:
+                            logits.append(0)
+                        else:
+                            logits.append(-100)
+                return np.array(logits),True
+
+
+
         else:
 
-            kwargs["logit_bias"]=answer_dict
-            kwargs["temperature"]=0.0
-            kwargs["max_tokens"]=1
-            kwargs["n"]=1
 
-            response = client.chat.completions.create(model=model,messages=messages,**kwargs)
+            if memory.test_mode:
+                pred_ind = np.random.choice(len(answer_choices),p=[1/len(answer_choices)]*len(answer_choices))
+                success=True
+                return answer_choices[pred_ind],success
+            else:
 
-          
+                kwargs["logit_bias"]=answer_dict
+                kwargs["temperature"]=0.0
+                kwargs["max_tokens"]=1
+                kwargs["n"]=1
+              
 
-            return response.choices[0].message.content,True
+                response = client.chat.completions.create(model=model,messages=messages,**kwargs)
+
+            
+
+                return response.choices[0].message.content,True
 
 
 

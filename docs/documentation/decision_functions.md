@@ -26,3 +26,13 @@ Presents the agent with a multiple-choice question.
 
 - **Returns**:
   - `int`: Index of the selected choice.
+
+#### **decision_chain(instruction,chain,**kwargs)**
+`autograms.functional.decision_chain`
+Execute a series of multiple choice style decisions with one call to the model where each thought can have a different prompt. Uses structured outputs to force a sequence of constrained outputs.
+- **Parameters**:
+   
+  - instruction (str): Instruction for the model
+  - chain list[str]: list of dictionaries, each each dictionary needs to have fields 'question' and 'choices', where question is a string and choices is a list of strings corresponding to multiple choice answers to the question.list of prompts for each thought
+- **Returns**:
+    output_list (list[str]): Gives the model generation for each prompt

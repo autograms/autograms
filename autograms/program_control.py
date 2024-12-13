@@ -551,7 +551,6 @@ class AutogramsFunction:
 
                 done=True
 
-                
 
 
             except ReplyExit as reply_exc:    
@@ -606,7 +605,7 @@ class AutogramsFunction:
 
 
                 else:
-                    import pdb;pdb.set_trace()
+                   
                     raise Exception("Error caused by invalid transition to unknown address: "+jump_exc.destination)
                 
         memory.process_return()

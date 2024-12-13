@@ -23,12 +23,19 @@ def get_persistent_globals():
     Returns:
     - dict: Persistent global variables or an empty dictionary if none exist.
     """
-    if hasattr(_thread_local, 'memory'):
-        return _thread_local.memory.persistent_globals
-    elif hasattr(_thread_local, 'persistent_globals'):
-        return _thread_local.persistent_globals
+
+    frame = inspect.currentframe().f_back
+    if '_persistent_globals' in frame.f_globals:
+        return frame.f_globals['_persistent_globals']
     else:
-        return {}
+        return []
+
+    # if hasattr(_thread_local, 'memory'):
+    #     return _thread_local.memory.persistent_globals
+    # elif hasattr(_thread_local, 'persistent_globals'):
+    #     return _thread_local.persistent_globals
+    # else:
+    #     return {}
         
 
 def get_timestamp():
@@ -63,12 +70,20 @@ class set_persistent_globals:
         """
         Stores newly defined globals in thread-local memory as persistent.
         """
+        print("done setting globals")
         end_globals = self.frame.f_globals
         new_globals = {k: v for k, v in end_globals.items() if k not in self.start_globals}
-        if hasattr(_thread_local, 'memory'):
-            _thread_local.memory.persistent_globals= new_globals
-        else:
-            _thread_local.persistent_globals = new_globals
+
+
+        end_globals['_persistent_globals'] = list(new_globals.keys())
+        end_globals['_persistent_globals_str']= dill.dumps(new_globals)
+        # end_globals['_persistent_globals'] = {}
+        # end_globals['_persistent_globals'].update(new_globals)
+
+        # if hasattr(_thread_local, 'memory'):
+        #     _thread_local.memory.persistent_globals= new_globals
+        # else:
+        #     _thread_local.persistent_globals = new_globals
 
 
         
@@ -125,8 +140,8 @@ def clear_memory():
 
         del _thread_local.memory
 
-    if hasattr(_thread_local, 'persistent_globals'):
-        del _thread_local.persistent_globals
+    # if hasattr(_thread_local, 'persistent_globals'):
+    #     del _thread_local.persistent_globals
 
 
 
@@ -143,6 +158,7 @@ class SerializableMemory():
     """
     def __init__(self,memory_dict,root_function):
         self.root_function=root_function
+        
         if memory_dict is None:
             self.memory_dict=dict()
             self.memory_dict['stack']=[]
@@ -151,26 +167,29 @@ class SerializableMemory():
             self.memory_dict['call_depth']=0
             self.memory_dict['globals_snapshot']={}
 
+            
 
 
-        if hasattr(_thread_local, 'persistent_globals'):
-            self.persistent_globals = _thread_local.persistent_globals
-            del _thread_local.persistent_globals
+
+        # if hasattr(_thread_local, 'persistent_globals'):
+        #     self.persistent_globals = _thread_local.persistent_globals
+        #     del _thread_local.persistent_globals
 
 
-        else:
+        # else:
 
-            self.persistent_globals={}
+        #     self.persistent_globals={}
 
         self.globals_snapshot={}
     def set_globals_snapshot(self,):
         """
         Captures a snapshot of current globals for serialization.
         """
-        if self.persistent_globals is None:
-            self.memory_dict['globals_snapshot']=self.root_function.func.__globals__.copy()
+        if not '_persistent_globals' in self.root_function.func.__globals__:
+            self.memory_dict['globals_snapshot']={} #self.root_function.func.__globals__.copy()
         else:
-            self.memory_dict['globals_snapshot']={k: v for k, v in self.root_function.func.__globals__.items() if self.persistent_globals is None or k in self.persistent_globals}
+            persistent_globals= self.root_function.func.__globals__['_persistent_globals']
+            self.memory_dict['globals_snapshot']={k: v for k, v in self.root_function.func.__globals__.items() if k in persistent_globals}
 
 
 
@@ -184,7 +203,6 @@ class SerializableMemory():
         Returns:
         - tuple: (call_info, include_line), where call_info is function call details or None, and include_line indicates if the call line should be included.
         """
-
 
 
         self.memory_dict['stack_pointer']+=1
@@ -529,6 +547,7 @@ class MemoryObject(SerializableMemory):
         Parameters:
         - ADDRESS (str): The node address.
         """
+        self.memory_dict['model_turns'].append({"node":ADDRESS,"entry_type":"node","timestamp":get_timestamp()})
         self.last_node=ADDRESS
         #print(f"setting node {ADDRESS}")
         try:
@@ -560,9 +579,13 @@ class MemoryObject(SerializableMemory):
         if not self.memory_dict["external_call_memory"] is None:
             include_line=True
 
-
         if self.memory_dict['stack_pointer']>=len(self.memory_dict['stack']):
-           self.memory_dict['turn_stack'].append({"scope":conv_scope,"turns":[],"system_prompt":self.config.default_prompt})
+            if len(self.memory_dict['turn_stack'])>0:
+               system_prompt = self.memory_dict['turn_stack'][-1]['system_prompt']
+            else:
+               system_prompt = self.config.default_prompt
+               
+            self.memory_dict['turn_stack'].append({"scope":conv_scope,"turns":[],"system_prompt":system_prompt})
            
 
 
@@ -752,7 +775,9 @@ class MemoryObject(SerializableMemory):
         self.memory_dict['turn_stack'][-1]["system_prompt"]=text
 
 
-
+    def get_system_prompt(self):
+        return self.memory_dict['turn_stack'][-1]["system_prompt"]
+    
     def log_classifier_turn(self,result,input_str,answer_choices,model_type):
         """
         Logs a classifier turn.

@@ -66,7 +66,7 @@ Generates a thought response without logging it.
   - `str`: The generated thought.
 
 
-#### **TRANSITION(transition_question, transitions, max_turns=1,ADDRESS=None, **kwargs)**
+#### **TRANSITION(transition_question, transitions, max_turns=1,ADDRESS=None, `**kwargs`)**
 `autograms.nodes.TRANSITION`
 
 Autograms node wrapper for `autograms.functionalTRANSITION`
@@ -76,7 +76,7 @@ Manages a transition based on multiple-choice input.
   - `transition_question` (str): The question prompting the transition.
   - `transitions` (dict): Maps choices to their corresponding addresses.
   - `max_turns` (int): Maximum attempts for a valid response.
-  - `**kwargs`: Additional arguments for the model.
+  - ``**kwargs``: Additional arguments for the model.
 
 - **Raises**:
   - `GoTo`: To jump to the target address.

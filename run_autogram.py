@@ -42,7 +42,7 @@ def main():
         fid = open(args.api_key_file)
         api_keys = json.load(fid)
     else:
-        api_keys = dict()
+        api_keys = None
 
     # Load or initialize configuration
     if args.config_file is None:

@@ -51,7 +51,12 @@ Python >=3.9 is required. If you plan to use OpenAI models or other LLM APIs, en
 
 ## Getting Started
 
-AutoGRAMS makes it easy to build structured, stateful chatbots. To get started with a recruiter chatbot demo, you can run:
+AutoGRAMS makes it easy to build structured, stateful chatbots. To get started with a recruiter chatbot demo, you can set an open ai api key with:
+
+
+export OPENAI_API_KEY=<your key>
+
+and then you can run:
 
 ```
 python run_autogram.py --api_key_file api_keys.json --example_name recruiter
@@ -59,15 +64,6 @@ python run_autogram.py --api_key_file api_keys.json --example_name recruiter
 
 This will launch an interactive chatbot in the terminal, simulating a virtual recruiter.
 
-### API Keys
-
-To use OpenAI or other API-driven models, set your API key as an environment variable:
-
-```
-export OPENAI_API_KEY=<your key>
-```
-
-Alternatively, you can store your API key in `api_keys.json`. Simply change `"load_from_env"` to `false` and set the `"openai"` key to your API key.
 
 ## Visualization
 

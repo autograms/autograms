@@ -215,8 +215,11 @@ def make_decision_prompt(turns,transition_question,answers,max_turns):
         choices -- possible outputs of the model. should each map to a single token in the models tokenization
 
     """
+    if len(turns)>0:
+        inputs,outputs,_ = make_prompt(turns,max_turns=max_turns,transition=True)
+    else:
+        inputs,outputs=[],[]
 
-    inputs,outputs,_ = make_prompt(turns,max_turns=max_turns,transition=True)
 
     if len(answers)==0:
         return answers[0]
