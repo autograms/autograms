@@ -10,18 +10,18 @@ nav:
   - Home: index.md  
   - Documentation: 
       - Autogram class: documentation/autogram.md
-      - Autograms Decorators: documentation/decorators.md
-      - Managing memory: memory.md
-      - Nodes: nodes.md
-      - Reply functions: reply_functions.md
-      - Decision functions: decision_functions.md
-      - Generation functions: structured_generation_functions.md
-      - Control Flow functions: control_flow_functions.md
-      - Prompt functions: prompt_functions.md
-      - Models calling functions: model_functions.md
-      - Embedding functions: embeddings.md
-      - Logging functions: logging_functions.md
-      - Code utility functions: helper.md
+      - Autograms Decorators: documentation/autograms_decorators.md
+      - Managing memory: documentation/memory.md
+      - Nodes: documentation/nodes.md
+      - Reply functions: documentation/reply_functions.md
+      - Decision functions: documentation/decision_functions.md
+      - Generation functions: documentation/structured_generation_functions.md
+      - Control Flow functions: documentation/control_flow_functions.md
+      - Prompt functions: documentation/prompt_functions.md
+      - Models calling functions: documentation/model_functions.md
+      - Embedding functions: documentation/embeddings.md
+      - Logging functions: documentation/logging_functions.md
+      - Code utility functions: documentation/helper.md
 
 
 

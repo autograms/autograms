@@ -21,7 +21,7 @@ By representing a chatbot as a running program, AutoGRAMS enables precise contro
 - **Visualize Conversation Flow**: Compile detailed graphs of your chatbot’s states and logic, helping you design, debug, and understand the flow of conversation at a glance.
 
 
-AutoGRAMS accomplishes many of these behaviors using a special @autograms_function decorator that enables non-standard python functionality such as saving and loading the state of a program mid-execution and jumping to a predefined location in the code.
+AutoGRAMS accomplishes many of these behaviors using a special @autograms_function decorator that enables non-standard python functionality such as saving and loading the state of a program mid-execution and jumping to a predefined location in the code. 
 
 The full documentation and tutorials are available in our [web docs](https://autograms.github.io/autograms).
 
@@ -33,7 +33,7 @@ You can install AutoGRAMS via pip:
 pip install autograms
 ```
 
-If you make local modifications, you can install them with:
+If you want to make local modifications you can install with:
 
 ```
 git clone https://github.com/autograms/autograms.git

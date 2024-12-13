@@ -18,7 +18,6 @@ AutoGRAMS addresses these challenges by treating chatbots as dynamic programs. C
 
 ---
 
-### Key Features
 
 ### Key Features
 
@@ -119,8 +118,8 @@ Here we'll walk through setting up and running a basic chatbot using Autograms. 
 
 ### Step 1: Coding a simple chatbot
 
-Let's code a very simple autograms chatbot
-```
+Let's code a very simple autograms chatbot that asks the user if they would like to know more about the latest advances in AI, and tells them a bit about AutoGRAMS if they say yes.
+```python
 from autograms.nodes import reply, reply_instruction
 from autograms.functional import yes_or_no
 from autograms import autograms_function
@@ -161,11 +160,11 @@ def chatbot():
 ```
 
 What's Happening Here?
-1. reply and reply_instruction: These nodes prompt the user. They pause the program, send a reply, and wait for user input before resuming.
+1. `reply` and `reply_instruction`: These nodes prompt the user. They pause the program, send a reply, and wait for user input before resuming.
 
-2. yes_or_no: This function decides the next flow based on an AI model's interpretation of user input. It’s not user-facing; instead, it processes the chatbot’s own decision.
+2. `yes_or_no`: This function decides the next flow based on an AI model's interpretation of user input. It’s not user-facing; instead, it processes the chatbot’s own decision.
 
-3. ADDRESS Parameters: These labels allow the chatbot to jump to specific points (Advanced), enabling dynamic flow and mid-conversation updates, and can also be used to help visualize the program
+3. `ADDRESS` Parameters: These labels allow the chatbot to jump to specific points (Advanced), enabling dynamic flow and mid-conversation updates, and can also be used to help visualize the program
 
 
 
@@ -177,7 +176,7 @@ All of these nodes and function we are calling have access to a shared memory ob
 ### Step 2
  
 Next, create a script called `run_simple_example.py` to run the chatbot function. This script will use the `Autogram` class to manage memory and handle user interactions.
-```
+```python
 from autograms import Autogram
 from simple_example import chatbot
 
@@ -202,7 +201,7 @@ use `python run_simple_example.py` to run the chatbot
 
 ### Step 3: visualize the code
 create a new file called generate_graph.py
-```
+```python
 from autograms.graph import compile_graph
 from simple_example import chatbot
 
