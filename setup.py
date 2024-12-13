@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='autograms',
-    version='0.5.0',
+    version='0.5.1',
     description='A framework for programming stateful LLM based chatbots.',
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',
