@@ -7,3 +7,17 @@ body.home-page .md-sidebar--primary {
   body.home-page .md-content {
     margin-left: 0;
   }
+
+/* Change code block background to black */
+pre code {
+  background-color: #000; /* Black background */
+  color: #f8f8f2; /* Light text for contrast */
+  padding: 10px; /* Add some padding for readability */
+  border-radius: 5px; /* Optional: Rounded corners */
+}
+
+/* Ensure inline code is consistent */
+code {
+  background-color: #000;
+  color: #f8f8f2;
+}
