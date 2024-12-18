@@ -8,7 +8,11 @@ title: Home
 
 Welcome to the official documentation for [AutoGRAMS](https://github.com/autograms/autograms), the Autonomous Graphical Agent Modeling Software. AutoGRAMS is a Python framework designed to transform chatbots into dynamic, stateful programs. It leverages Python’s full power, allowing developers to craft intelligent conversational agents with advanced control over dialogue flow, memory, and program state. 
 
-Unlike conventional chatbot frameworks, AutoGRAMS positions conversations as dynamic processes, enabling chatbots to behave like continuously running programs. This lets you define and manage complex conversation flows with precision, while maintaining full control over program state and memory across user interactions.
+
+By representing a chatbot as a continuously running program, AutoGRAMS enables you to precisely control the prompts and memory at different points in the conversation. Decisions made during conversations directly influence the program’s execution path, variables persist as the chatbot’s memory, and conversations seamlessly adapt based on the program’s current state.
+
+We invite you to join the [AutoGRAMS community on discord](https://discord.gg/7U3pP75C) to learn more and get support with building chatbots.
+
 
 ## Introduction
 

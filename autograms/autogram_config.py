@@ -54,6 +54,7 @@ class AutogramConfig():
             classifier_max_tries=2,
             classifier_wait_per_try=5,
             classifier_max_input_len=2048,
+            exclude_classifier_system_prompt=False,
             banned_phrases=None,
             post_process_response=True,
             classifier_type="openai",
@@ -155,6 +156,7 @@ Parameters:
         self.post_process_response=post_process_response
         self.classifier_type=classifier_type
         self.classifier_path=classifier_path
+        self.exclude_classifier_system_prompt=exclude_classifier_system_prompt
 
         self.instruction_template=instruction_template
 

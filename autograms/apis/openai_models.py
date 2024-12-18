@@ -103,6 +103,7 @@ def truncate_turn_input(inputs,outputs,tokenizer,max_input_len):
 #         input_turns,output_turns=truncate_input(input_turns,output_turns)
 
 
+
 def get_chatbot_messages(input_turns,output_turns,system_prompt,system_prompt_in_turns=False,truncate_input=False,model=None):
     memory = get_memory()
     config=memory.config
@@ -119,16 +120,14 @@ def get_chatbot_messages(input_turns,output_turns,system_prompt,system_prompt_in
         max_input_length = config.chatbot_max_input_len
         system_tokens = tokenizer.encode(system_prompt)
         if len(system_tokens)>max_input_length/2:
-            print(f"warning system prompt is too long({system_tokens} tokens). It is only allowed to be half of config.chatbot_max_input_len, which is set to {config.chatbot_max_input_len} tokens. truncating system prompt.")
-            system_prompt = tokenizer.decode(system_tokens[:max_input_length/2])+"..."
+            print(f"warning system prompt is too long({len(system_tokens)} tokens). It is only allowed to be half of config.chatbot_max_input_len, which is set to {config.chatbot_max_input_len} tokens. truncating system prompt.")
+            system_prompt = tokenizer.decode(system_tokens[:int(max_input_length/2)])+"..."
 
         max_input_length = max_input_length-len(tokenizer.encode(system_prompt))
 
 
         input_turns,output_turns=truncate_turn_input(input_turns,output_turns,tokenizer,max_input_length)
 
-
-    
 
 
     
@@ -145,8 +144,6 @@ def get_chatbot_messages(input_turns,output_turns,system_prompt,system_prompt_in
 
     messages.append({"role":"user", "content": input_turns[-1]})
 
-    if not system_prompt is None and not system_prompt_in_turns:
-        messages[0]['content'] = system_prompt+"\n\n"+messages[0]['content']
     return messages
 
 def call_openai_chatbot(messages,handle_errors=False,handle_refusal=False,model=None,ignore_config=False,**kwargs):
@@ -185,8 +182,9 @@ def call_openai_chatbot(messages,handle_errors=False,handle_refusal=False,model=
         
 
         success=True
+        usage_log = {'model':'test'}
 
-        return texts,success
+        return texts,usage_log
     else:
         num_errors=0
         num_refusals=0
@@ -196,12 +194,17 @@ def call_openai_chatbot(messages,handle_errors=False,handle_refusal=False,model=
             if handle_errors:
                 try:
                     result = client.chat.completions.create(model=model,messages=messages,**generation_args)
+                    usage_log = result.usage.to_dict()
+                    usage_log['model'] = model
                 except:
                     num_errors+=1
                     responses=[config.error_response]*kwargs['n']
+                    usage_log = {'model':'failed'}
                     continue
             else:
                 result = client.chat.completions.create(model=model,messages=messages,**generation_args)
+                usage_log = result.usage.to_dict()
+                usage_log['model'] = model
             responses = [result.choices[i].message.content for i in range(kwargs['n'])]
             if handle_refusal:
                 is_refusal=detect_refusal(responses[0])
@@ -213,8 +216,10 @@ def call_openai_chatbot(messages,handle_errors=False,handle_refusal=False,model=
                     continue
             success=True
             break
+       
 
-        return responses,success
+
+        return responses,usage_log
 
 
 def call_openai_chat_formatted(messages,obj_structure=None,model=None,**kwargs):
@@ -235,6 +240,8 @@ def call_openai_chat_formatted(messages,obj_structure=None,model=None,**kwargs):
             response_format=obj_structure,
             **kwargs
         )
+        usage_log = result.usage.to_dict()
+        usage_log['model'] = model
 
         output_obj = result.choices[0].message
   
@@ -263,12 +270,11 @@ def call_openai_chat_formatted(messages,obj_structure=None,model=None,**kwargs):
     except Exception as e:
         print(e)
         print("Warning!!!! failed to parse openai structured output,object will be generated to defaults")
-        return None,None,False
+        return None,None,{'model':'failed'}
 
 
-
-
-    return output,raw_str, success
+  
+    return output,raw_str, usage_log
 
 
 
@@ -322,21 +328,39 @@ def refusal_args(response,tokenizer,generation_args):
 #         **input_args
 #     )
 
-def get_classifier_messages(text,truncate=True,model=None):
+def get_classifier_messages(text,truncate=True,model=None,system_prompt=None,system_prompt_in_turns=False):
     memory = get_memory()
     config = memory.config
     if model is None:
         model = config.classifier_path
     tokenizer = tiktoken.encoding_for_model(model)
 
+
+
     if truncate:
         max_len=config.classifier_max_input_len
+
+        if not system_prompt is None:
+            system_tokens = tokenizer.encode(system_prompt)
+            if len(system_tokens)>max_len:
+                print(f"warning system prompt is too long({len(system_tokens)} tokens). It is only allowed to be half of config.chatbot_max_input_len, which is set to {config.classifier_max_input_len} tokens. truncating system prompt.")
+                system_prompt = tokenizer.decode(system_tokens[:int(max_len/2)])+"..."
+
+            max_len = max_len-len(tokenizer.encode(system_prompt))
+
+
         tokens = tokenizer.encode(text)
         if len(tokens)>max_len:
             new_tokens = tokens[-max_len:]
             text=tokenizer.decode(new_tokens)
-
-    messages = [{"role":"user", "content": text}]
+    messages=[]
+    if not system_prompt is None:
+        if not system_prompt_in_turns:
+            messages.append({"role":"system", "content": system_prompt})
+        else:
+            text=system_prompt+"\n\n"+text
+        
+    messages.append({"role":"user", "content": text})
 
     return messages
 
@@ -371,13 +395,15 @@ def call_openai_classifier(messages,answer_choices,model=None,class_biases=None,
                 answer_dict[str(token[0])]=100
             else:
                 answer_dict[str(token[0])]=int(100+class_biases[i])
-
+    
         if return_logits:
             if memory.test_mode:
                 logits = np.random.randn(len(answer_dict))
-                return logits,True
+                result=logits
+                usage_log = {'model':'test'}
 
             else:
+
                 kwargs["logit_bias"]=answer_dict
                 kwargs["temperature"]=0.0
                 kwargs["max_tokens"]=1
@@ -386,22 +412,32 @@ def call_openai_classifier(messages,answer_choices,model=None,class_biases=None,
                 kwargs["top_logprobs"]= 20
 
 
-                response = client.chat.completions.create(model=model,messages=messages,**kwargs)
+                try:
 
-                log_probs = response.choices[0].logprobs.content[0].top_logprobs
+                    response = client.chat.completions.create(model=model,messages=messages,**kwargs)
+                    usage_log = response.usage.to_dict()
+                    usage_log['model'] = model
+                    log_probs = response.choices[0].logprobs.content[0].top_logprobs
 
-                dict_mapping = {x.token:x.logprob for x in log_probs}
-                logits = []
-                for answer in answer_choices:
-                    if answer in dict_mapping:
-                        logits.append(dict_mapping[answer])
-                    else:
-                        if answer == response.choices[0].message.content:
-                            logits.append(0)
+                    dict_mapping = {x.token:x.logprob for x in log_probs}
+                    logits = []
+                    for answer in answer_choices:
+                        if answer in dict_mapping:
+                            logits.append(dict_mapping[answer])
                         else:
-                            logits.append(-100)
-                return np.array(logits),True
+                            if answer == response.choices[0].message.content:
+                                logits.append(0)
+                            else:
+                                logits.append(-100)
 
+                    result = logits
+                  
+                except:
+
+                    logits = np.random.randn(len(answer_dict))
+                    result = logits
+                    usage_log = {'model':'failed'}
+                    print("Warning, open ai classifier failed")
 
 
         else:
@@ -410,21 +446,29 @@ def call_openai_classifier(messages,answer_choices,model=None,class_biases=None,
             if memory.test_mode:
                 pred_ind = np.random.choice(len(answer_choices),p=[1/len(answer_choices)]*len(answer_choices))
                 success=True
-                return answer_choices[pred_ind],success
+                result =  answer_choices[pred_ind]
+                usage_log = {'model':'test'}
             else:
+                try:
+                    kwargs["logit_bias"]=answer_dict
+                    kwargs["temperature"]=0.0
+                    kwargs["max_tokens"]=1
+                    kwargs["n"]=1
+                
 
-                kwargs["logit_bias"]=answer_dict
-                kwargs["temperature"]=0.0
-                kwargs["max_tokens"]=1
-                kwargs["n"]=1
-              
+                    response = client.chat.completions.create(model=model,messages=messages,**kwargs)
+                    usage_log = response.usage.to_dict()
+                    usage_log['model'] = model
+                
+                    result = response.choices[0].message.content
+               
+                except:
 
-                response = client.chat.completions.create(model=model,messages=messages,**kwargs)
+                    result =  answer_choices[0]
+                
+                    usage_log = {'model':'failed'}
 
-            
-
-                return response.choices[0].message.content,True
-
+        return result,usage_log
 
 
         

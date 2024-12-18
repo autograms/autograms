@@ -419,16 +419,10 @@ class MemoryObject(SerializableMemory):
 
         from . import __version__
 
-
-        
-
         self.root_function = root_function
         self.test_mode=False
         self.config=config
         self.last_node=None
-        
-
-
 
         if memory_dict is None:
             self.memory_dict=dict()
@@ -439,25 +433,17 @@ class MemoryObject(SerializableMemory):
             self.memory_dict['call_depth']=0
             self.memory_dict['globals_snapshot']={}
             self.memory_dict['external_call_memory']=None
-
-
-
             self.memory_dict['model_turns']=[]
-
-
 
             #we may later use this to maintain backward compatibiltiy if future memory objects have different structure
             self.memory_dict["version"] = __version__
 
             self.memory_dict['external_call']=None
-            
-        
-               
 
         else:
 
-
             self.memory_dict=memory_dict
+
 
         super().__init__(self.memory_dict,self.root_function)
 
@@ -776,9 +762,12 @@ class MemoryObject(SerializableMemory):
 
 
     def get_system_prompt(self):
+
         return self.memory_dict['turn_stack'][-1]["system_prompt"]
+  
+
     
-    def log_classifier_turn(self,result,input_str,answer_choices,model_type):
+    def log_classifier_turn(self,result,input_str,answer_choices,usage_log=None,system_prompt=None):
         """
         Logs a classifier turn.
 
@@ -788,10 +777,10 @@ class MemoryObject(SerializableMemory):
         - answer_choices (list): Possible answers.
         - model_type (str): Type of model used.
         """
-        self.memory_dict['model_turns'].append({"output":result,"entry_type":"classifier","content":input_str,"answer_choices":answer_choices,"model_type":model_type,"last_node":self.last_node,"timestamp":get_timestamp()})
+        self.memory_dict['model_turns'].append({"output":result,"entry_type":"classifier","content":input_str,"answer_choices":answer_choices,"system_prompt":system_prompt,"usage_log":usage_log,"last_node":self.last_node,"timestamp":get_timestamp()})
 
 
-    def log_chatbot_turn(self,result,input_turns=[],output_turns=[],system_prompt=[],model_type="no_model"):
+    def log_chatbot_turn(self,result,input_turns=[],output_turns=[],system_prompt="",usage_log=None):
         """
         Logs a chatbot turn with model input/output.
 
@@ -802,8 +791,9 @@ class MemoryObject(SerializableMemory):
         - system_prompt (str): System prompt.
         - model_type (str): Type of model used.
         """
-        
-        self.memory_dict['model_turns'].append({"output":result,"entry_type":"chatbot","input_turns":input_turns,"output_turns":output_turns,"system_prompt":system_prompt,"model_type":model_type,"last_node":self.last_node,"timestamp":get_timestamp()})
+
+
+        self.memory_dict['model_turns'].append({"output":result,"entry_type":"chatbot","input_turns":input_turns,"output_turns":output_turns,"system_prompt":system_prompt,"usage_log":usage_log,"last_node":self.last_node,"timestamp":get_timestamp()})
        
 
         
@@ -834,6 +824,16 @@ class SimpleMemory():
         - text (str): The system prompt text.
         """
         self.memory_dict["system_prompt"]=text
+    def set_test_mode(self,test_mode):
+
+        """
+        Sets the memory object to test mode.
+
+        Parameters:
+        - test_mode (bool): If True, enables test mode.
+        """
+        self.test_mode=test_mode
+
 
     def log_chat_turn(self,reply,instruction=None,retain_instruction=False,line_number=None,function_name=None):
         """
@@ -886,7 +886,7 @@ class SimpleMemory():
         self.memory_dict['model_turns'].append({"output":result,"entry_type":"classifier","content":input_str,"answer_choices":answer_choices,"model_type":model_type,"last_node":None,"timestamp":get_timestamp()})
 
 
-    def log_chatbot_turn(self,result,input_turns=[],output_turns=[],system_prompt=[],model_type="no_model"):
+    def log_chatbot_turn(self,result,input_turns=[],output_turns=[],system_prompt="",usage_log=None):
         """
         Logs a chatbot turn for SimpleMemory.
 
@@ -898,7 +898,7 @@ class SimpleMemory():
         - model_type (str): Type of model used.
         """
         
-        self.memory_dict['model_turns'].append({"output":result,"entry_type":"chatbot","input_turns":input_turns,"output_turns":output_turns,"system_prompt":system_prompt,"model_type":model_type,"last_node":None,"timestamp":get_timestamp()})
+        self.memory_dict['model_turns'].append({"output":result,"entry_type":"chatbot","input_turns":input_turns,"output_turns":output_turns,"system_prompt":system_prompt,"usage_log":usage_log,"last_node":None,"timestamp":get_timestamp()})
        
 
     def add_user_reply(self,user_reply):

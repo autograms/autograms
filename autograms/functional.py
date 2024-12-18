@@ -212,21 +212,18 @@ def multiple_choice_logits(question,choices,max_turns=1,**kwargs):
     """
     memory_object = get_memory()
     turns,system_prompt = memory_object.get_turns_for_model()
+    if memory_object.config.exclude_classifier_system_prompt:
+        system_prompt=None
+
+
     content,choices = make_decision_prompt(turns,question,choices,max_turns)
     
-    logits,success = call_classifier(content,choices,return_logits = True,**kwargs)
+    logits,success = call_classifier(content,choices,return_logits = True,system_prompt=system_prompt,**kwargs)
     return logits
 
 
     
 
-def multiple_choice(question,choices,max_turns=1,**kwargs):
-    
-    memory_object = get_memory()
-    turns,system_prompt = memory_object.get_turns_for_model()
-    content,choices = make_decision_prompt(turns,question,choices,max_turns)
-    
-    answer,success = call_classifier(content,choices,**kwargs)
 
 def multiple_choice(question,choices,max_turns=1,**kwargs):
     """
@@ -244,8 +241,10 @@ def multiple_choice(question,choices,max_turns=1,**kwargs):
     memory_object = get_memory()
     turns,system_prompt = memory_object.get_turns_for_model()
     content,choices = make_decision_prompt(turns,question,choices,max_turns)
+    if memory_object.config.exclude_classifier_system_prompt:
+        system_prompt=None
+    answer,success = call_classifier(content,choices,system_prompt=system_prompt,**kwargs)
     
-    answer,success = call_classifier(content,choices,**kwargs)
     if success and answer in choices:
         return choices.index(answer)
     else:
@@ -268,7 +267,9 @@ def yes_or_no(question,max_turns=1,**kwargs):
     memory_object = get_memory()
     turns,system_prompt = memory_object.get_turns_for_model()
     content,choices = make_decision_prompt(turns,question,answers=["Yes","No"],max_turns=max_turns)
-    answer,success = call_classifier(content,choices,**kwargs)
+    if memory_object.config.exclude_classifier_system_prompt:
+        system_prompt=None
+    answer,success = call_classifier(content,choices,system_prompt=system_prompt,**kwargs)
 
     if success and answer in choices:
         if answer=="Yes":
@@ -294,7 +295,7 @@ def call_conv_model(instruction,**kwargs):
         return "test mode, no response enabled"
 
 
-def call_classifier(input_str,answer_choices,model_type=None,model_path=None,**kwargs):
+def call_classifier(input_str,answer_choices,system_prompt=None,model_type=None,model_path=None,**kwargs):
     """
     Calls a classifier model to determine the best choice from given options.
 
@@ -309,24 +310,20 @@ def call_classifier(input_str,answer_choices,model_type=None,model_path=None,**k
     - tuple: (selected_answer, success_flag)
     """
     memory_object = get_memory()
-    if not memory_object.test_mode:
 
-        if model_type is None:
-            model_type=memory_object.config.chatbot_type
+    if model_type is None:
+        model_type=memory_object.config.chatbot_type
 
-        if model_type=='openai':
-            func = apis.openai_models.call_openai_classifier
-            preprocess_func =apis.openai_models.get_classifier_messages
+    if model_type=='openai':
+        func = apis.openai_models.call_openai_classifier
+        preprocess_func =apis.openai_models.get_classifier_messages
 
-        messages = preprocess_func(input_str,model=model_path)
-        result,success = func(messages,answer_choices,**kwargs)
-    else:
-        result = random.choice(answer_choices)
-        success=True
+    messages = preprocess_func(input_str,system_prompt=system_prompt,system_prompt_in_turns=memory_object.config.system_prompt_in_turns,model=model_path)
+    result,usage_log = func(messages,answer_choices,**kwargs)
 
 
-    memory_object.log_classifier_turn(result,input_str,answer_choices,model_type=model_type)
-
+    memory_object.log_classifier_turn(result,input_str,answer_choices,system_prompt=system_prompt,usage_log=usage_log)
+    success = not(usage_log['model']=='failed')
     return result,success
 
 def get_batch_embedding(texts,model_type='openai'):
@@ -381,7 +378,7 @@ def call_model(input_turns,output_turns,system_prompt,system_prompt_in_turns=Fal
     - **kwargs: Additional parameters for the model.
 
     Returns:
-    - tuple: (model response, success flag)
+    - tuple: (model response, usage_log flag)
     """
     memory_object = get_memory()
     config = memory_object.config
@@ -398,10 +395,11 @@ def call_model(input_turns,output_turns,system_prompt,system_prompt_in_turns=Fal
         
     messages = preprocess_func(input_turns,output_turns,system_prompt,system_prompt_in_turns=system_prompt_in_turns,truncate_input=True,model=model_path)
 
-    result,success = func(messages,model=model_path,**kwargs)
+    result,usage_log = func(messages,model=model_path,**kwargs)
 
 
-    memory_object.log_chatbot_turn(result,input_turns,output_turns,system_prompt,model_type=model_type)
+    memory_object.log_chatbot_turn(result,input_turns,output_turns,system_prompt,usage_log=usage_log)
+    success=not(usage_log['model']=='failed')
     return result,success
 
 def generate_json_schema(questions_with_answers):
@@ -798,18 +796,18 @@ def call_object_model(input_turns,output_turns,system_prompt,system_prompt_in_tu
     messages = preprocess_func(input_turns,output_turns,system_prompt,system_prompt_in_turns=system_prompt_in_turns,truncate_input=True,model=model_path)
 
   
-    result,raw_str,success = func(messages,model=model_path,obj_structure = obj_structure,**kwargs)
+    result,raw_str,usage_log = func(messages,model=model_path,obj_structure = obj_structure,**kwargs)
 
    
    
     
-    if not success:
+    if usage_log['model']=='failed':
         if isinstance(obj_structure, dict):
             result = initialize_with_defaults_json(obj_structure)
         else:
             result = initialize_with_defaults(obj_structure)
     else:
-        memory_object.log_chatbot_turn(raw_str,input_turns,output_turns,system_prompt,model_type=model_type)
+        memory_object.log_chatbot_turn(raw_str,input_turns,output_turns,system_prompt,usage_log=usage_log)
     return result
 
 
@@ -852,7 +850,7 @@ def initialize_with_defaults_json(schema):
 
     return defaults
 
-# Utility function to generate a default instance
+
 def initialize_with_defaults(model_class):
     """
     Initializes an instance of a Pydantic model with default values for all fields.
@@ -865,24 +863,81 @@ def initialize_with_defaults(model_class):
     """
     defaults = {}
     for field_name, field in model_class.__fields__.items():
+        field_type = field.annotation  # Updated to use field.annotation
+        origin = getattr(field_type, '__origin__', None)
+        args = getattr(field_type, '__args__', ())
+
         # Set default value based on the type
-        if field.outer_type_ == str:
+        if field_type == str:
             defaults[field_name] = "<There was an error generating this message, please ignore>"
-        elif field.outer_type_ == int:
+        elif field_type == int:
             defaults[field_name] = 0
-        elif field.outer_type_ == float:
+        elif field_type == float:
             defaults[field_name] = 0.0
-        elif field.outer_type_ == bool:
+        elif field_type == bool:
             defaults[field_name] = False
-        elif hasattr(field.outer_type_, "__origin__") and field.outer_type_.__origin__ == list:
-            defaults[field_name] = []
-        elif issubclass(field.outer_type_, BaseModel):
+        elif origin == list:
+            # Generate a random list with elements of the appropriate type
+            list_type = args[0] if args else str  # Default to str if no type is specified
+            defaults[field_name] = [
+                initialize_value(list_type) for _ in range(np.random.randint(0, 5))
+            ]
+        elif isinstance(field_type, type) and issubclass(field_type, BaseModel):
             # Recursively initialize nested models
-            defaults[field_name] = initialize_with_defaults(field.outer_type_)
+            defaults[field_name] = initialize_with_defaults(field_type)
         else:
             defaults[field_name] = None  # Use None for any other type
 
     return model_class.construct(**defaults)
+def initialize_value(value_type):
+    """
+    Generate a default value for a given type.
+    """
+    if value_type == str:
+        return "<default>"
+    elif value_type == int:
+        return 0
+    elif value_type == float:
+        return 0.0
+    elif value_type == bool:
+        return False
+    elif isinstance(value_type, type) and issubclass(value_type, BaseModel):
+        return initialize_with_defaults(value_type)
+    else:
+        return None  # Default to None for unknown types
+# # Utility function to generate a default instance
+# def initialize_with_defaults(model_class):
+#     """
+#     Initializes an instance of a Pydantic model with default values for all fields.
+
+#     Parameters:
+#     - model_class (BaseModel): The model class to instantiate.
+
+#     Returns:
+#     - BaseModel: An instance of the model class with default values.
+#     """
+#     defaults = {}
+#     for field_name, field in model_class.__fields__.items():
+#         import pdb;pdb.set_trace()
+        
+#         # Set default value based on the type
+#         if field.annotation.__origin__ == str:
+#             defaults[field_name] = "<There was an error generating this message, please ignore>"
+#         elif field.annotation.__origin__ == int:
+#             defaults[field_name] = 0
+#         elif field.annotation.__origin__ == float:
+#             defaults[field_name] = 0.0
+#         elif field.annotation.__origin__ == bool:
+#             defaults[field_name] = False
+#         elif  field.annotation.__origin__ == list:
+#             defaults[field_name] = []
+#         elif issubclass(field.outer_type_, BaseModel):
+#             # Recursively initialize nested models
+#             defaults[field_name] = initialize_with_defaults(field.annotation.__origin__)
+#         else:
+#             defaults[field_name] = None  # Use None for any other type
+
+#     return model_class.construct(**defaults)
 
 
 def set_system_prompt(text):
@@ -941,6 +996,7 @@ def log_chat_turn(reply,instruction=None,line_number=None,function_name=None):
     """
     memory_object = get_memory()
     memory_object.log_chat_turn(reply,instruction,line_number=line_number,function_name=function_name)
+    
 
     
 
@@ -964,7 +1020,7 @@ def log_thought_turn(reply,instruction):
 
 
 
-def extract_code(input_string, code_type='python'):
+def extract_code(input_string, code_type='python',merge_blocks=True):
     """
     Extract and concatenate code from multiple code blocks of a specified type in the input string.
 
@@ -979,7 +1035,10 @@ def extract_code(input_string, code_type='python'):
     pattern = rf'```{re.escape(code_type)}\n(.*?)```'
     code_blocks = re.findall(pattern, input_string, re.DOTALL)
     # Join the extracted blocks with newlines
-    return '\n'.join(code_blocks)
+    if merge_blocks:
+        return '\n'.join(code_blocks)
+    else:
+        return code_blocks
 
 def execute_code(code, command="firejail --noprofile --quiet --read-only=/home --read-only=/usr python3",timeout=60,code_suffix=".py"):
   

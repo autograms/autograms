@@ -14,17 +14,19 @@ import os
 def main():
     # Set up argument parsing for command-line arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument('--root_function', type=str, help='root function in autogram file')
     parser.add_argument('--api_key_file', type=str, help='api key file')
     parser.add_argument('--config_file', type=str, default=None, help='config file')
     parser.add_argument('--saveload_file', type=str, default=None, help='file to reload memory from file')
-    parser.add_argument('--example_name', type=str, default=None)
+    parser.add_argument('--example_name', type=str, default="autograms_seed_agent")
+    parser.add_argument('--model_name', type=str, default="gpt-4o")
 
     args = parser.parse_args()
 
 
     # Load chatbot example based on the provided example_name
-    if args.example_name == "simple_example":
+    if args.example_name == "autograms_seed_agent":
+        from examples.autograms_seed_agent import chatbot
+    elif args.example_name == "simple_example":
         from examples.simple_example import chatbot
     elif args.example_name == "fraction_tutor":
         from examples.fraction_tutor import chatbot
@@ -46,7 +48,10 @@ def main():
 
     # Load or initialize configuration
     if args.config_file is None:
-        autogram_config = AutogramConfig()
+        if args.example_name == "autograms_seed_agent":
+            autogram_config = AutogramConfig(chatbot_path = args.model_name,chatbot_max_input_len=40000,classifier_max_input_len=40000,classifier_path = args.model_name,max_response_len=4096,exclude_classifier_system_prompt=True)
+        else:
+            autogram_config = AutogramConfig(chatbot_path = args.model_name,classifier_path = args.model_name)
     else:
         initial_args = {}
         with open(args.config_file) as fid:
@@ -66,7 +71,7 @@ def main():
         
         # Resume from the last user reply saved in memory
         user_reply = memory_object.memory_dict['user_reply_to_save']
-        chat_reply, memory_object = autogram.reply(user_reply, memory_object=memory_object, test_mode=False)
+        chat_reply, memory_object = autogram.reply(user_reply, memory_object=memory_object)
     else:
         # Start a new conversation if no memory file is provided
         chat_reply, memory_object = autogram.reply()
@@ -90,7 +95,7 @@ def main():
 
 
         # Generate the next reply based on user input
-        chat_reply, memory_object = autogram.reply(user_reply, memory_object=memory_object, test_mode=False)
+        chat_reply, memory_object = autogram.reply(user_reply, memory_object=memory_object)
 
         # Save the updated memory to file if a save/load file is provided
         if not args.saveload_file is None:

@@ -108,7 +108,6 @@ class Autogram():
 
             self.root_module = sys.modules[self.root_function.func.__module__]
 
-            self.globals_original= dill.dumps(self.root_function.func.__globals__.copy())
 
         else:
             self.root_function=None
