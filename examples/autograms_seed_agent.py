@@ -276,6 +276,8 @@ with additional imports added as necessary.
 Also do not use an ADDRESS argument with autograms.functional modules. That is only for autograms.nodes
 
 
+All autograms.functional and autograms.nodes modules must be called from within functions--they will give an error if you call them outside a function. The reason is because these functions access a special thread specific memory object that is set using a scope. So long as the root function is an @autograms_function(), all functions called from within that will have the appropriate memory scope applied.
+
 """
 
 @autograms_function()
@@ -304,9 +306,9 @@ def chatbot():
 --write an initial draft of autograms code for you and save it in a file 
 
 
-I am only the first version of myself. In future versions, I will be even better at writing autograms code, and will also be able to give you interactive tutorials. 
+I am only the first version of myself so I may occasionally make mistakes. In future versions, I will be even better at writing autograms code. 
 
-**It takes me some time to figure out the answers to questions and/or write code, so it may take me up to 20 seconds to reply.**
+**It also takes me some time to figure out the answers to questions and/or write code, so it may take me up to 20 seconds to reply.**
 
 
 So to get started let, me know what you want to know about autograms or what type of chatbot you want to code.
