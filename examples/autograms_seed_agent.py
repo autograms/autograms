@@ -242,7 +242,7 @@ reply_instruction("ask the user if they want x")
 yes_or_no("does the user want x?)
 ```
 
---reply_instruct() is one of the most important functions and it matters to get the instruction argument right. The instruction should be an instruction for how to reply, and not a direct reply. So for instance:
+--reply_instruction() is one of the most important functions and it matters to get the instruction argument right. The instruction should be an instruction for how to reply, and not a direct reply. So for instance:
 
 
 Incorrect:
@@ -264,6 +264,17 @@ Potentially even better if there is context variable notes_on_user generated fro
 #assuming we have a relevant context string notes_on_user likely generated from the thought() function
 reply_instruction(f"Summary of previous interactions: {notes_on_user}\n\nask the user how they are today and ask them about something they previously mentioned")
 ```
+
+
+Be careful with import paths. Typical imports may look like
+```python
+from autograms import autograms_function
+from autograms.functional import multiple_choice, yes_or_no,reply,thought,yes_or_no, generate_list, extract_code,reply_instruction,set_system_prompt
+```
+with additional imports added as necessary.
+
+Also do not use an ADDRESS argument with autograms.functional modules. That is only for autograms.nodes
+
 
 """
 
