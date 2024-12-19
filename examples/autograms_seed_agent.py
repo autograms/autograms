@@ -11,7 +11,7 @@ from datetime import datetime
 
 
 
-REPOSITORY_ROOT="../pythonic_autograms/"
+REPOSITORY_ROOT="./"
 
 
 
@@ -69,6 +69,8 @@ def extract_docs():
         if os.path.exists(path):
             with open(path, "r") as file:
                 docs[os.path.basename(path)] = file.read()
+        else:
+            raise Exception("must run Asa from autograms repository root directory so it can find docs.")
     return docs
 
 
