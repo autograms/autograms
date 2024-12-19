@@ -5,7 +5,7 @@
 By representing a chatbot as a continuously running program, AutoGRAMS enables you to precisely control the prompts and memory at different points in the conversation. Decisions made during conversations directly influence the program’s execution path, variables persist as the chatbot’s memory, and conversations seamlessly adapt based on the program’s current state.
 
 
-To get started, you can chat with the AutoGRAMS Seed Agent (Asa)--an AutoGRAMS chatbot that runs in the terminal and helps you code autograms. See instructions for running this below.
+To get started, you can chat with the **AutoGRAMS Seed Agent** (Asa)--an AutoGRAMS chatbot that runs in the terminal and codes AutoGRAMS chatbots for you 🔥 It can also answer questions about the code it writes or about AutoGRAMS in general. To run **Asa**, follow the **Installation** and **Getting Started** instructions below.
 
 
 The full documentation and tutorials are available in our [web docs](https://autograms.github.io/autograms). 
@@ -62,7 +62,7 @@ Python >=3.9 is required. If you plan to use OpenAI models or other LLM APIs, en
 
 ## Getting Started
 
-AutoGRAMS makes it easy to build structured, stateful chatbots. We have an autograms chatbot in this repository that can help you code other autograms chatbots.  
+AutoGRAMS makes it easy to build structured, stateful chatbots. We have an autograms chatbot called Asa in this repository that can help you code other autograms chatbots.  
 
 
 
@@ -71,13 +71,13 @@ To start, you can set your api key with:
 
 `export OPENAI_API_KEY=<your key>`
 
-Then you can run an autograms chatbot that will help you learn and code autograms with:
+Then you can run Asa to help you learn and code autograms with:
 
 ```
 python run_autogram.py --example_name autograms_seed_agent
 ```
 
-This will launch an interactive chatbot in the terminal. You can ask the autograms seed agent to design a specific chatbot and it will write and save the code for you. You can also ask it questions about the code it writes or questions about autograms in general.
+This will launch an interactive chatbot in the terminal. You can ask the autograms seed agent to design a specific chatbot and it will write and save the code for you. You can also ask it questions about the code it writes or questions about autograms in general. You can try giving it messages like "Code a chatbot that will help me develop a workout plan". It should write and save the code in a new folder and give you instructions on how to run the chatbot it just designed. You can also ask Asa questions about the code it wrote.
 
 
 To see a more direct application, you can try the recruiter chatbot demo:
@@ -117,7 +117,7 @@ This will create both a static and interactive graph in the specified folder. Yo
 
 ## Demos and Examples
 
-Explore the `/examples` folder for more sample autograms. Each example demonstrates different capabilities of AutoGRAMS, from simple branching dialogues to complex, stateful agents.
+Explore the `/examples` folder to see sample autograms, including the source code for Asa. Each example demonstrates different capabilities of AutoGRAMS, from simple branching dialogues to complex, stateful agents.
 
 To run a demo:
 
