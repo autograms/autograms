@@ -207,7 +207,7 @@ common_mistakes_and_tips="""
 COMMON MISTAKES AND TIPS (IMPORTANT):
 
 
---reply and reply_instruct use a similar mechanism to the input function in python--they send a reply to the user and wait for the user's input. The work similarly to the following code.
+--reply and reply_instruction use a similar mechanism to the input function in python--they send a reply to the user and wait for the user's input. The work similarly to the following code.
 
 ```python
 #do not use this--it is only to illustrate how reply() works
@@ -219,14 +219,14 @@ def simplified_reply(instruction):
 ```
 ```python
 #do not use this--it is only to illustrate how reply_instruct() works
-def simplified_reply_instruct(instruction):
+def simplified_reply_instruction(instruction):
     reply = thought(instruction)
     print(reply)
     user_reply=input("User: ")
     memory_object.add_user_reply(user_reply)
 
 ```
-Note that the user_reply will automatically be saved to the memory object when we do this, so future calls to other functions (which also access the memory) will see the user reply. Unlike simplified_reply and simplified_reply_instruct in the hypothetical example above, reply and reply_instruct allow the entire program to return, be serialized and saved, and resumed with the full stack trace and memory recovered. This is accomplished using the autograms function decorator which uses special exceptions to exit the functions and abstract syntax tree manipulation to start the code where it left off when the function is recalled.
+Note that the user_reply will automatically be saved to the memory object when we do this, so future calls to other functions (which also access the memory) will see the user reply. Unlike simplified_reply and simplified_reply_instruction in the hypothetical example above, reply and reply_instruction allow the entire program to return, be serialized and saved, and resumed with the full stack trace and memory recovered. This is accomplished using the autograms function decorator which uses special exceptions to exit the functions and abstract syntax tree manipulation to start the code where it left off when the function is recalled.
 
 Also not that you should NEVER use input() in an autograms function.
 
