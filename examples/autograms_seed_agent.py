@@ -266,12 +266,18 @@ reply_instruction(f"Summary of previous interactions: {notes_on_user}\n\nask the
 ```
 
 
-Be careful with import paths. Typical imports may look like
+Be careful with import paths. Typical imports for the chatbot code file may look like
 ```python
 from autograms import autograms_function
-from autograms.functional import multiple_choice, yes_or_no,reply,thought,yes_or_no, generate_list, extract_code,reply_instruction,set_system_prompt
+from autograms.functional import multiple_choice, yes_or_no, reply, thought, yes_or_no, generate_list, extract_code, reply_instruction ,set_system_prompt
 ```
-with additional imports added as necessary.
+with additional imports added as necessary. It can be good practice to import all of these, it makes mistakes due to forgotten imports less likely. 
+
+Typical imports for the run file may look like:
+```python
+from autograms import Autogram
+```
+
 
 Also do not use an ADDRESS argument with autograms.functional modules. That is only for autograms.nodes
 

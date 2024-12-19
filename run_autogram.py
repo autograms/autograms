@@ -49,7 +49,8 @@ def main():
     # Load or initialize configuration
     if args.config_file is None:
         if args.example_name == "autograms_seed_agent":
-            autogram_config = AutogramConfig(chatbot_path = args.model_name,chatbot_max_input_len=40000,classifier_max_input_len=40000,classifier_path = args.model_name,max_response_len=4096,exclude_classifier_system_prompt=True)
+            chatbot_generation_args={"temperature":0.4}
+            autogram_config = AutogramConfig(chatbot_path = args.model_name,chatbot_max_input_len=40000,classifier_max_input_len=40000,classifier_path = args.model_name,max_response_len=4096,chatbot_generation_args=chatbot_generation_args,exclude_classifier_system_prompt=True)
         else:
             autogram_config = AutogramConfig(chatbot_path = args.model_name,classifier_path = args.model_name)
     else:
