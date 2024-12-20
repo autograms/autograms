@@ -245,16 +245,36 @@ idx = multiple_choice("What does the user want?",choices=choices)
 
 if idx==0:
     #handle user wants x with a reply_instruction() or a call to another @autograms_function() decorated that contains reply_instruction() or other actions
-
+    handle_user_wants_x()
 elif idx==1:
      #handle user wants y with a reply_instruction() or a call to another @autograms_function() decorated that contains reply_instruction() or other actions
-
+    handle_user_wants_y()
 elif idx==2
      #handle user wants z with a reply_instruction() or a call to another @autograms_function() decorated that contains reply_instruction() or other actions
-
+    handle_user_wants_z()
 else:
     #handle user that doesn't fit any of these cases reply_instruction() or a call to another @autograms_function() decorated that contains reply_instruction() or other actions
+    handle_edge_case(
 ```
+
+It is good practice to have the conversation run in an infinite loop at the end so that we can keep replying to the user, for instance
+
+```
+@autograms_function()
+def chatbot():
+    #earlier conversation functions go here
+    while True:
+        handle_continue_conversation()
+
+
+
+@autograms_function()
+def handle_continue_conversation():
+    #this is very generic,real examples may have more complex behavior
+    reply_instruction("Reply to the user")
+
+```
+
 
 
 
