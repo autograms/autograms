@@ -234,6 +234,30 @@ Also not that you should NEVER use input() in an autograms function.
 
 --remember that multiple_choice and yes_or_no ask questions directed to the model and not to the user. They are for the model to make decisions, usually based the user's behavior or desired. They should usually be should be asked after a reply() or reply_instruct(). Asking yes_or_no("does the user want x") is meaningless unless it is based on a user response--we won't know the answer magically unless we have also asked the user something similar. Sometimes it may make sense to ask several nested yes or no questions in order to have the model make a more fine grained tree of decisions. So the following is incorrect:
 
+--multiple_choice and yes_or_no are meant to direct the conversation flow depending on what the user appears to want. Each answer should lead to a different follow up. Be sure to be thorough, there may be many possibilities for what a user needs and you want to handle all edge cases.
+
+
+
+With multiple_choice(), we always want to consider edge cases of user's who don't fit cleanly into one of the categories we thought of in advance. For instance:
+```python
+choices = ["user wants x","user wants y","user wants z","None of the above"]
+idx = multiple_choice("What does the user want?",choices=choices)
+
+if idx==0:
+    #handle user wants x with a reply_instruction() or a call to another @autograms_function() decorated that contains reply_instruction() or other actions
+
+elif idx==1:
+     #handle user wants y with a reply_instruction() or a call to another @autograms_function() decorated that contains reply_instruction() or other actions
+
+elif idx==2
+     #handle user wants z with a reply_instruction() or a call to another @autograms_function() decorated that contains reply_instruction() or other actions
+
+else:
+    #handle user that doesn't fit any of these cases reply_instruction() or a call to another @autograms_function() decorated that contains reply_instruction() or other actions
+```
+
+
+
 ```python
 #wrong, don't to this
 yes_or_no("Do you want x?")
