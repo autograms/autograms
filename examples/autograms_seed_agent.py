@@ -346,7 +346,7 @@ def chatbot():
         start_prompt += f"Example: {example}\n\n{examples[example]}"
 
     start_prompt+="\n\n"+common_mistakes_and_tips+"\n\n"
-    start_prompt +="You are Asa (Autograms Seed Agent. You goal is to answer user questions about the docs and help users write code."
+    start_prompt +="You are Asa (Autograms Seed Agent. You goal is to answer user questions about the docs and help users write code)."
     
     set_system_prompt(start_prompt)
     #import pdb;pdb.set_trace()
@@ -373,7 +373,7 @@ So to get started let, me know what you want to know about autograms or what typ
 
     while True:
 
-        needs_code = yes_or_no("is the user requesting that we write code?")
+        needs_code = yes_or_no("is the user requesting that we write (or revise) code?")
 
         if not needs_code:
             needs_answer = yes_or_no("is the user asking us a question?")
@@ -383,10 +383,15 @@ So to get started let, me know what you want to know about autograms or what typ
                     answer_question()
                 else:
                     reply_instruction("tell the user you really only specialize in questions about autograms and writing code but you'll do your best to answer their question. Then follow it up with your best answer.")
-                
-        else:
-            write_code()
+            else:
+                reply_instruction("reply to the user")
 
+        else:
+            needs_chatbot = yes_or_no("is the code the user is asking for a chatbot (or related AI agent application?")
+            if needs_chatbot:
+                write_code()
+            else:
+                reply_instruction("reply to the user")
 
 
 
@@ -394,51 +399,13 @@ So to get started let, me know what you want to know about autograms or what typ
 def answer_question():
     prompt = "We need to decide how to answer the user's question. We can either answer directly from the docs or take a deeper look at the code. Can we answer the question precisely enough from the docs (given above) or do we need to dig deeper? If it's answerable from the docs, write the answer while brainstorming the reply."
 
-    while True:
-        result = thought(prompt)
+    result = thought(prompt)
 
-        has_answer = yes_or_no("Is the answer in the docs?")
-
-
-        if has_answer:
-            reply_instruction("write the answer as a direct reply to the user.")
-        else:
-
-            source = get_source_list()
-            
-            prompt = f"We have looked up the following source code: {source}. Can we answer the user's questions better right now, should we A. Answer the user B. look up more source code. C. Tell the user we aren't sure and to contact {email} for questions"
-            
-            choices = ["answer directly","look at more code","tell user to contact email"]
-
-            idx = multiple_choice(question="what should we do?",choices=choices)
-            if idx == 0:
-                reply_instruction("write the answer as a direct reply to the user.")
-
-            elif idx == 1:
-                source = get_source_list()
-                prompt = f"We have looked up the following source code: {source}. Can we answer the user's questions better right now, should we A. Answer the user B. Tell the user we aren't sure and to contact {email} for questions"
-                choices = ["answer directly","tell user to contact email"]
-                idx2 = multiple_choice(question="what should we do?",choices=choices)
-                if idx2 == 0:
-                    reply_instruction("write the answer as a direct reply to the user.")
-                else:
-                    GOTO("contact")
-                    
-            else:
-                location(ADDRESS="contact")
-                reply_instruction(f"Tell the user you aren't too sure about the answer to their question but they can contact {name} at {email} if they want to know")
+    reply_instruction("write the answer as a direct reply to the user.")
 
 
-        location(ADDRESS="check_next")
-        idx = multiple_choice("what did the user do?",choices=["asked a follow up question directly related to the question you just answers","made a comment related to the answer","simple answer anknoledgement","asked a new question or made a new comment unrelated to the question"])
 
-        if idx == 0:
-            continue
-        elif idx ==1 or idx==2:
-            reply_instruction("respond to the user")
-            GOTO("check_next")
-        elif idx==3:
-            return
+
 
 
 
@@ -499,86 +466,62 @@ def get_module_source_list():
 @autograms_function()
 def write_code():
 
+    
+    prompt = "we aren't going to write code just yet--we need to make a plan. Let the user know your plan and ask if it's okay."
 
-    while True:
-        prompt = "we aren't going to write code just yet--we need to make a plan. Also, do we need to lookup more information to write the code or do we have enough in the current docs given above?"
-
-        thought(prompt)
-
-
-        info=""
-        code_file = "chatbot_code.py"
-        run_file = "run_chatbot.py"
-
-        full_file = base_path+"/"+code_file
-        full_run_file = base_path+"/"+run_file
+    reply_instruction(prompt)
 
 
-        for i in range(3):
-            if len(info)==0:
-                more_lookup=yes_or_no("Do we need to look up more information to write the code?")
-            else:
-                more_lookup=yes_or_no(f"Here is some additional information{info}.\nDo we need to look up more information to write the code?")
+    code_file = "chatbot_code.py"
+    run_file = "run_chatbot.py"
+
+    full_file = base_path+"/"+code_file
+    full_run_file = base_path+"/"+run_file
 
 
-            if more_lookup:
-                new_info = general_lookup()
-                info+="\n\n"+new_info
-            else:
-                more_lookup=yes_or_no(f"Here is some additional information{info}.\nDo we need to look up more information to write the code?")
 
-        prompt =f"let's write the code. Enclose the code using ```python```. There should be exactly 2 ``python``` blocks. The first one should code the autograms module, which will be saved in {code_file}. The second block should import and call the chatbot by passing the autograms function to an Autogram object"
-        if len(info)>0:
-            prompt = f"Here is some additional info thought might be helpful {info}\n\n"+prompt
-        
+    prompt =f"let's write the code. Enclose the code using ```python```. There should be exactly 2 ``python``` blocks. The first one should code the autograms module, which will be saved in {code_file}. The second block should import and call the chatbot by passing the autograms function to an Autogram object"
 
-        result = thought(prompt)
+    
+    print("writing code...")
+    result = thought(prompt)
 
+    code = extract_code(result,merge_blocks=False)
+
+    if len(code)!=2:
+        result = thought(f"There was a problem extracting the last code. let's write the code again. Be sure you close the code using ```python``` or else it won't be extracted correctly. Also make sure there exactly 2 blocks.")
         code = extract_code(result,merge_blocks=False)
+        if len(code)==0:
+            reply_instruction("let the user know there is a problem saving the code, but respond to them as best as you can.")
 
+
+    code = fix_problems(code)
+
+    if len(code)!=2:
+        result = thought(f"There was a problem extracting the last code. let's write the code again. Be sure you close the code using ```python``` or else it won't be extracted correctly. Also make sure there exactly 2 blocks.")
+        code = extract_code(result,merge_blocks=False)
         if len(code)!=2:
-            result = thought(f"There was a problem extracting the last code. let's write the code again. Be sure you close the code using ```python``` or else it won't be extracted correctly. Also make sure there exactly 2 blocks.")
-            code = extract_code(result,merge_blocks=False)
-            if len(code)==0:
-                reply_instruction("let the user know there is a problem saving the code, but respond to them as best as you can.")
-                continue
-
-        code = fix_problems(code)
-
-        if len(code)!=2:
-            result = thought(f"There was a problem extracting the last code. let's write the code again. Be sure you close the code using ```python``` or else it won't be extracted correctly. Also make sure there exactly 2 blocks.")
-            code = extract_code(result,merge_blocks=False)
-            if len(code)!=2:
-                reply_instruction("let the user know there is a problem saving the code, but respond to them as best as you can.")
-                continue
-        
-        if not os.path.exists(base_path):
-            os.makedirs(base_path)
-            print(f"Directory '{base_path}' created successfully.")
-
-
-        time_base_path = base_path+"/"+get_timestamp()
-        os.makedirs(time_base_path)
-
-        
-        full_file = time_base_path+"/"+code_file
-        full_run_file = time_base_path+"/"+run_file
-
-        with open(full_file,'w') as fid:
-            fid.write(code[0])
-
-        with open(full_run_file,'w') as fid:
-            fid.write(code[1])
-        reply_instruction(f"now we will reply to the user. Let them know you wrote the code directory {time_base_path}. {code_file} contains the code for the chatbot and {run_file} contains the code ro run the chatbot. Tell them to run the code, they can open a new terminal, do `cd {time_base_path}` and `python3 {run_file}`. Also tell them about the code.")
-
-        idx = multiple_choice("what did the user do?",["Asked us to refine the code","asked us a question about the code.","asked us a new question or new coding task unrelated to the previous coding task."])
-
-        if idx==0:
-            continue
-        elif idx==1:
-            answer_question()
-        elif idx==2:
+            reply_instruction("let the user know there is a problem saving the code, but respond to them as best as you can.")
             return
+    
+    if not os.path.exists(base_path):
+        os.makedirs(base_path)
+        print(f"Directory '{base_path}' created successfully.")
+
+
+    time_base_path = base_path+"/"+get_timestamp()
+    os.makedirs(time_base_path)
+
+    
+    full_file = time_base_path+"/"+code_file
+    full_run_file = time_base_path+"/"+run_file
+
+    with open(full_file,'w') as fid:
+        fid.write(code[0])
+
+    with open(full_run_file,'w') as fid:
+        fid.write(code[1])
+    reply_instruction(f"now we will reply to the user. Let them know you wrote the code directory {time_base_path}. {code_file} contains the code for the chatbot and {run_file} contains the code ro run the chatbot. Tell them to run the code, they can open a new terminal, do `cd {time_base_path}` and `python3 {run_file}`. Also tell them about the code.")
 
         
 @autograms_function()

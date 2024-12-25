@@ -5,15 +5,38 @@
 By representing a chatbot as a continuously running program, AutoGRAMS enables you to precisely control the prompts and memory at different points in the conversation. Decisions made during conversations directly influence the program’s execution path, variables persist as the chatbot’s memory, and conversations seamlessly adapt based on the program’s current state.
 
 
-To get started, you can chat with the **AutoGRAMS Seed Agent** (Asa)--an AutoGRAMS chatbot that runs in the terminal and codes AutoGRAMS chatbots for you 🔥 It can also answer questions about the code it writes or about AutoGRAMS in general. To run **Asa**, follow the **Installation** and **Getting Started** instructions below.
+To get started, you can chat with the **AutoGRAMS Seed Agent** (Asa)--an AutoGRAMS chatbot that runs in the terminal and codes AutoGRAMS chatbots for you 🔥 It can also answer questions about the code it writes or about AutoGRAMS in general. To run **Asa**, follow the **Quick Start** instructions below.
 
 
 The full documentation and tutorials are available in our [web docs](https://autograms.github.io/autograms). 
 
 
-We also invite you to join the [AutoGRAMS community on discord](https://discord.gg/7U3pP75C) with over 40 members to learn more and get support with building chatbots.
+## Quick start
 
+To talk to the Autgograms Seed Agent, whcih can help you design chatbots and help explain how autograms works, you can use the following steps from a terminal:
 
+Create and activate a fresh conda environment
+``
+conda create --name test_autograms python=3.9
+conda activate  test_autograms
+```
+Clone repo and install from source
+``
+git clone https://github.com/autograms/autograms.git
+cd autograms
+pip install .
+```
+Set Open AI api key (make sure you have a valid key from Open AI)
+```
+export OPENAI_API_KEY=<yourkey>
+```
+
+Run the Autograms Seed agent, opens an interactive chatbot in the terminal that can write and save code or answer questions
+```
+python run_autogram.py
+```
+
+Here is a quick video tutorial of these steps [quick video tutorial](https://www.youtube.com/watch?v=MPrpPGqbaOM)
 
 ---
 
@@ -60,18 +83,27 @@ sudo apt install graphviz
 
 Python >=3.9 is required. If you plan to use OpenAI models or other LLM APIs, ensure you set up the necessary dependencies and keys.
 
-## Getting Started
 
-AutoGRAMS makes it easy to build structured, stateful chatbots. We have an autograms chatbot called Asa in this repository that can help you code other autograms chatbots.  
+## Demos and Examples
 
+Explore the `/examples` folder to see sample autograms, including the source code for Asa. Each example demonstrates different capabilities of AutoGRAMS, from simple branching dialogues to complex, stateful agents.
 
-
-To start, you can set your api key with:
+To run a demo, set your open ai api key with 
 
 
 `export OPENAI_API_KEY=<your key>`
 
-Then you can run Asa to help you learn and code autograms with:
+and run:
+
+```
+python run_autogram.py --api_key_file  --example_name <example_name>
+```
+
+Replace `<example_name>` with the desired example (e.g., `autograms_seed_agent`, `simple_example`, `fraction_tutor`, `general_tutor`, or `recruiter`), or use your own example by manually importing your autograms chatbot in `run_autogram.py`.
+
+
+
+You can run Asa (Described above) to help you learn and code autograms with:
 
 ```
 python run_autogram.py --example_name autograms_seed_agent
@@ -94,12 +126,16 @@ python run_autogram.py --example_name autograms_seed_agent --model_name gpt-4o-m
 ```
 although it will sometimes give inferior results. See the [openai documentation](https://openai.com/api/pricing/) for details on their token costs.
 
+The recruiter chatbot and other examples also have much shorter prompts and use fewer tokens.
+
 You can also see the token usage (along with other information about model calls) in the list:
 
 ```
 python 
 memory_object.memory_dict['model_turns']
 ```
+
+
 in `run_autogram.py`. This list contains logging information for the whole conversation. Each entry in this list is a dictionary, and entries that have a 'usage_log' field use api model calls and have token use documented.
 
 
@@ -115,19 +151,9 @@ python visualize_autogram.py --example_name recruiter --save_folder recruiter_gr
 This will create both a static and interactive graph in the specified folder. You can explore the chatbot flow and decision points by clicking on nodes in the interactive graph.
 
 
-## Demos and Examples
 
-Explore the `/examples` folder to see sample autograms, including the source code for Asa. Each example demonstrates different capabilities of AutoGRAMS, from simple branching dialogues to complex, stateful agents.
 
-To run a demo:
-
-```
-python run_autogram.py --api_key_file api_keys.json --example_name <example_name>
-```
-
-Replace `<example_name>` with the desired example (e.g., `autograms_seed_agent`, `simple_example`, `fraction_tutor`, `general_tutor`, or `recruiter`), or use your own example by manually importing your autograms chatbot in `run_autogram.py`.
-
-## debugging autograms
+## Debugging autograms
 
 
 `python debug_autogram.py --example_name <example_name>`
