@@ -29,41 +29,45 @@ import os
 
 
 
-def reply(text):    
+def reply(text,data=None,ADDRESS=None):    
     """
     Sends a direct reply and logs it as a chat turn.
 
     Parameters:
     - text (str): The reply text to be sent.
+    - data (dict): optional data to be sent back in autograms return object sent by autogram.apply()
+    - ADDRESS(str): Only used by compiler--used to recover position of function call in the code of an @autograms_function. Optional, useful mainly for changing the code while the memory is active, allowing line numbers to be mapped 
 
     Raises:
     - ReplyExit: Exception to handle the reply in the program control flow.
     """
-    exc=ReplyExit(text)
+    exc=ReplyExit(text,data=data,ADDRESS=ADDRESS)
     log_chat_turn(text,line_number = exc.line_number,function_name = exc.function_name)
     raise exc
 
-def reply_instruction(instruction,**kwargs):
+def reply_instruction(instruction,data=None,ADDRESS=None,**kwargs):
     """
     Generates a reply based on the given instruction and logs it.
 
     Parameters:
     - instruction (str): Instruction guiding the chatbot response.
-
+    - data (dict): optional data to be sent back in autograms return object sent by autogram.apply()
+    - ADDRESS(str): Only used by compiler--used to recover position of function call in the code of an @autograms_function. Optional, useful mainly for changing the code while the memory is active, allowing line numbers to be mapped 
     Raises:
     - ReplyExit: Exception to handle the reply in the program control flow.
     """
     response= call_conv_model(instruction,**kwargs)
 
-    reply(response)
+    reply(response,data=data,ADDRESS=ADDRESS)
 
-def reply_suffix(instruction):
+def reply_suffix(instruction,data=None,ADDRESS=None):
     """
     Appends specific text to a chatbot reply and logs it.
 
     Parameters:
     - instruction (str): Text to be appended as a suffix in the reply.
-
+    - data (dict): optional data to be sent back in autograms return object sent by autogram.apply()
+    - ADDRESS(str): Only used by compiler--used to recover position of function call in the code of an @autograms_function. Optional, useful mainly for changing the code while the memory is active, allowing line numbers to be mapped 
     Raises:
     - ReplyExit: Exception to handle the reply in the program control flow.
     """
@@ -75,7 +79,7 @@ def reply_suffix(instruction):
     
     response,req_satisfied = post_process_responses([result],required_text)
 
-    reply(response)
+    reply(response,data=data,ADDRESS=ADDRESS)
 
 
 
@@ -211,12 +215,16 @@ def multiple_choice_logits(question,choices,max_turns=1,**kwargs):
     - int: Index of the selected choice.
     """
     memory_object = get_memory()
+
+    if not memory_object.config.classifier_mode=="logit":
+        raise Exception(f"multiple_choice_logits not allowed for classifier mode: {memory_object.config.classifier_mode}, must set classifier mode to logit for this.") 
     turns,system_prompt = memory_object.get_turns_for_model()
     if memory_object.config.exclude_classifier_system_prompt:
         system_prompt=None
 
 
     content,choices = make_decision_prompt(turns,question,choices,max_turns)
+    
     
     logits,success = call_classifier(content,choices,return_logits = True,system_prompt=system_prompt,**kwargs)
     return logits
@@ -241,9 +249,15 @@ def multiple_choice(question,choices,max_turns=1,**kwargs):
     memory_object = get_memory()
     turns,system_prompt = memory_object.get_turns_for_model()
     content,choices = make_decision_prompt(turns,question,choices,max_turns)
+    choices = [c for c in choices]
+    
     if memory_object.config.exclude_classifier_system_prompt:
         system_prompt=None
     answer,success = call_classifier(content,choices,system_prompt=system_prompt,**kwargs)
+
+
+    if not(type(answer)==str):
+        answer=answer["answer"]
     
     if success and answer in choices:
         return choices.index(answer)
@@ -271,7 +285,9 @@ def yes_or_no(question,max_turns=1,**kwargs):
         system_prompt=None
     answer,success = call_classifier(content,choices,system_prompt=system_prompt,**kwargs)
 
+
     if success and answer in choices:
+        
         if answer=="Yes":
             return True
     return False
@@ -295,7 +311,7 @@ def call_conv_model(instruction,**kwargs):
         return "test mode, no response enabled"
 
 
-def call_classifier(input_str,answer_choices,system_prompt=None,model_type=None,model_path=None,**kwargs):
+def call_classifier(input_str,answer_choices,system_prompt=None,model_type=None,model=None,multi_modal_inputs=None,**kwargs):
     """
     Calls a classifier model to determine the best choice from given options.
 
@@ -303,7 +319,13 @@ def call_classifier(input_str,answer_choices,system_prompt=None,model_type=None,
     - input_str (str): Input prompt for the classifier.
     - answer_choices (list of str): List of possible answers.
     - model_type (str, optional): Type of model to use.
-    - model_path (str, optional): Path to the model.
+    - model (str, optional): Path to the model.
+    - multi_modal_inputs - list[dict] --list of open ai style image or audio inputs for the model, for example :
+                    {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg"}
+                    } 
     - **kwargs: Additional parameters for the classifier.
 
     Returns:
@@ -314,57 +336,231 @@ def call_classifier(input_str,answer_choices,system_prompt=None,model_type=None,
     if model_type is None:
         model_type=memory_object.config.chatbot_type
 
-    if model_type=='openai':
-        func = apis.openai_models.call_openai_classifier
-        preprocess_func =apis.openai_models.get_classifier_messages
-
-    messages = preprocess_func(input_str,system_prompt=system_prompt,system_prompt_in_turns=memory_object.config.system_prompt_in_turns,model=model_path)
-    result,usage_log = func(messages,answer_choices,**kwargs)
+    #if model_type=='openai':
+    func = apis.openai_models.call_openai_classifier
+    preprocess_func =apis.openai_models.get_classifier_messages
 
 
-    memory_object.log_classifier_turn(result,input_str,answer_choices,system_prompt=system_prompt,usage_log=usage_log)
+    if not memory_object.config.classifier_mode=="logit" and "class_biases" in kwargs and not kwargs["class_biases"] is None:
+        raise Exception(f"class_biases not allowed for classifier_mode: {memory_object.config.classifier_mode},must set classifier mode to logit for this.")
+  
+
+
+
+    messages = preprocess_func(input_str,system_prompt=system_prompt,system_prompt_in_turns=memory_object.config.system_prompt_in_turns,model=model,multi_modal_inputs=multi_modal_inputs)
+
+    if memory_object.config.classifier_mode=="logit":
+
+        result,usage_log = func(messages,answer_choices,**kwargs)
+        raw_result = result
+    else:
+
+        
+        schema = make_decision_schema_json(answer_choices)
+        if memory_object.config.classifier_type=="huggingface_tgi":
+
+            schema = convert_openai_json_schema(schema)
+        
+        memory_object = get_memory()
+        if not memory_object.test_mode:
+            func = apis.openai_models.call_openai_chat_formatted
+            kwargs['temperature']=0
+            raw_result,_,usage_log = func(messages,model=model,obj_structure = schema,**kwargs)
+            success = not(raw_result is None)
+            try:
+                result_dict = json.loads(raw_result)
+                result = result_dict["answer"]
+            except:
+                success=False
+
+
+            if not success:
+                return answer_choices[0],False
+
+            
+        else:
+            
+            return random.choice(answer_choices),True
+   
+
+    memory_object.log_classifier_turn(raw_result,input_str,answer_choices,system_prompt=system_prompt,usage_log=usage_log)
     success = not(usage_log['model']=='failed')
     return result,success
+def make_decision_regex(choices):
+    """
+    Create a minimal TGI response_format using a regex that restricts
+    the output to exactly one of the enumerated choices.
 
-def get_batch_embedding(texts,model_type='openai'):
+    Example:
+        >>> make_decision_regex(["apple", "banana", "cherry"])
+        {
+            "type": "regex",
+            "pattern": "(apple|banana|cherry)"
+        }
+
+    Args:
+        choices (list[str]): A list of allowed string outputs.
+
+    Returns:
+        dict: A TGI response_format dictionary for a single-choice regex.
+    """
+    # Build a pattern like: ^(apple|banana|cherry)$
+    pattern = f"({'|'.join(choices)})"
+
+    return {
+        "type": "regex",
+        "value": pattern
+    }
+
+# def make_decision_schema_json_tgi(choices, name="decision_schema"):
+#     """
+#     Create a JSON schema in the format:
+#       {
+#         "type": "json_schema",
+#         "json_schema": {
+#           "name": <name>,
+#           "strict": True,
+#           "value": {
+#             "type": "object",
+#             "properties": {
+#               "answer": {
+#                 "type": "string",
+#                 "enum": [...]
+#               }
+#             },
+#             "additionalProperties": false,
+#             "required": ["answer"]
+#           }
+#         }
+#       }
+
+#     Args:
+#         choices (list[str]): The allowed values for the "answer" property.
+#         name (str): A unique name for the schema (default "decision_schema").
+
+#     Returns:
+#         dict: A Python dictionary representing the JSON schema.
+#     """
+
+#     schema = {
+#         "type": "json",
+#         "value":  {
+#                 "type": "object",
+#                 "properties": {
+#                     "answer": {
+#                         "type": "string",
+#                         "enum": choices
+#                     }
+#                 },
+#                 "additionalProperties": False,
+#                 "required": ["answer"]
+            
+#         }
+#     }
+#     return schema
+def make_decision_schema_json(choices, name="decision_schema"):
+    """
+    Create a JSON schema in the format:
+      {
+        "type": "json_schema",
+        "json_schema": {
+          "name": <name>,
+          "strict": True,
+          "schema": {
+            "type": "object",
+            "properties": {
+              "answer": {
+                "type": "string",
+                "enum": [...]
+              }
+            },
+            "additionalProperties": false,
+            "required": ["answer"]
+          }
+        }
+      }
+
+    Args:
+        choices (list[str]): The allowed values for the "answer" property.
+        name (str): A unique name for the schema (default "decision_schema").
+
+    Returns:
+        dict: A Python dictionary representing the JSON schema.
+    """
+
+    schema = {
+        "type": "json_schema",
+        "json_schema": {
+            "name": name,
+            "strict": True,
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "answer": {
+                        "type": "string",
+                        "enum": choices
+                    }
+                },
+                "additionalProperties": False,
+                "required": ["answer"]
+            }
+        }
+    }
+    return schema
+
+def get_batch_embedding(texts,default_size=1536,**kwargs):
     """
     Gets embeddings for a batch of texts.
 
     Parameters:
     - texts (list of str): List of texts to embed.
-    - model_type (str): Model type used for embedding.
+    - default_size (str): used for test mode only, initialize random embedding of default_size.
 
     Returns:
     - list: Embeddings for the input texts.
     """
-    if model_type=='openai':
-        func = apis.openai_models.get_batch_embedding
-    results = func(texts)
+    #if model_type=='openai':
+    func = apis.openai_models.get_batch_embedding
+    memory_object = get_memory()
+
+    if not "model" in kwargs:
+        kwargs["model"] = memory_object.config.embedding_path
+
+
+
+    if memory_object.test_mode:
+        results = [np.random.randn(default_size).tolist()]*default_size
+
+    else:
+        results = func(texts,**kwargs)
     return results
 
-def get_single_embedding(text,model_type='openai'):
+def get_single_embedding(text,default_size=1536,**kwargs):
     """
     Gets embedding for a single text.
 
     Parameters:
     - text (str): The text to embed.
-    - model_type (str): Model type used for embedding.
+    - default_size (str): used for test mode only, initialize random embedding of default_size.
 
     Returns:
     - list: Embedding for the input text.
     """
     memory_object = get_memory()
     if memory_object.test_mode:
-        result = np.random.randn(1536).tolist()
+        result = np.random.randn(default_size).tolist()
 
     else:
-        if model_type=='openai':
-            func = apis.openai_models.get_single_embedding
-        result = func(text)
+        if not "model" in kwargs:
+            kwargs["model"] = memory_object.config.embedding_path
+        #if model_type=='openai':
+        func = apis.openai_models.get_single_embedding
+        result = func(text,**kwargs)
+        
 
     return result
 
-def call_model(input_turns,output_turns,system_prompt,system_prompt_in_turns=False,model_type=None,model_path=None,**kwargs):
+def call_model(input_turns,output_turns,system_prompt,system_prompt_in_turns=False,model_type=None,model=None,multi_modal_inputs=None,**kwargs):
     """
     Calls a conversational model and returns its response.
 
@@ -374,7 +570,13 @@ def call_model(input_turns,output_turns,system_prompt,system_prompt_in_turns=Fal
     - system_prompt (str): System prompt for the model.
     - system_prompt_in_turns (bool): Whether to include system prompt in conversation turns.
     - model_type (str, optional): Type of model to use.
-    - model_path (str, optional): Path to the model.
+    - model (str, optional): Path to the model.
+    - multi_modal_inputs - list[dict] --list of open ai style image or audio inputs for the model, for example :
+                    {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg"}
+                    } 
     - **kwargs: Additional parameters for the model.
 
     Returns:
@@ -386,16 +588,16 @@ def call_model(input_turns,output_turns,system_prompt,system_prompt_in_turns=Fal
     if model_type is None:
         model_type=memory_object.config.chatbot_type
 
-    if model_type=='openai':
+   # if model_type=='openai':
     
-        func = apis.openai_models.call_openai_chatbot
- 
+    func = apis.openai_models.call_openai_chatbot
 
-        preprocess_func =apis.openai_models.get_chatbot_messages
+
+    preprocess_func =apis.openai_models.get_chatbot_messages
         
-    messages = preprocess_func(input_turns,output_turns,system_prompt,system_prompt_in_turns=system_prompt_in_turns,truncate_input=True,model=model_path)
+    messages = preprocess_func(input_turns,output_turns,system_prompt,system_prompt_in_turns=system_prompt_in_turns,truncate_input=True,model=model,multi_modal_inputs=multi_modal_inputs)
 
-    result,usage_log = func(messages,model=model_path,**kwargs)
+    result,usage_log = func(messages,model=model,**kwargs)
 
 
     memory_object.log_chatbot_turn(result,input_turns,output_turns,system_prompt,usage_log=usage_log)
@@ -426,6 +628,13 @@ def generate_json_schema(questions_with_answers):
         "required": list(properties.keys())
     }
 
+
+        
+
+def convert_openai_json_schema(schema):
+
+    new_schema = {"type":"json","value":schema["json_schema"]["schema"]}
+    return new_schema
 
 
 def generate_list_of_dicts(instruction,keys,**kwargs):
@@ -658,6 +867,8 @@ def thought_decision_chain(instruction,chain_structure,fixed_type = None,**kwarg
     return output_list
 
 #     )
+
+
 def generate_list(instruction,**kwargs):
     """
     Generates a list based on the given instruction using a predefined list structure.
@@ -672,6 +883,119 @@ def generate_list(instruction,**kwargs):
     memory_object = get_memory()
     config = memory_object.config
 
+    schema = {
+        "type": "json_schema",
+        "json_schema": {
+            "name": "list_of_strings",
+            "strict": True,
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "data": {  # The key under which the array is nested
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "additionalItems": False  # Disallow extra items in the array
+                    }
+                },
+                "required": ["data"],  # Ensure the "data" key is present
+                "additionalProperties": False  # Disallow extra keys in the root object
+            }
+        }
+    }
+        
+
+    result = generate_object(instruction,schema,**kwargs)
+
+
+    try:
+        result=json.loads(result)
+    except:
+        result = initialize_with_defaults_json(schema)
+
+
+    
+    return result
+
+def generate_fixed_dict(instruction, keys, **kwargs):
+    """
+    Generates a dictionary with fixed keys based on the given instruction.
+
+    Parameters:
+    - instruction (str): The instruction for generating the dictionary.
+    - keys (list[str]): The fixed set of keys for the dictionary.
+    - **kwargs: Additional arguments for model configuration.
+
+    Returns:
+    - dict: A dictionary with the generated values for each key.
+    """
+    properties = {key: {"type": "string"} for key in keys}  # Each key maps to a string
+
+    schema = {
+        "type": "json_schema",
+        "json_schema": {
+            "name": "fixed_dict",
+            "strict": True,
+            "schema": {
+                "type": "object",
+                "properties": properties,  # Keys with their expected types and constraints
+                "additionalProperties": False,  # Disallow extra keys
+                "required": list(keys)  # Ensure all keys are present
+            }
+        }
+    }
+    result = generate_object(instruction,schema,**kwargs)
+
+
+    try:
+        result=json.loads(result)
+    except:
+        result = initialize_with_defaults_json(schema)
+
+    return result
+
+def generate_fixed_list(instruction,num_items,**kwargs):
+    """
+    Generates a list of a fixed number of items based on the given instruction.
+
+    Parameters:
+    - instruction (str): The instruction for generating the list.
+    - num_items (int): The fixed number of items in the list.
+    - **kwargs: Additional arguments for model configuration.
+
+    Returns:
+    - list[str]: A list containing the generated items.
+    """
+    fields = [f'item{i}' for i in range(1,num_items+1)]
+
+    result = generate_fixed_dict(instruction, fields, **kwargs)
+
+
+    out_list = [result[f'item{i}'] for i in range(1,num_items+1)]
+   
+    return out_list
+
+
+
+
+
+    
+def generate_list_obj(instruction,**kwargs):
+    """
+    Generates a list based on the given instruction using a predefined list structure.
+
+    Parameters:
+    - instruction (str): The instruction for generating the list.
+    - **kwargs: Additional arguments for model configuration.
+
+    Returns:
+    - list[str]: A list of generated items.
+    """
+    print("warning, generate_list_obj is deprecated and may be removed.")
+    memory_object = get_memory()
+    config = memory_object.config
+
     class SimpleList(BaseModel):
         items: list[str]
 
@@ -681,7 +1005,10 @@ def generate_list(instruction,**kwargs):
 
     
     return result.items
-def generate_fixed_list(instruction,num_items,**kwargs):
+
+
+
+def generate_fixed_list_obj(instruction,num_items,**kwargs):
     """
     Generates a list of a fixed number of items based on the given instruction.
 
@@ -706,7 +1033,7 @@ def generate_fixed_list(instruction,num_items,**kwargs):
             break
     return output_list
 
-def generate_fixed_dict(instruction, keys, **kwargs):
+def generate_fixed_dict_obj(instruction, keys, **kwargs):
     """
     Generates a dictionary with fixed keys based on the given instruction.
 
@@ -755,6 +1082,8 @@ def generate_object(instruction,obj_structure,**kwargs):
     input_turns,output_turns,system_prompt = get_turn_history(instruction=instruction)
     memory_object = get_memory()
     if not memory_object.test_mode:
+
+
         result= call_object_model(input_turns,output_turns,system_prompt,system_prompt_in_turns=memory_object.config.system_prompt_in_turns,obj_structure=obj_structure,**kwargs)
         return result
     else:
@@ -764,7 +1093,7 @@ def generate_object(instruction,obj_structure,**kwargs):
 
             return initialize_with_defaults(obj_structure)
     
-def call_object_model(input_turns,output_turns,system_prompt,system_prompt_in_turns=False,model_type=None,model_path=None,obj_structure=None,**kwargs):
+def call_object_model(input_turns,output_turns,system_prompt,system_prompt_in_turns=False,model_type=None,model=None,obj_structure=None,multi_modal_inputs=None,**kwargs):
     """
     Calls a model to generate an object formatted response.
 
@@ -774,8 +1103,14 @@ def call_object_model(input_turns,output_turns,system_prompt,system_prompt_in_tu
     - system_prompt (str): System prompt to guide the model.
     - system_prompt_in_turns (bool): Whether to include the system prompt in conversation turns.
     - model_type (str, optional): Type of model to use.
-    - model_path (str, optional): Path to the model.
+    - model (str, optional): Path to the model.
     - obj_structure (BaseModel): Structure for the expected response.
+    - multi_modal_inputs - list[dict] --list of open ai style image or audio inputs for the model, for example :
+                    {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg"}
+                    } 
     - **kwargs: Additional parameters for the model.
 
     Returns:
@@ -787,19 +1122,30 @@ def call_object_model(input_turns,output_turns,system_prompt,system_prompt_in_tu
     if model_type is None:
         model_type=memory_object.config.chatbot_type
 
-    if model_type=='openai':
+    #if model_type=='openai' or model_type=="proxy":
 
-        func = apis.openai_models.call_openai_chat_formatted
+    func = apis.openai_models.call_openai_chat_formatted
 
-        preprocess_func =apis.openai_models.get_chatbot_messages
+    preprocess_func =apis.openai_models.get_chatbot_messages
+
+    if not config.chatbot_type=="openai":
         
-    messages = preprocess_func(input_turns,output_turns,system_prompt,system_prompt_in_turns=system_prompt_in_turns,truncate_input=True,model=model_path)
+        if isinstance(obj_structure, dict):
+            
+            obj_structure = convert_openai_json_schema(obj_structure)
+        else:
+            obj_structure=obj_structure.schema()
+            if obj_structure['type']=="object":
+                obj_structure['type']="json"
+
+
+        
+    messages = preprocess_func(input_turns,output_turns,system_prompt,system_prompt_in_turns=system_prompt_in_turns,truncate_input=True,model=model,multi_modal_inputs=multi_modal_inputs)
 
   
-    result,raw_str,usage_log = func(messages,model=model_path,obj_structure = obj_structure,**kwargs)
+    result,raw_str,usage_log = func(messages,model=model,obj_structure = obj_structure,**kwargs)
 
-   
-   
+
     
     if usage_log['model']=='failed':
         if isinstance(obj_structure, dict):
@@ -905,44 +1251,12 @@ def initialize_value(value_type):
         return initialize_with_defaults(value_type)
     else:
         return None  # Default to None for unknown types
-# # Utility function to generate a default instance
-# def initialize_with_defaults(model_class):
-#     """
-#     Initializes an instance of a Pydantic model with default values for all fields.
 
-#     Parameters:
-#     - model_class (BaseModel): The model class to instantiate.
-
-#     Returns:
-#     - BaseModel: An instance of the model class with default values.
-#     """
-#     defaults = {}
-#     for field_name, field in model_class.__fields__.items():
-#         import pdb;pdb.set_trace()
-        
-#         # Set default value based on the type
-#         if field.annotation.__origin__ == str:
-#             defaults[field_name] = "<There was an error generating this message, please ignore>"
-#         elif field.annotation.__origin__ == int:
-#             defaults[field_name] = 0
-#         elif field.annotation.__origin__ == float:
-#             defaults[field_name] = 0.0
-#         elif field.annotation.__origin__ == bool:
-#             defaults[field_name] = False
-#         elif  field.annotation.__origin__ == list:
-#             defaults[field_name] = []
-#         elif issubclass(field.outer_type_, BaseModel):
-#             # Recursively initialize nested models
-#             defaults[field_name] = initialize_with_defaults(field.annotation.__origin__)
-#         else:
-#             defaults[field_name] = None  # Use None for any other type
-
-#     return model_class.construct(**defaults)
 
 
 def set_system_prompt(text):
     """
-    Sets the system prompt for the current memory object.
+    Sets the system prompt for the current memory object at the current autograms function level.
 
     Parameters:
     - text (str): The system prompt text.
@@ -952,13 +1266,25 @@ def set_system_prompt(text):
 
 def get_system_prompt():
     """
-    Sets the system prompt for the current memory object.
+    Sets the system prompt for the current memory object at the current autograms function level.
 
     Parameters:
     - text (str): The system prompt text.
     """
     memory_object = get_memory()
     return memory_object.get_system_prompt()
+
+def append_system_prompt(text):
+    """
+    Appends the system prompt for the current memory object at the current autograms function level.
+
+    Parameters:
+    - text (str): The system prompt text.
+    """
+    memory_object = get_memory()
+    orig = memory_object.get_system_prompt()
+    memory_object.set_system_prompt(orig+"\n"+text)
+
 
 
     
@@ -982,6 +1308,26 @@ def get_turn_history(instruction="",max_turns=-1,conv_only=False):
    
 
     return inputs,outputs,system_prompt
+
+
+
+def extract_last_user_reply():
+    """
+    Extracts the last submitted user reply
+    Returns:
+    - user_reply(str)
+    """
+    memory_object = get_memory()
+    return memory_object.get_user_reply()
+
+def extract_full_conv_history():
+    """
+    Extracts the conversation history
+    Returns:
+    - conv_history (List[dict]): A list of all conversation turns between the model and the user
+    """
+    memory_object = get_memory()
+    return memory_object.extract_full_conv_history()
 
 
 def log_chat_turn(reply,instruction=None,line_number=None,function_name=None):
@@ -1056,8 +1402,6 @@ def execute_code(code, command="firejail --noprofile --quiet --read-only=/home -
     """
     
 
-
-    print(command)
 
     if (not timeout is None) and timeout>0:
         # Add timeout to the command
@@ -1164,6 +1508,9 @@ def process_task(function_pkl, args, shared_object_encoding=None):
 
    
     return result
+
+
+
 
 
 

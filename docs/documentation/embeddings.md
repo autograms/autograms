@@ -3,7 +3,7 @@
 ### Embedding Functions
 Embedding functions generate vector representations of text, which is most often used for retrieval and memory within the chatbot.
 
-#### **get_single_embedding(text, model_type='openai')**
+#### **get_single_embedding(text, `**kwargs`)**
 `autograms.functional.get_single_embedding`
 Fetches a single embedding for the given text.
 
@@ -14,7 +14,7 @@ Fetches a single embedding for the given text.
 - **Returns**:
   - `list[float]`: A vector representation of the input text.
 
-#### **get_batch_embedding(texts, model_type='openai')**
+#### **get_batch_embedding(texts,`**kwargs`)**
 `autograms.functional.get_batch_embedding`
 Fetches embeddings for a batch of texts.
 

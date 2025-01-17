@@ -35,7 +35,8 @@ class SimpleIndex:
         :param n: Number of top results to return.
         :return: List of tuples (text, similarity) where similarity is the cosine similarity.
         """
-
+        if len(self.texts)<=1:
+            return 1*self.texts
         query_vector = np.array(query_vector)
         # Normalize query vector
         query_norm = np.linalg.norm(query_vector)

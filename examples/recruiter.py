@@ -13,24 +13,29 @@ def chatbot():
         'Your goal is to interact with candidates who have applied for jobs and ask them routine questions. '
         'Start the conversation by introducing yourself and thank the person for taking the time to talk to you.'
     )
+    
+    
 
     user_ready = False
 
+    reply("hi, I'm Daisy, a recruiter in the HR department of Dipply. It's lovely to see you. I hope you're doing well. Are you ready to start our interview?")
+
     # Ensure the user is ready to proceed with the interview.
     while not user_ready:
-        reply_instruction("Ask the user if they are ready to begin.")
+
         user_ready = yes_or_no("Is the user ready to proceed?")
+        reply_instruction("Reply with a response to the user and nothing else.")
 
     # Gather background information from the user.
-    reply_instruction("Ask the user to describe their background in detail, including relevant experience.")
-    reply_instruction("Respond to the user and ask another question about their relevant background.")
+    reply_instruction("Ask the user to describe their background in detail, including relevant experience. Reply with a response to the user and nothing else.")
+    reply_instruction("Respond to the user and ask another question about their relevant background. Reply with a response to the user and nothing else.")
     reply_instruction(
-        "Respond to the user and ask another detailed question about a specific aspect of their background."
+        "Respond to the user and ask another detailed question about a specific aspect of their background. Reply with a response to the user and nothing else."
     )
 
     # Transition to salary expectations.
     reply_instruction(
-        "Respond to the user. Then move on and ask the candidate about their salary expectations for the position."
+        "Respond to the user. Then move on and ask the candidate about their salary expectations for the position. Reply with a response to the user and nothing else."
     )
 
     # Determine the user's response regarding salary expectations.
@@ -58,20 +63,20 @@ def chatbot():
         # User asked about the salary range
         reply_instruction(
             f"Respond to the user. State our salary range as {salary_range}, depending on the candidate. "
-            "Ask if this would be acceptable."
+            "Ask if this would be acceptable. Reply with a response to the user and nothing else."
         )
     elif answer_idx == 1:
         # User avoided the question or was unsure
         reply_instruction(
             "Respond to the user. Ask if they can be more specific about their desired salary, "
-            "so we can ensure expectations align with our budget."
+            "so we can ensure expectations align with our budget.  Reply with a response to the user and nothing else."
         )
         gave_range = yes_or_no("Did the user provide a specific salary range?")
         if not gave_range:
             # User still didn't specify, provide the company's salary range
             reply_instruction(
                 f"Respond to the user. State our salary range as {salary_range}, depending on the candidate. "
-                "Ask if this is acceptable."
+                "Ask if this is acceptable.  Reply with a response to the user and nothing else."
             )
     else:
         # User provided a salary range directly
@@ -86,7 +91,7 @@ def chatbot():
         else:
             reply_instruction(
                 f"Inform the user that the salary range for this position is {salary_range}. "
-                "Ask if this is acceptable."
+                "Ask if this is acceptable.  Reply with a response to the user and nothing else."
             )
 
     # If expectations were not within the range, check if the user is open to negotiation.
@@ -98,9 +103,9 @@ def chatbot():
 
     # Finalize based on salary expectations.
     if exp_okay:
-        reply_instruction("Tell the user that's great and that we will be in touch with the next steps.")
+        reply_instruction("Tell the user that's great and that we will be in touch with the next steps.  Reply with a response to the user and nothing else.")
     else:
-        reply_instruction("Tell the user that's unfortunate and wish them the best.")
+        reply_instruction("Tell the user that's unfortunate and wish them the best.  Reply with a response to the user and nothing else.")
 
     # End conversation with a polite closing statement in an infinite loop.
     while True:

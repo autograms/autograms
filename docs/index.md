@@ -11,7 +11,6 @@ Welcome to the official documentation for [AutoGRAMS](https://github.com/autogra
 
 By representing a chatbot as a continuously running program, AutoGRAMS enables you to precisely control the prompts and memory at different points in the conversation. Decisions made during conversations directly influence the program’s execution path, variables persist as the chatbot’s memory, and conversations seamlessly adapt based on the program’s current state.
 
-We invite you to join the [AutoGRAMS community on discord](https://discord.gg/7U3pP75C) to learn more and get support with building chatbots.
 
 
 ## Introduction
@@ -89,19 +88,22 @@ AutoGRAMS solves this problem by allowing you to define these structured interac
 
 ## Installation and Requirements
 
-You can install AutoGRAMS via pip:
+You can install AutoGRAMS via pip, either with 
+
 
 ```
 pip install autograms
 ```
 
+or `pip install .` from the root directory
+
 Requirements:
 - **Python 3.9+**
-- **Graphviz** (for visualizing conversation graphs). On Linux:
+- **Graphviz** (optionial, for visualizing conversation graphs). On Linux:
   ```
   sudo apt install graphviz
   ```
-- **OpenAI API Key** (optional, for AI-driven functionalities). Set it in your environment:
+- **OpenAI API Key** (optional, for openai api--can also use other models through proxy). Set it in your environment:
   ```
   export OPENAI_API_KEY=[your_key]
   ```
@@ -122,7 +124,7 @@ Here we'll walk through setting up and running a basic chatbot using Autograms. 
 
 ### Step 1: Coding a simple chatbot
 
-Let's code a very simple autograms chatbot that asks the user if they would like to know more about the latest advances in AI, and tells them a bit about AutoGRAMS if they say yes.
+Let's create a new file called `simple_example.py` to code a very simple autograms chatbot that asks the user if they would like to know more about the latest advances in AI, and tells them a bit about AutoGRAMS if they say yes.
 ```python
 from autograms.nodes import reply, reply_instruction
 from autograms.functional import yes_or_no
@@ -200,7 +202,25 @@ while True:
 ```
 
 
-use `python run_simple_example.py` to run the chatbot
+use `python run_simple_example.py` to run the chatbot. 
+
+
+Alternatively, from the root directory of the autograms repository, you can run your chatbot with:
+
+
+```
+python run_autogram.py --autogram_file path/to/simple_example.py
+```
+
+
+You can also quickly debug common problems in the chatbot with 
+
+
+```
+python run_debug_autogram.py --autogram_file path/to/simple_example.py
+```
+
+which will simulate many conversations with the user without calling any model APIs
 
 
 ### Step 3: visualize the code
@@ -226,7 +246,7 @@ Interactive HTML graph: allows you to highlight nodes to see code.
 
 ## More examples and useful functions
 
-See `run_autogram.py` and `visualize_autogram.py` for code that is useful for running, debugging, and visualizing autograms. Also see the `/examples` folder for more examples of autograms chatbots with comments
+See `run_autogram.py`, `debug_augogram.py`, and `visualize_autogram.py` for code that is useful for running, debugging, and visualizing autograms. Also see the `/examples` folder for more examples of autograms chatbots with comments
 
 
 

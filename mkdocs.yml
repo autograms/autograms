@@ -10,6 +10,7 @@ nav:
   - Home: index.md  
   - Documentation: 
       - Autogram class: documentation/autogram.md
+      - Autogram Config: documentation/config.md
       - Autograms Decorators: documentation/autograms_decorators.md
       - Managing memory: documentation/memory.md
       - Nodes: documentation/nodes.md

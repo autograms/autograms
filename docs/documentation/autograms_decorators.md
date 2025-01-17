@@ -1,11 +1,11 @@
 
 ## `@autograms_function()`
 
-The `@autograms_function` decorator is a core feature of the Autograms framework, designed to enable dynamic control flow in conversational agents. It transforms standard Python functions into resumable, stateful workflows that can pause, serialize, and resume seamlessly. This allows chatbots or other interactive agents to act as one continuously running program that can be paused and saved at any time while waiting for input.
+The `@autograms_function()` decorator is a core feature of the Autograms framework, designed to enable dynamic control flow in conversational agents. It transforms standard Python functions into resumable, stateful workflows that can pause, serialize, and resume seamlessly. This allows chatbots or other interactive agents to act as one continuously running program that can be paused and saved at any time while waiting for input.
 
 ### Key Features
 1. **Pause and Resume Execution**:  
-   Functions decorated with `@autograms_function` can pause at any point using special nodes (e.g., `reply`, `reply_instruction`). These pauses return temporary responses to the user, while the function's state is saved and can be resumed from the exact point it left off.
+   Functions decorated with `@autograms_function()` can pause at any point using special nodes (e.g., `reply`, `reply_instruction`). These pauses return temporary responses to the user, while the function's state is saved and can be resumed from the exact point it left off.
 
 
 2. **Memory management**:  
@@ -14,10 +14,8 @@ The `@autograms_function` decorator is a core feature of the Autograms framework
 3. **Conversation Scopes**:  
    Manage how conversation history is retained using flexible scope options (`global`, `normal`, `local`).
 
-4. **Global Variable Management**:  
-   Automatically declares specified global variables at runtime to maintain consistency across serialized states.
 
-5. **Dynamic Control Flow**:  
+4. **Dynamic Control Flow**:  
    The decorator supports advanced control mechanisms like GOTO and RETURNTO, allowing the program to jump to specific points in the function based on predefined `ADDRESS` labels in functions decorated by `@autograms_node`.
 
 ---
@@ -29,10 +27,12 @@ The `@autograms_function` decorator is a core feature of the Autograms framework
   - `"normal"`: Turns are accessible within the current function but do not persist after returning.
   - `"local"`: Turns are isolated to the current function call.
 
-- **globals_to_declare** (dict, optional):  
-  Specifies global variables to declare in the function.
-
 ---
+
+
+
+
+
 
 
 ### Example usage
@@ -83,6 +83,34 @@ def chatbot():
 ### Restrictions
 While `@autograms_function` supports various control flow constructs, it may not handle resumption within certain node types (e.g., `try`-`except`, `finally`). Ensure that `ADDRESS` labels and pauses occur within supported contexts like loops and conditionals.
 
+## `@autograms_external()`
+
+`@autograms_external()` is meant to allow for functions that interact with user specific memory of the program to be called from outside of the normal conversation chain. The are mainly used to interact with user specific global variables
+
+
+## example use
+```python
+@autograms_external()
+def update_user_settings(user_command):
+
+   thought(f" The user made this request {user_command}. Should we change the chat_style setting? it is currently set to {user_globals['chat_style']}, and the options are {','.join(chat_styles)}")
+
+   idx =multiple_choice("what should the chat style be set to?",chat_styles) 
+
+   user_globals['chat_style'] = chat_styles[idx]
+
+```
+
+And then in the Autogram object wrapping the module, you can do
+```python
+autogram.apply(memory_object = memory_object,function=update_user_settings,user_command=user_command)
+```
+
+@autograms_external functions do not permanently modify the stack in the memory_object, are mainly used to change the UserGlobals object for user specific global variables defined in the module if there is one. 
+
+
+
+
 
 ## @autograms_node
 
@@ -121,3 +149,5 @@ def fibonacci():
    GOTO(destination="output_x")
    
 ```
+
+

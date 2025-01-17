@@ -71,23 +71,28 @@ class FunctionExit(ControlFlowException):
     Attributes:
     - data (dict): Data passed during function exit.
     """
-    def __init__(self, data={}):
+    def __init__(self, data={},ADDRESS=None):
         super().__init__(message="Exception for exiting a function")
         self.data=data
+        self.address=ADDRESS
 
         frame_info = find_decorated_frame(3)
-
+        
+        if frame_info is None:
+            stack = inspect.stack()
+            raise Exception()
+            import pdb;pdb.set_trace()
         line_number = frame_info.lineno  # Absolute line number in the file
         function_name = frame_info.function
         code_locals = filter_variables(frame_info.frame.f_locals.copy())  # Get a copy of the local variables at the time
       #  code_globals = filter_variables(frame_info.frame.f_globals.copy())  # Get a copy of the global variables at the time
 
         memory=get_memory()
-        memory.process_function_exit(function_name,line_number,code_locals)
+        memory.process_function_exit(function_name,line_number,code_locals,address=self.address)
         
 
 class ReplyExit(ControlFlowException):
-    def __init__(self,reply=None):
+    def __init__(self,reply=None,ADDRESS=None,data=None):
         """
         Exception used to pause a chatbot function and return a reply.
         
@@ -101,6 +106,7 @@ class ReplyExit(ControlFlowException):
         message="Exception meant to be used inside autograms functions, meant for pausing the program to return a reply"
      
         super().__init__(message)
+        self.address=ADDRESS
 
         
 
@@ -112,9 +118,14 @@ class ReplyExit(ControlFlowException):
       #  code_globals = filter_variables(frame_info.frame.f_globals.copy())  # Get a copy of the global variables at the time
  
         memory = get_memory()
-        memory.process_function_exit(self.function_name,self.line_number,code_locals)
+        memory.process_function_exit(self.function_name,self.line_number,code_locals,address=self.address)
 
         self.reply = reply
+        if data is None:
+            self.data = {}
+
+        if not ((reply is None) and ('reply' in self.data)):
+            self.data['reply']=reply
 
 
 
@@ -193,6 +204,7 @@ def find_decorated_frame(skip_frames=1):
     - inspect.FrameInfo: Frame information for the decorated function.
     """
     stack = inspect.stack()
+    
 
     # Skip the first two frames:
     # - The first frame is the current call inside __call__ if called from within decorated frame.
@@ -284,7 +296,9 @@ def generate_function_from_ast(func_def_node, func_orig,file_name="<ast>"):
     compiled_object = compile(module_node, file_name, mode="exec")
 
 
-    defaults = tuple(func_def_node.args.defaults) if func_def_node.args.defaults else None
+    defaults = func_orig.__defaults__ #tuple(func_def_node.args.defaults) if func_def_node.args.defaults else None
+    # if not defaults is None and len(defaults)>1:
+    #     import pdb;pdb.set_trace()
 
     code_object = get_function_code_object(compiled_object, func_def_node.name)
 
@@ -301,6 +315,7 @@ def generate_function_from_ast(func_def_node, func_orig,file_name="<ast>"):
         defaults,  # Pass the converted tuple here
         None
     )
+
 
 
     return new_func
@@ -337,7 +352,7 @@ class AutogramsFunction:
                 raise TypeError(f"Function '{func.__name__}' with @autograms_chatbot decorator must have an argument named '{self.user_arg_name}'")
 
 
-        self._addressable = getattr(func, '_addressable', False)
+        self._addressable = True #getattr(func, '_addressable', False)
 
         self.func_name = func.__name__
         self.call_memory=None
@@ -365,114 +380,16 @@ class AutogramsFunction:
         while_tree= convert_for_to_while(stripped_tree)
 
         self.processed_def = while_tree
+        
 
 
 
         self.addresses = get_address_book(self.processed_def,func.__globals__)
 
         self.processed_function = generate_function_from_ast(while_tree,self.func,self.file_name)
-
-        # print(ast.unparse(while_tree))
-
-        # import pdb;pdb.set_trace()
-
-
-
-        # # Compile the modified source code into an executable object
-        # self.compiled_code = compile(source, filename="<string>", mode="exec")
-        #self._validate_ast()
-
-
-
-        #AutogramsFunction.decorated_functions[self.func_name]=self
-
         
-       # self.shared_env.locals[self.func_name]=self
-
-    # def get_child_functions(self):
-
-    #     sub_functions={self.name:self}
 
 
-
-    #     def get_functions(sub_functions):
-    #         for key in self.func.__globals__:
-    #             if isinstance(self.func.__globals__[key],AutogramsFunction):
-    #                 sub_functions[key]=self.func.__globals__[key]
-    #                 get_functions(self.func.__globals__[key],sub_functions)
-
-    #     get_functions(sub_functions)
-
-    #     return sub_functions
-    
-    # def update(self,autogram):
-    #     self.autogram = autogram
-
-
-
-    # def _validate_ast(self):
-    #     # Parse the AST of the function
-    #     source = inspect.getsource(self.func)
-    #     tree = ast.parse(textwrap.dedent(source))
-        
-    #     # Walk through the AST nodes
-    #     for node in ast.walk(tree):
-    #         if isinstance(node, ast.Try):
-    #             for handler in node.handlers:
-    #                 # If the handler catches `BaseException` or is a generic `except:`
-    #                 if handler.type is None or (
-    #                     isinstance(handler.type, ast.Name) and handler.type.id == "BaseException"
-    #                 ):
-    #                     # Check if it specifically handles ReplyExit
-    #                     if not self._is_handling_special_exit(handler):
-    #                         raise ValueError(
-    #                             f"Function '{self.func_name}' contains a disallowed generic or BaseException handler. This interferes with return mechanism for replies"
-    #                         )
-    #                 elif isinstance(handler.type, ast.Name):
-    #                     # If the handler catches a subclass of Exception, it's fine
-    #                     if handler.type.id == "Exception" or issubclass(eval(handler.type.id, {}, {}), Exception):
-    #                         continue
-    #                     # If the handler catches another specific BaseException subclass
-    #                     elif issubclass(eval(handler.type.id, {}, {}), BaseException):
-    #                         if handler.type.id != "ReplyExit":
-    #                             # If it's not ReplyExit, allow it
-    #                             continue
-    #                     else:
-    #                         raise ValueError(
-    #                             f"Function '{self.func_name}' contains a disallowed exception handler: {handler.type.id}"
-    #                         )
-
-    # def _is_handling_special_exit(self, handler):
-    #     """Check if the except handler specifically handles ReplyExit."""
-    #     if handler.type is None:
-    #         return False  # A generic except: block
-    #     if isinstance(handler.type, ast.Name) and handler.type.id == "ReplyExit":
-    #         return True
-    #     return False
-    # def _get_stripped_source(self):
-    #     # Get the source code of the function
-    #     source = self.source_orig
-
-    #     # Split the lines of the source code
-    #     source_lines = source.splitlines()
-
-    #     # Remove lines that start with @ (which are decorators) until the function definition
-    #     line_mapping = dict()
-    #     stripped_lines = []
-
-    #     for i in range(len(source_lines)):
-    #         line = source_lines[i]
-    #         if not line.strip().startswith('@'):
-    #             line_mapping[len(stripped_lines)]=i
-    #             stripped_lines.append(line)
-
-                
-
-      #  stripped_lines = [line for line in source_lines if not line.strip().startswith('@')]
-
-        # Join the remaining lines and dedent the code
-        # stripped_source = textwrap.dedent("\n".join(stripped_lines))
-        # return stripped_source,line_mapping
         
 
     def __call__(self, *args, **kwargs):
@@ -482,17 +399,50 @@ class AutogramsFunction:
         Returns:
         - AutogramsReturn: Object containing return value, memory, and additional data.
         """
-        last_frame = find_decorated_frame(2)
 
-        if last_frame is None:
+        memory = get_memory()
+        stack_pointer =  memory.memory_dict['stack_pointer']
+
+        
+
+        if stack_pointer == -1:
+           
 
             root_call=True
+            last_frame=None
+            
         else:
             root_call=False
+            last_frame = find_decorated_frame(2)
             if self.chatbot:
                 raise Exception("function defined with @autograms_chatbot decorator must be called externally. Use @autograms_function for functions that must be called from within other autograms functions or chatbots")
 
-        memory = get_memory()
+
+
+        if "ADDRESS" in kwargs:
+            caller_line_address = kwargs["ADDRESS"]
+
+            parameters = self.sig.parameters
+
+            # Check if the function has **kwargs
+            accepts_kwargs = any(
+                param.kind == param.VAR_KEYWORD for param in parameters.values()
+            )
+
+            # Remove ADDRESS and LABEL if they are not explicitly accepted and no **kwargs
+            if not accepts_kwargs:
+
+                if 'ADDRESS' not in parameters:
+                    kwargs.pop('ADDRESS', None)
+
+        else:
+            caller_line_address = None
+
+
+
+
+
+        
 
         if self.chatbot:      
             bound_args = self.sig.bind(*args, **kwargs)
@@ -514,6 +464,11 @@ class AutogramsFunction:
             include_line=False
         else:
             target_line=call_info['line_number']
+            if 'address' in call_info and not call_info['address'] is None:
+                if call_info['address'] in self.addresses:
+                    target_line = self.addresses[call_info['address']]
+
+            
             code_locals=call_info['locals']
 
 
@@ -522,7 +477,7 @@ class AutogramsFunction:
             for arg_name in bound_args.arguments:
                 code_locals[arg_name] =  bound_args.arguments[arg_name]
 
-        
+
         while not done:
 
             
@@ -538,13 +493,13 @@ class AutogramsFunction:
             else:
 
                 function_tree = jump_start_function(self.processed_def,target_line,code_locals.keys(),include_line,globals_to_declare=self.globals_to_declare)
-
+     
                 function_obj = generate_function_from_ast(function_tree,self.func,self.file_name)
                 #line_mapping_full = merge_line_mapping(line_mapping,self.line_mapping)
                 args =[]
                 kwargs = code_locals
 
-         #   import pdb;pdb.set_trace()
+
             try:
       
                 result =  function_obj(*args, **kwargs)
@@ -557,15 +512,16 @@ class AutogramsFunction:
                 done=True
 
 
+
                 if root_call:
                     memory=get_memory()
-                    return AutogramsReturn(func_return=None,memory=memory,data={"reply":reply_exc.reply})
+                    return AutogramsReturn(func_return=None,memory=memory,data=reply_exc.data)
                 else:
                     if debug:
                         import pdb;pdb.set_trace()
 
 
-                    raise FunctionExit(data ={"reply":reply_exc.reply})
+                    raise FunctionExit(data =reply_exc.data,ADDRESS=caller_line_address)
             
             except FunctionExit as exc_cont:
                 done=True
@@ -578,7 +534,7 @@ class AutogramsFunction:
                     return AutogramsReturn(func_return=None,memory=memory,data=exc_cont.data)
                 else:
 
-                    raise FunctionExit(data =exc_cont.data)    
+                    raise FunctionExit(data =exc_cont.data,ADDRESS=caller_line_address)    
             except ReturnTo as rt_exc:
 
                 if root_call:
@@ -616,6 +572,46 @@ class AutogramsFunction:
         else:
             return result
 
+class AutogramsExternal():
+    def __init__(self, func):
+        self.func=func
+
+    def __call__(self, *args, **kwargs):
+
+        memory = get_memory()
+        memory.process_external_call()
+        try:
+            result = self.func(*args,**kwargs)
+
+
+        except ReplyExit as reply_exc:
+            memory.process_external_return()    
+            raise Exception("Replies are invalid inside @autograms_external")
+        
+        except FunctionExit as exc_cont:
+            memory.process_external_return()    
+            raise Exception("Invalid function exit @autograms_external") 
+        except ReturnTo as rt_exc:
+            memory.process_external_return()    
+            raise Exception("Invalid RETURNTO inside @autograms_external. This is disallowed.") 
+            
+        except ReturnToContinued as rt_exc:
+            memory.process_external_return()    
+            raise Exception("Invalid RETURNTO continued inside @autograms_external. This is disallowed.") 
+
+
+        except GoTo as jump_exc:
+            memory.process_external_return()    
+            raise Exception("Invalid GOTO inside @autograms_external. This is disallowed.") 
+        except Exception as e:
+            memory.process_external_return()    
+            raise 
+
+        memory.process_external_return()
+
+        return result
+
+    
 
     
 
@@ -632,6 +628,17 @@ class AutogramsReturn():
         self.func_return=func_return
         self.memory = memory
         self.data =data
+
+
+def autograms_external():
+    """
+    Decorator for defining an Autograms extenral function, meant to be part of same module as chatbot but called from outside of chatbot to set or manipulate variables
+
+    """
+    def decorator(func):
+        return AutogramsExternal(func)
+    
+    return decorator
 
 def autograms_function(conv_scope="global",globals_to_declare={}):
     """

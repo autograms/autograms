@@ -92,22 +92,42 @@ def get_address_book(function_def_node,func_globals={}):
             # Check if the function name matches the one we're looking for
             if isinstance(node.func, ast.Name):
                 
-                if node.func.id in func_globals:
-                    node_func = func_globals[node.func.id]
+                #if node.func.id in func_globals:
+                if True:
+                    # node_func = func_globals[node.func.id]
              
-                    if hasattr(node_func,"_addressable") and node_func._addressable:
-                        
+                    # if hasattr(node_func,"_addressable") and node_func._addressable:
+                    #     found_address = False
                     # Look for the keyword argument
-                        for keyword in node.keywords:
-                            if keyword.arg == self.keyword_name:
-                                # Store the value of the keyword argument
+                    for keyword in node.keywords:
+                        if keyword.arg == self.keyword_name:
+                    
+                            # Store the value of the keyword argument
+                            try:
                                 value = ast.literal_eval(keyword.value)
+                            except:
+                                if isinstance(keyword.value,ast.Name):
+                                    if keyword.value.id in func_globals:
+                                        value = func_globals[keyword.value.id]
+                                        
 
-                                if not isinstance(value,str):
-                                    raise Exception(" `ADDRESS` argument to addressable function must be defined as a string literal. It cannot be a variable.")
-                                if keyword.value in self.matches:
-                                    raise Exception("all addressable functions called from within a function must have different `ADDRESS` set. `ADDRESS` "+value+"was repeated")
-                                self.matches[value]=node.lineno
+                                    else:
+                                        raise Exception(f"invalid use of ADDRESS keyword set to value {keyword.value.id} on line {node.lineno}, must be a string literal, or a global constant defined before the function {node.func.id} is defined")
+
+
+                                else:
+                                    raise Exception(f"invalid use of ADDRESS keyword with value {ast.unparse(keyword.value)} on line {node.lineno}, must be a string literal, or a global constant defined before the function {node.func.id} is defined")
+
+                            if not isinstance(value,str):
+                                raise Exception(f" `ADDRESS` argument with value {ast.unparse(keyword.value)} on line {node.lineno} must be defined as a string literal. It cannot be a variable.")
+                            if keyword.value in self.matches:
+                                raise Exception("all addressable functions called from within a function must have different `ADDRESS` set. `ADDRESS` "+value+"was repeated")
+                 
+                            self.matches[value]=node.lineno
+
+                       
+                        # if not found_address:
+                        #     print(f"Warning: {node.func.id} is addressable but does not have an address defined.")
             
             # Continue traversing the AST
             self.generic_visit(node)
@@ -133,6 +153,7 @@ def get_address_book(function_def_node,func_globals={}):
 
     # Get all matches found
     matches = visitor.get_matches()
+
 
     return matches
 

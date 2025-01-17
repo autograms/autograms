@@ -1,5 +1,5 @@
 import json
-from autograms import Autogram, AutogramConfig
+from autograms import Autogram, AutogramConfig, use_config, load_autogram
 
 
 import pandas as pd
@@ -18,26 +18,15 @@ def main():
     parser.add_argument('--config_file', type=str, default=None, help='config file')
     parser.add_argument('--saveload_file', type=str, default=None, help='file to reload memory from file')
     parser.add_argument('--example_name', type=str, default="autograms_seed_agent")
+    parser.add_argument('--autogram_file', type=str, default=None,help="Load autogram from .py module file instead of importing directly in code. useful for custom examples")
     parser.add_argument('--model_name', type=str, default="gpt-4o")
+    parser.add_argument('--model_type', type=str, default="openai")
+    parser.add_argument('--embedding_model_name', type=str, default="text-embedding-3-small")
+    parser.add_argument('--embedding_model_type', type=str, default=None)
+    parser.add_argument('--proxy_port', type=str, default=8080)
+    parser.add_argument('--embedding_proxy_port', type=str, default=None)
 
     args = parser.parse_args()
-
-
-    # Load chatbot example based on the provided example_name
-    if args.example_name == "autograms_seed_agent":
-        from examples.autograms_seed_agent import chatbot
-    elif args.example_name == "simple_example":
-        from examples.simple_example import chatbot
-    elif args.example_name == "fraction_tutor":
-        from examples.fraction_tutor import chatbot
-    elif args.example_name == "general_tutor":
-        from examples.general_tutor import chatbot
-    elif args.example_name == "recruiter":
-        from examples.recruiter import chatbot
-    else:
-        # Raise an error if no valid example is provided
-        # can alternatively replace this raise statement with your own import statement to set chatbot function
-        raise Exception("No example_name defined. If you wish to use your own example, delete this exception and replace it with an import statement for your example")
 
     # Load API keys from a file if provided, otherwise use an empty dictionary
     if not args.api_key_file is None:
@@ -46,13 +35,14 @@ def main():
     else:
         api_keys = None
 
+
     # Load or initialize configuration
     if args.config_file is None:
         if args.example_name == "autograms_seed_agent":
             chatbot_generation_args={"temperature":0.4}
-            autogram_config = AutogramConfig(chatbot_path = args.model_name,chatbot_max_input_len=40000,classifier_max_input_len=40000,classifier_path = args.model_name,max_response_len=4096,chatbot_generation_args=chatbot_generation_args,exclude_classifier_system_prompt=True)
+            autogram_config = AutogramConfig(chatbot_path = args.model_name,chatbot_max_input_len=40000,classifier_max_input_len=40000,classifier_path = args.model_name,max_response_len=4096,chatbot_generation_args=chatbot_generation_args,exclude_classifier_system_prompt=True,chatbot_type = args.model_type,chatbot_proxy_port=args.proxy_port,embedding_proxy_port = args.embedding_proxy_port,embedding_type=args.embedding_model_type,embedding_path=args.embedding_model_name)
         else:
-            autogram_config = AutogramConfig(chatbot_path = args.model_name,classifier_path = args.model_name)
+            autogram_config = AutogramConfig(chatbot_path = args.model_name,classifier_path = args.model_name,chatbot_type = args.model_type,chatbot_proxy_port=args.proxy_port,embedding_proxy_port = args.embedding_proxy_port,embedding_type=args.embedding_model_type,embedding_path=args.embedding_model_name)
     else:
         initial_args = {}
         with open(args.config_file) as fid:
@@ -61,8 +51,36 @@ def main():
         config = {**initial_args, **config}
         autogram_config = AutogramConfig(**config)
 
-    # Initialize the Autogram instance
+    if args.autogram_file is None:
+
+        # Load chatbot example based on the provided example_name
+        if args.example_name == "autograms_seed_agent":
+            from examples.autograms_seed_agent import chatbot
+        elif args.example_name == "simple_example":
+            from examples.simple_example import chatbot
+        elif args.example_name == "fraction_tutor":
+            from examples.fraction_tutor import chatbot
+        elif args.example_name == "general_tutor":
+            from examples.general_tutor import chatbot
+        elif args.example_name == "recruiter":
+            from examples.recruiter import chatbot
+        else:
+            # Raise an error if no valid example is provided
+            # can alternatively replace this raise statement with your own import statement to set chatbot function
+            raise Exception("No example_name defined. If you wish to use your own example, delete this exception and replace it with an import statement for your example")
+
+    else:
+        chatbot,init_chatbot = load_autogram(args.autogram_file)
+
+        if chatbot is None:
+            raise Exception(f"Must have chatbot() function in module defined in file {args.autogram_file}")
+
+        if not init_chatbot is None:
+            with use_config(autogram_config):
+                init_chatbot()
+
     autogram = Autogram(autogram_config=autogram_config, root_function=chatbot, api_keys=api_keys)
+
 
     # If a save/load file is provided and exists, load memory from it
     if not (args.saveload_file is None) and os.path.exists(args.saveload_file):

@@ -13,7 +13,7 @@ Calls the conversational model with the specified instruction.
 - **Returns**:
   - `str`: The model's response.
 
-#### **call_classifier(input_str, answer_choices, model_type=None, model_path=None, `**kwargs`)**
+#### **call_classifier(input_str, answer_choices, model_type=None, model=None, `**kwargs`)**
 `autograms.functional.call_classifier`
 Calls a classification model to determine the best choice.
 
@@ -21,13 +21,21 @@ Calls a classification model to determine the best choice.
   - `input_str` (str): The input text for classification.
   - `answer_choices` (list[str]): Possible answers.
   - `model_type` (str, optional): Type of the model.
-  - `model_path` (str, optional): Path to the model.
+  - `model` (str, optional): Path to the model.
+  - `multi_modal_inputs` (list[dict], optional) --list of open ai style image or audio inputs for the model, for example :
+                    ```python
+                    {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg"}
+                    } 
+                    ```
   - ``**kwargs``: Additional model arguments.
 
 - **Returns**:
   - `tuple`: The chosen answer and a success flag.
 
-#### **call_model(input_turns, output_turns, system_prompt, system_prompt_in_turns=False, model_type=None, model_path=None, `**kwargs`)**
+#### **call_model(input_turns, output_turns, system_prompt, system_prompt_in_turns=False, model_type=None, model=None, `**kwargs`)**
 `autograms.functional.call_model`
 Calls a conversational model and retrieves a response.
 
@@ -37,7 +45,15 @@ Calls a conversational model and retrieves a response.
   - `system_prompt` (str): System prompt to guide the model.
   - `system_prompt_in_turns` (bool, default=False): Whether the system prompt is included in the turns.
   - `model_type` (str, optional): The type of model to call.
-  - `model_path` (str, optional): Path to a specific model.
+  - `model` (str, optional): Path to a specific model.
+  - `multi_modal_inputs` (list[dict], optional) --list of open ai style image or audio inputs for the model, for example :
+                    ```python
+                    {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg"}
+                    } 
+                    ```
   - ``**kwargs``: Additional arguments for the model.
 
 - **Returns**:
@@ -45,7 +61,7 @@ Calls a conversational model and retrieves a response.
     - `result` (str): The model response.
     - `success` (bool): Whether the model call was successful.
 
-#### **call_object_model(input_turns, output_turns, system_prompt, system_prompt_in_turns=False, model_type=None, model_path=None, obj_structure=None, `**kwargs`)**
+#### **call_object_model(input_turns, output_turns, system_prompt, system_prompt_in_turns=False, model_type=None, model=None, obj_structure=None, `**kwargs`)**
 `autograms.functional.call_object_model`
 Calls a model to generate a structured object based on input.
 
@@ -55,8 +71,16 @@ Calls a model to generate a structured object based on input.
   - `system_prompt` (str): The system prompt.
   - `system_prompt_in_turns` (bool): Include system prompt in turns.
   - `model_type` (str, optional): Model type.
-  - `model_path` (str, optional): Model path.
-  - `obj_structure` (BaseModel): Pydantic model structure.
+  - `model` (str, optional): Model path.
+  - `obj_structure` (BaseModel): Pydantic model structure or json schema.
+  - `multi_modal_inputs` (list[dict], optional) --list of open ai style image or audio inputs for the model, for example :
+                  ```python
+                  {
+                  "type": "image_url",
+                  "image_url": {
+                      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg"}
+                  } 
+                  ```
   - ``**kwargs``: Additional arguments.
 
 - **Returns**:

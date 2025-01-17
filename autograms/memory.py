@@ -1,5 +1,4 @@
 
-default_system_globals = globals().keys()
 
 #from .__init__ import __version__
 import base64
@@ -13,7 +12,14 @@ from datetime import datetime
 debug = False
 
 
-_thread_local = threading.local()
+from contextvars import ContextVar
+from contextlib import contextmanager
+
+# Define a ContextVar for memory
+_memory_var = ContextVar("autograms_memory", default=None)
+
+#old logic
+#_thread_local = threading.local()
 
 
 def get_persistent_globals():
@@ -30,13 +36,7 @@ def get_persistent_globals():
     else:
         return []
 
-    # if hasattr(_thread_local, 'memory'):
-    #     return _thread_local.memory.persistent_globals
-    # elif hasattr(_thread_local, 'persistent_globals'):
-    #     return _thread_local.persistent_globals
-    # else:
-    #     return {}
-        
+
 
 def get_timestamp():
     """
@@ -61,6 +61,8 @@ class set_persistent_globals:
         """
         Captures the initial state of global variables.
         """
+
+
         self.frame = inspect.currentframe().f_back
 
         self.start_globals = self.frame.f_globals.copy()
@@ -77,13 +79,6 @@ class set_persistent_globals:
 
         end_globals['_persistent_globals'] = list(new_globals.keys())
         end_globals['_persistent_globals_str']= dill.dumps(new_globals)
-        # end_globals['_persistent_globals'] = {}
-        # end_globals['_persistent_globals'].update(new_globals)
-
-        # if hasattr(_thread_local, 'memory'):
-        #     _thread_local.memory.persistent_globals= new_globals
-        # else:
-        #     _thread_local.persistent_globals = new_globals
 
 
         
@@ -96,17 +91,32 @@ def use_memory(memory=None):
 
     Parameters:
     - memory (SerializableMemory): The memory object to use. Defaults to a new SerializableMemory instance.
+
     """
     if memory is None:
         memory = SerializableMemory()
 
     """Set _memory in thread-local storage."""
-    set_memory(memory)
+    token = set_memory(memory)
     
     try:
         yield
     finally:
-        clear_memory()
+
+        reset_memory(token)
+
+            
+
+
+def get_memory():
+    """
+    gets the current memory in thread-local storage.
+
+    Returns:
+    - memory (SerializableMemory): The memory object currently set or None if no memory object is set.
+    """
+
+    return _memory_var.get()
 
 
 def set_memory(memory):
@@ -119,29 +129,115 @@ def set_memory(memory):
 
 
     """Set _memory in thread-local storage."""
-    _thread_local.memory = memory
+    return _memory_var.set(memory)
 
 
-def get_memory():
+def reset_memory(token):
     """
-    Retrieves the current memory object from thread-local storage.
+    Resets the memory object to a previous state using a token.
 
-    Returns:
-    - SerializableMemory or None: The memory object, or None if no memory is set.
+    Parameters:
+    - token: A token returned by `set_memory`.
     """
-    """Retrieve _memory from thread-local storage."""
-    return getattr(_thread_local, 'memory', None)
+    _memory_var.reset(token)
+
 
 def clear_memory():
     """
-    Clears the current memory object from thread-local storage.
+    Clears the current memory object by setting it to None.
     """
-    if hasattr(_thread_local, 'memory'):
+    _memory_var.set(None)
 
-        del _thread_local.memory
 
-    # if hasattr(_thread_local, 'persistent_globals'):
-    #     del _thread_local.persistent_globals
+
+class UserGlobals():
+    def __init__(self):
+        self.init_dict = {}
+
+
+
+    def _get_thread_dict(self):
+        # Initialize the dictionary for the current thread if it doesn't exist
+
+        mem = get_memory()
+        if mem is None:
+            return self.init_dict
+          
+        else:
+            return mem.memory_dict['user_globals']
+        
+
+    def __getitem__(self, key):
+        thread_dict = self._get_thread_dict()
+
+        return thread_dict[key]
+
+    def __setitem__(self, key, value):
+        thread_dict = self._get_thread_dict()
+        thread_dict[key] = value
+
+    def __delitem__(self, key):
+        thread_dict = self._get_thread_dict()
+        del thread_dict[key]
+
+    def __contains__(self, key):
+        thread_dict = self._get_thread_dict()
+        return key in thread_dict
+
+    def items(self):
+        return self._get_thread_dict().items()
+
+    def keys(self):
+        return self._get_thread_dict().keys()
+
+    def values(self):
+        return self._get_thread_dict().values()
+
+    def get(self, key, default=None):
+        return self._get_thread_dict().get(key, default)
+
+    def clear(self):
+        self._get_thread_dict().clear()
+    def __repr__(self):
+        """
+        Returns a string representation of the thread-specific dictionary,
+        prefixed with 'UserGlobals'.
+        """
+        # Convert the underlying dictionary to a normal dict so it prints nicely
+        thread_dict = self._get_thread_dict()
+        return f"UserGlobals({thread_dict})"
+
+user_global_modules = dict()
+def init_user_globals():
+    #use inspect to create unique id (derived from file (if exists, name (if exists), etc. throw exception if user_globals already initialized in this space))
+    frame = inspect.currentframe().f_back
+    module_globals = frame.f_globals
+
+    # Create a unique module ID
+    module_id = create_module_id(module_globals)
+
+    if module_id in user_global_modules:
+        raise Exception("User globals can only be initialized once per module")
+
+
+    user_globals = UserGlobals()
+    user_global_modules[module_id] = user_globals
+    return user_globals
+
+def create_module_id(module_globals):
+    """Create a unique identifier for a module based on its globals."""
+    module_file = module_globals.get("__file__", None)
+    module_name = module_globals.get("__name__", None)
+
+    if module_file:
+        # Use file path as primary identifier
+        return f"file::{module_file}"
+    elif module_name:
+        # Use module name as fallback
+        return f"name::{module_name}"
+    else:
+        # Fallback to unique ID of the globals dictionary
+        return f"id::{id(module_globals)}"
 
 
 
@@ -168,17 +264,15 @@ class SerializableMemory():
             self.memory_dict['globals_snapshot']={}
 
             
+        if not 'user_globals' in self.memory_dict:
+            module_id = create_module_id(self.root_function.func.__globals__)
+            if module_id in user_global_modules:
+                self.memory_dict['user_globals']= dill.loads(dill.dumps(user_global_modules[module_id].init_dict))
+            else:
+                self.memory_dict['user_globals']=dict()
 
 
-
-        # if hasattr(_thread_local, 'persistent_globals'):
-        #     self.persistent_globals = _thread_local.persistent_globals
-        #     del _thread_local.persistent_globals
-
-
-        # else:
-
-        #     self.persistent_globals={}
+        
 
         self.globals_snapshot={}
     def set_globals_snapshot(self,):
@@ -190,6 +284,8 @@ class SerializableMemory():
         else:
             persistent_globals= self.root_function.func.__globals__['_persistent_globals']
             self.memory_dict['globals_snapshot']={k: v for k, v in self.root_function.func.__globals__.items() if k in persistent_globals}
+
+
 
 
 
@@ -240,16 +336,16 @@ class SerializableMemory():
                 line_number= frame.frame.f_code.co_firstlineno + frame.frame.f_lineno - 1
                 function_name = frame.frame.f_code.co_name
                 code_locals = frame.frame.f_locals.copy()  
-                code_globals =  frame.frame.f_globals.copy()  
+          
 
 
                 if self.memory_dict['stack_pointer']>len(self.memory_dict['stack']):
 
                     #this is the stack info for the previous call, the stack will lag 1 behind the new call since we don't have this information yet
-                    self.memory_dict['stack'].append({"line_number":line_number,"function_name":function_name,"locals":code_locals,"globals":code_globals})
+                    self.memory_dict['stack'].append({"line_number":line_number,"function_name":function_name,"locals":code_locals})
                 else:
                     #import pdb;pdb.set_trace()
-                    self.memory_dict['stack'][self.memory_dict['stack_pointer']-1]={"line_number":line_number,"function_name":function_name,"locals":code_locals,"globals":code_globals}
+                    self.memory_dict['stack'][self.memory_dict['stack_pointer']-1]={"line_number":line_number,"function_name":function_name,"locals":code_locals}
 
 
 
@@ -275,7 +371,7 @@ class SerializableMemory():
         self.memory_dict['stack_pointer']-=1
         self.memory_dict['call_depth']-=1
 
-    def process_function_exit(self,function_name,line_number,code_locals):
+    def process_function_exit(self,function_name,line_number,code_locals,address=None):
         """
         Logs the state of a function upon exit for serialization.
 
@@ -293,9 +389,9 @@ class SerializableMemory():
 
         if len(self.memory_dict['stack'])==self.memory_dict['stack_pointer']:
          
-             self.memory_dict['stack'].append({"line_number":line_number,"function_name":function_name,"locals":code_locals})
+             self.memory_dict['stack'].append({"line_number":line_number,"function_name":function_name,"locals":code_locals,"address":address})
         else: 
-            self.memory_dict['stack'][self.memory_dict['stack_pointer']] = {"line_number":line_number,"function_name":function_name,"locals":code_locals}
+            self.memory_dict['stack'][self.memory_dict['stack_pointer']] = {"line_number":line_number,"function_name":function_name,"locals":code_locals,"address":address}
         # if len(self.memory_dict['stack'])>0 and not self.memory_dict['stack'][0]['function_name']=='main':
         #     import pdb;pdb.set_trace()
         
@@ -310,82 +406,31 @@ class SerializableMemory():
         self.memory_dict['stack_pointer']-=1
 
 
-    def serialize(self,serialization_type="partial"):
+    def serialize(self):
         """
         Serializes the memory object.
 
-        Parameters:
-        - serialization_type (str): Type of serialization ('full', 'partial', or 'json').
+
 
         Returns:
         - str: Serialized representation of the memory.
         """
+        obj_str = dill.dumps(self.memory_dict)
+        obj_base64 = base64.b64encode(obj_str).decode('utf-8')
 
-        if serialization_type=="full":
-            obj_str = dill.dumps(self)
-            obj_base64 = base64.b64encode(obj_str).decode('utf-8')
-            return obj_str
+        return obj_base64
 
-
-        else:
-            
-           # non_function_globals = {k: v for k, v in self.root_function.func.__globals__.items() if self.persistent_globals is None or k in self.persistent_globals}
-            
-            # {
-            #         name: value for name, value in self.root_func.__globals__.items()
-            #         if not isinstance(value, (types.FunctionType, types.ModuleType, type))
-            #     }
-           # obj = {"memory":self.memory_dict,"non_func_globals":self.globals_snapshot }
-            if serialization_type=="partial":
-                
-                obj_str = dill.dumps(self.memory_dict)
-                obj_base64 = base64.b64encode(obj_str).decode('utf-8')
-
-                return obj_base64
-
-                
-
-            elif serialization_type=="json":
-                raise NotImplementedError("json serialization not implemented yet, use partial for now")
-                result = jsonpickle.encode(self.memory_dict)
-                return result
-
-    def save(self,file_name,serialization_type="partial"):
+    def save(self,file_name):
         """
         Saves the memory object to a file.
 
         Parameters:
         - file_name (str): Name of the file to save to.
-        - serialization_type (str): Type of serialization ('full', 'partial', or 'json').
+
         """
+        with open(file_name,'wb') as fid:
+            dill.dump(self.memory_dict,fid)
 
-        if serialization_type=="full":
-            with open(file_name,'wb') as fid:
-                dill.dump(self,fid)
-            
-
-        else:
-            
-            # non_function_globals = {
-            #         name: value for name, value in self.root_func.__globals__.items()
-            #         if not isinstance(value, (types.FunctionType, types.ModuleType, type))
-            #     }
-
-           # non_function_globals = {k: v for k, v in self.root_function.func.__globals__.items() if self.persistent_globals is None or k in self.persistent_globals}
-        #    obj = {"memory":self.memory_dict,"non_func_globals":self.globals_snapshot }
-            if serialization_type=="partial":
-                
-                with open(file_name,'wb') as fid:
-                    dill.dump(self.memory_dict,fid)
-
-
-            
-            elif serialization_type=="json":
-                raise NotImplementedError("json serialization not implemented yet, use partial for now")
-                result = jsonpickle.encode(self.memory_dict)
-                with open(file_name,'w') as fid:
-                    fid.write(result)
-                
 
     # def save(self,file_name,serialization_type="memory_partial"):
     #     save_obj = self.serialilize(serialization_type)
@@ -453,66 +498,30 @@ class MemoryObject(SerializableMemory):
 
 
 
-    def serialize(self,serialization_type="partial"):
+    def serialize(self):
 
         """
         Serializes the memory object with chatbot-specific context.
 
-        Parameters:
-        - serialization_type (str): Type of serialization ('full', 'partial', or 'json').
 
         Returns:
         - str: Serialized representation of the memory.
         """
-        if serialization_type=="full":
-            obj_str = dill.dumps(self)
-            obj_base64 = base64.b64encode(obj_str).decode('utf-8')
-            return obj_str
+        obj_str = dill.dumps(self.memory_dict)
+        obj_base64 = base64.b64encode(obj_str).decode('utf-8')
 
+        return obj_base64
 
-        else:
-  
-            if serialization_type=="partial":
-                
-                obj_str = dill.dumps(self.memory_dict)
-                obj_base64 = base64.b64encode(obj_str).decode('utf-8')
-
-                return obj_base64
-
-                
-
-            elif serialization_type=="json":
-                result = jsonpickle.encode(self.memory_dict)
-                return result
-
-    def save(self,file_name,serialization_type="partial"):
+    def save(self,file_name):
         """
         Saves the memory object with chatbot-specific context.
 
         Parameters:
         - file_name (str): Name of the file to save to.
-        - serialization_type (str): Type of serialization ('full', 'partial', or 'json').
         """
+        with open(file_name,'wb') as fid:
+            dill.dump(self.memory_dict,fid)
 
-        if serialization_type=="full":
-            with open(file_name,'wb') as fid:
-                dill.dump(self,fid)
-            
-
-        else:
-            
-
-            if serialization_type=="partial":
-                
-                with open(file_name,'wb') as fid:
-                    dill.dump(self.memory_dict,fid)
-
-
-            
-            elif serialization_type=="json":
-                result = jsonpickle.encode(self.memory_dict)
-                with open(file_name,'w') as fid:
-                    fid.write(result)
 
     def set_test_mode(self,test_mode):
 
@@ -543,6 +552,16 @@ class MemoryObject(SerializableMemory):
 
             
 
+
+    def process_external_call(self):
+        if len(self.memory_dict['turn_stack'])>0:
+            system_prompt = self.memory_dict['turn_stack'][-1]['system_prompt']
+        else:
+            system_prompt = self.config.default_prompt
+        self.memory_dict['turn_stack'].append({"scope":"normal","turns":[],"system_prompt":system_prompt})
+
+    def process_external_return(self):
+        self.memory_dict['turn_stack']=self.memory_dict['turn_stack'][:-1]
 
 
 
@@ -676,6 +695,8 @@ class MemoryObject(SerializableMemory):
         self.memory_dict['model_turns'].append({"user_reply":user_reply,"entry_type":"user_reply","timestamp":get_timestamp()})
 
         self.memory_dict["cached_user_reply"]=user_reply
+    def get_user_reply(self):
+        return self.memory_dict["cached_user_reply"]
     def get_turns_for_model(self,instruction=None):
 
         """
@@ -708,6 +729,28 @@ class MemoryObject(SerializableMemory):
         
 
         return turns,system_prompt
+
+
+
+    def extract_full_conv_history(self):
+
+        conv_turns = []
+        for turn in self.memory_dict['model_turns']:
+            if turn["entry_type"]=="agent_reply":
+                conv_turns.append({"role":"assistant","content":turn["reply"]})
+
+            if turn["entry_type"]=="user_reply":
+                conv_turns.append({"role":"user","content":turn["user_reply"]})
+        return conv_turns
+    
+    def extract_conv_history_str(self):
+        out_str=""
+        turns = self.extract_full_conv_history()
+        for turn in turns:
+            out_str+=f"{turn['role']}: {turn['content']}"
+        return out_str
+
+
 
 
 

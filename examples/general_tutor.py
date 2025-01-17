@@ -1,6 +1,7 @@
 from autograms import autograms_function
 from autograms.nodes import reply, reply_instruction, thought, silent_thought
-from autograms.functional import set_system_prompt, multiple_choice, yes_or_no, generate_list, generate_fixed_list, generate_fixed_dict
+from autograms.functional import set_system_prompt, multiple_choice, yes_or_no, generate_list,  generate_fixed_dict
+
 
 # Initial message to introduce the chatbot and its functionality
 intro_message = (
@@ -17,6 +18,10 @@ def chatbot():
         "Follow all instructions carefully, ensure user understanding before proceeding, "
         "and avoid adding extra content that may disrupt the conversation flow."
     )
+
+
+
+
 
     # Start the interaction with the introduction message
     reply(intro_message)

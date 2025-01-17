@@ -9,42 +9,50 @@ from ..memory import get_memory
 import copy
 
 
-# openai_version = pkg_resources.get_distribution("openai").version
-
-# legacy_openai= [int(x) for x in openai_version.split('.')][0]==0
-
-
 client = None
+embedding_client=None
+api_settings = dict()
+stored_tokenizers=dict()
 
 
 
-def init_api(api_key):
+def init_api(api_key=None,proxy_address=None,embedding_proxy_address=None):
     global client
-    client = OpenAI(api_key=api_key)
-
-   
-
-# def get_tokenizer(model):
-#     if model in tokenizers:
-#         return tokenizers[model]
-#     else:
-#         tokenizer = tiktoken.encoding_for_model(model)
-#         tokenizers[model]=tokenizer
-
-#         return tokenizer
-    
+    global embedding_client
+    if proxy_address is None:
+        client = OpenAI(api_key=api_key)
+    else:
+        client = OpenAI(base_url=proxy_address,api_key="default")
+        #client = OpenAI(base_url=proxy_address)
 
 
-def get_batch_embeddings(texts, model="text-embedding-3-small"):
+    if embedding_proxy_address is None or embedding_proxy_address==proxy_address:
+        embedding_client = client
+    else:
+         embedding_client = OpenAI(base_url=embedding_proxy_address,api_key="default")
+        #client = OpenAI(base_url=proxy_address)
 
-   data = client.embeddings.create(input = texts, model=model).data
+    if not api_key is None:
+        api_settings['open_api_key']=api_key
+
+
+
+    if not proxy_address is None:
+        api_settings['openai_api_base']=proxy_address
+
+
+
+def get_batch_embeddings(texts, model=None,**kwargs):
+
+   data = embedding_client.embeddings.create(input = texts, model=model,**kwargs).data
    results = [x.embedding for x in data]
    return results
 
-def get_single_embedding(text, model="text-embedding-3-small"):
+def get_single_embedding(text, model=None,**kwargs):
 
-   result = client.embeddings.create(input = [text], model=model).data[0].embedding
-   return result
+   result = embedding_client.embeddings.create(input = [text], model=model,**kwargs)
+
+   return result.data[0].embedding
 
 
 def truncate_turn_input(inputs,outputs,tokenizer,max_input_len):
@@ -102,18 +110,37 @@ def truncate_turn_input(inputs,outputs,tokenizer,max_input_len):
 #     if truncate_input:
 #         input_turns,output_turns=truncate_input(input_turns,output_turns)
 
+def get_tokenizer(model):
+    if model in stored_tokenizers:
+        tokenizer=stored_tokenizers[model]
+    else:
+        try:
+            tokenizer =tiktoken.encoding_for_model(model)
+        except:
+            try:
+                from transformers import AutoTokenizer
+            except:
+                print(f"tokenizer not found for {model}, using openai tokenizer for prompt length enforcement")
+                tokenizer = tiktoken.encoding_for_model("gpt-4o")
+                #raise Exception(f"{model} not found. If this is a transformers model, you need to do `pip install transformers` to allow the tokenizer to be found. If this is a valid openai model, then your tiktoken installation may be out of date. If this is a neither an openai or transfomers model, your model may not have a tokenizer, which is necessary for certain autograms functions. future versions of autograms may provide a workaround.")
+            try:
+                print(f"tokenizer not found for {model}, using openai tokenizer for prompt length enforcement")
+                tokenizer = AutoTokenizer.from_pretrained(model)
+            except:
+                tokenizer = tiktoken.encoding_for_model("gpt-4o")
+                
+                #raise Exception(f"{model} not found. If this is a valid openai model, then your tiktoken installation may be out of date. If this is a neither an openai or transfomers model, your model may not have a tokenizer, which is necessary for certain autograms functions. Future versions of autograms may provide a workaround.")
 
-
-def get_chatbot_messages(input_turns,output_turns,system_prompt,system_prompt_in_turns=False,truncate_input=False,model=None):
+    stored_tokenizers[model]=tokenizer
+    return tokenizer
+def get_chatbot_messages(input_turns,output_turns,system_prompt,system_prompt_in_turns=False,truncate_input=False,model=None,multi_modal_inputs=None):
     memory = get_memory()
     config=memory.config
 
     if model is None:
         model = config.chatbot_path
-    tokenizer =tiktoken.encoding_for_model(model)
 
-
-
+    tokenizer=get_tokenizer(model)
 
 
     if truncate_input:
@@ -137,12 +164,15 @@ def get_chatbot_messages(input_turns,output_turns,system_prompt,system_prompt_in
         if system_prompt_in_turns:
              input_turns[0] = system_prompt+"\n\n"+input_turns[0]
         else:
-            messages.append({"role":"system", "content": system_prompt})
+            messages.append({"role":"system", "content": [{"type": "text", "text":system_prompt}]})
     for i in range(len(output_turns)):
-        messages.append({"role":"user", "content": input_turns[i]})
-        messages.append({"role":"assistant", "content": output_turns[i]})
+        messages.append({"role":"user", "content": [{"type": "text", "text":input_turns[i]}]})
+        messages.append({"role":"assistant", "content": [{"type": "text", "text":output_turns[i]}]})
 
-    messages.append({"role":"user", "content": input_turns[-1]})
+    messages.append({"role":"user", "content": [{"type": "text", "text":input_turns[-1]}]})
+    if not multi_modal_inputs is None:
+        for turn in multi_modal_inputs:
+            messages[-1]['content'].append(turn)
 
     return messages
 
@@ -163,12 +193,14 @@ def call_openai_chatbot(messages,handle_errors=False,handle_refusal=False,model=
     if model is None:
         model = config.chatbot_path
 
-    tokenizer =tiktoken.encoding_for_model(model)
+    tokenizer=get_tokenizer(model)
 
-    if not "temperature" in generation_args:
-        generation_args["temperature"] = config.chatbot_generation_args['temperature']
+
+    for arg in config.chatbot_generation_args:
+        if not arg in generation_args:
+            generation_args[arg]= config.chatbot_generation_args[arg]
     if not "max_tokens" in generation_args:
-        generation_args["max_tokens"] = config.max_response_len
+        generation_args["max_tokens"] = config.max_tokens
 
 
 
@@ -231,7 +263,11 @@ def call_openai_chat_formatted(messages,obj_structure=None,model=None,**kwargs):
     if model is None:
         model = config.chatbot_path
 
+    generation_args = copy.deepcopy(kwargs)
 
+    for arg in config.chatbot_generation_args:
+        if not arg in generation_args:
+            generation_args[arg]= config.chatbot_generation_args[arg]
 
     try:
         result = client.beta.chat.completions.parse(
@@ -275,6 +311,66 @@ def call_openai_chat_formatted(messages,obj_structure=None,model=None,**kwargs):
 
   
     return output,raw_str, usage_log
+
+
+# def call_openai_json_classifier(messages,obj_structure=None,model=None,**kwargs):
+    
+    
+#     memory = get_memory()
+#     config=memory.config
+
+#     kwargs["temperature"]=0.0
+#     kwargs["n"]=1
+
+#     if return_logits:
+
+
+#         kwargs["logprobs"]=True
+#         kwargs["top_logprobs"]= 20
+#     try:
+
+
+#         result = client.beta.chat.completions.parse(
+#             messages=messages,
+#             model=model,
+#             response_format=obj_structure,
+#             **kwargs
+#         )
+#         usage_log = result.usage.to_dict()
+#         usage_log['model'] = model
+
+#         output_obj = result.choices[0].message
+  
+
+#         if output_obj.parsed:
+            
+#             output = output_obj.parsed
+#             raw_str = result.choices[0].message.content
+#             success=True
+
+
+#         else:
+            
+#             #if isinstance(obj_structure,dict)
+                
+#             raw_str = result.choices[0].message.content
+#             output = raw_str
+            
+#             if output_obj.refusal:
+#                 success=False
+#             else:
+#                 success=True
+
+
+
+#     except Exception as e:
+#         print(e)
+#         print("Warning!!!! failed to parse openai structured output,object will be generated to defaults")
+#         return None,None,{'model':'failed'}
+
+
+  
+#     return output,raw_str, usage_log
 
 
 
@@ -328,14 +424,13 @@ def refusal_args(response,tokenizer,generation_args):
 #         **input_args
 #     )
 
-def get_classifier_messages(text,truncate=True,model=None,system_prompt=None,system_prompt_in_turns=False):
+def get_classifier_messages(text,truncate=True,model=None,system_prompt=None,system_prompt_in_turns=False,multi_modal_inputs=None):
     memory = get_memory()
     config = memory.config
     if model is None:
         model = config.classifier_path
-    tokenizer = tiktoken.encoding_for_model(model)
 
-
+    tokenizer=get_tokenizer(model)
 
     if truncate:
         max_len=config.classifier_max_input_len
@@ -356,11 +451,15 @@ def get_classifier_messages(text,truncate=True,model=None,system_prompt=None,sys
     messages=[]
     if not system_prompt is None:
         if not system_prompt_in_turns:
-            messages.append({"role":"system", "content": system_prompt})
+            messages.append({"role":"system", "content":[{"type": "text", "text":system_prompt}] })
         else:
             text=system_prompt+"\n\n"+text
         
-    messages.append({"role":"user", "content": text})
+    messages.append({"role":"user", "content": [{"type": "text", "text":text}]})
+
+    if not multi_modal_inputs is None:
+        for turn in multi_modal_inputs:
+            messages[-1]['content'].append(turn)
 
     return messages
 
@@ -377,7 +476,7 @@ def call_openai_classifier(messages,answer_choices,model=None,class_biases=None,
         if model is None:
             model = config.classifier_path
 
-        tokenizer =tiktoken.encoding_for_model(model)
+        tokenizer =get_tokenizer(model)
 
         answer_dict=dict()
 
@@ -391,10 +490,17 @@ def call_openai_classifier(messages,answer_choices,model=None,class_biases=None,
         for i in range(len(answer_choices)):
             answer = answer_choices[i]
             token=tokenizer.encode(answer)
-            if class_biases is None:
-                answer_dict[str(token[0])]=100
+
+            if isinstance(tokenizer, tiktoken.Encoding):
+                if class_biases is None:
+                    answer_dict[str(token[0])]=100
+                else:
+                    answer_dict[str(token[0])]=int(100+class_biases[i])
             else:
-                answer_dict[str(token[0])]=int(100+class_biases[i])
+                if class_biases is None:
+                    answer_dict[token[0]]=100
+                else:
+                    answer_dict[token[0]]=int(100+class_biases[i])         
     
         if return_logits:
             if memory.test_mode:
@@ -432,10 +538,11 @@ def call_openai_classifier(messages,answer_choices,model=None,class_biases=None,
 
                     result = logits
                   
-                except:
+                except Exception as e:
 
                     logits = np.random.randn(len(answer_dict))
                     result = logits
+                    print(e)
                     usage_log = {'model':'failed'}
                     print("Warning, open ai classifier failed")
 
@@ -449,24 +556,21 @@ def call_openai_classifier(messages,answer_choices,model=None,class_biases=None,
                 result =  answer_choices[pred_ind]
                 usage_log = {'model':'test'}
             else:
-                try:
-                    kwargs["logit_bias"]=answer_dict
-                    kwargs["temperature"]=0.0
-                    kwargs["max_tokens"]=1
-                    kwargs["n"]=1
-                
+                #try:
+           
+                kwargs["logit_bias"]=answer_dict
+                kwargs["temperature"]=0.0
+                kwargs["max_tokens"]=1
+                kwargs["n"]=1
+            
 
-                    response = client.chat.completions.create(model=model,messages=messages,**kwargs)
-                    usage_log = response.usage.to_dict()
-                    usage_log['model'] = model
-                
-                    result = response.choices[0].message.content
-               
-                except:
+                response = client.chat.completions.create(model=model,messages=messages,**kwargs)
+                usage_log = response.usage.to_dict()
+                usage_log['model'] = model
+            
+                result = response.choices[0].message.content
 
-                    result =  answer_choices[0]
-                
-                    usage_log = {'model':'failed'}
+
 
         return result,usage_log
 
