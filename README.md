@@ -22,7 +22,7 @@ conda activate  test_autograms
 ```
 
 Clone repo and install from source
-``
+```
 git clone https://github.com/autograms/autograms.git
 cd autograms
 pip install .
