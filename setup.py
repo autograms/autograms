@@ -7,7 +7,7 @@ setup(
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',
     package_data={'autograms': ['graph_utils/template.html']},
-    packages=find_packages(exclude=['examples', 'examples.*']),
+    packages=find_packages(include=['autograms', 'autograms.*']),
     install_requires=[
         "openai",
         "tiktoken",
