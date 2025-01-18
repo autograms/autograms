@@ -267,7 +267,32 @@ def extract_nonlocals(func_orig):
         free_vars = func_orig.__code__.co_freevars
         nonlocals = {name: cell.cell_contents for name, cell in zip(free_vars, func_orig.__closure__)}
     return nonlocals
+def validate_and_fix_ast(node):
+    """
+    Validates and fixes AST node ranges, ensuring `lineno`, `end_lineno`, `col_offset`, and `end_col_offset`
+    are consistent and not None.
+    """
+    # Validate line numbers
+    if hasattr(node, 'lineno') and hasattr(node, 'end_lineno'):
+        if node.lineno is None or node.end_lineno is None:
+            pass
 
+        elif node.lineno > node.end_lineno:
+
+            node.end_lineno = node.lineno
+
+    # Validate column offsets
+    if hasattr(node, 'col_offset') and hasattr(node, 'end_col_offset'):
+        if node.col_offset is None or node.end_col_offset is None:
+            pass
+        elif node.lineno == node.end_lineno and node.col_offset > node.end_col_offset:
+
+            
+            node.end_col_offset = node.col_offset
+
+    # Recursively validate child nodes
+    for child in ast.iter_child_nodes(node):
+        validate_and_fix_ast(child)
 
 
 def generate_function_from_ast(func_def_node, func_orig,file_name="<ast>"):
@@ -293,6 +318,8 @@ def generate_function_from_ast(func_def_node, func_orig,file_name="<ast>"):
    # module_node = ast.fix_missing_locations(module_node)
     #print("fixed")
 
+    validate_and_fix_ast(module_node)
+
     compiled_object = compile(module_node, file_name, mode="exec")
 
 
@@ -306,7 +333,7 @@ def generate_function_from_ast(func_def_node, func_orig,file_name="<ast>"):
     non_locals = extract_nonlocals(func_orig)
     if len(non_locals)>0:
         raise Exception("function "+func_def_node.name + " cannot be defined inside another function. functions decorated with @autograms_function or @autograms_chatbot must be derived at the module level or directly within a class")
-        
+    
     # Create the function object using types.FunctionType
     new_func = types.FunctionType(
         code_object,  # The code object for the function (first constant in the compiled module)

@@ -145,8 +145,7 @@ The recruiter chatbot and other examples also have much shorter prompts and use 
 
 You can also see the token usage (along with other information about model calls) in the list:
 
-```
-python 
+```python 
 memory_object.memory_dict['model_turns']
 ```
 
@@ -177,30 +176,30 @@ Local AI is useful if you want to run autograms locally, and supports both text 
 Note: If you do not have docker installed, are using ubuntu, and want a quick solution, you can run `bash proxy_apis/install_docker.sh` (tested in ubuntu 20.04)
 
 You can run llama with docker : 
-
+```
 docker run -ti --name local-ai -p 8080:8080 localai/localai:latest-cpu run llama-3.2-1b-instruct:q4_k_m
-
+```
 Note that you may need to run docker with `sudo` if this gives a permission error. 
 
 If you would also like to run an embeddings model to work with autograms, you can use:
-
+```
 docker run -ti --name local-ai-embed -p 8081:8080 -v "$(pwd)/proxy_apis:/models" localai/localai:latest-cpu /models/localai_embedding_config.yaml
-
+```
 Note that embeddings aren't necessary for the current examples in the repo, but are needed for autograms that use RAG. We will add some examples of this soon.
 
 
 You can then open a new terminal window, cd into the autograms repo, and run an example using:
-
+```
 python run_autogram.py --example_name recruiter --model_type proxy --proxy_port 8080 --model_name llama-3.2-1b-instruct:q4_k_m 
-
+```
 
 Note that compared with openai's best models, the instructions in autograms need slightly more detail for some smaller open source models, otherwise the model can become confused about it's role. /examples/recruiter.py is well optimized for this.
 
 If you have a custom example that needs to use embeddings, assuming you set up both proxies, you can use
 
-
+```
 python run_autogram.py --autogram_file path/to/file.py --model_type proxy --proxy_port 8080 --model_name llama-3.2-1b-instruct:q4_k_m --embedding_model_name text-embedding-ada-002 --embedding_model_type proxy --embedding_proxy_port 8081
-
+```
 
 When you want to stop or restart the docker run, you can clean up the previous run with
 
