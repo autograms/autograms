@@ -75,6 +75,20 @@ def use_config(config,test_mode=False):
     """
     A simple way to set the config 
     """
+
+
+    if config.chatbot_type == 'openai':
+            
+        new_api_keys=dict()
+        if DEFAULT_API_KEYS['openai'] in os.environ:
+        
+            new_api_keys['openai'] = os.environ[DEFAULT_API_KEYS['openai']]
+        else:
+            new_api_keys['openai'] ='none'
+        init_apis(new_api_keys)
+    else:
+        init_apis(None,proxy_address = config.proxy_address,embedding_proxy_address=config.embedding_proxy_address)
+
     memory_object =SimpleMemory(config = config)
     token= set_memory(memory_object)
 

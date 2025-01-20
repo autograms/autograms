@@ -3,6 +3,7 @@ import ast
 import re
 import copy
 from collections import OrderedDict
+
 SKIP_FLAG_PREFIX= "_AUTO_SKIP_FLAG"
 CONDITION_FLAG_PREFIX = "_AUTO_CONDITION_FLAG"
 ITERATOR_PREFIX = "_AUTO_ITERATOR"
@@ -586,6 +587,7 @@ def jump_start_function(source_tree, target_line,new_kwargs,include_line=False,g
     Returns:
     - ast.AST: The modified AST.
     """
+   
     tree = copy.deepcopy(source_tree)
     
     class PathFinder(ast.NodeVisitor):

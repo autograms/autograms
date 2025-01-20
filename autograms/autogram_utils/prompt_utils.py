@@ -55,11 +55,15 @@ def set_past_output(agent_reply,transition):
     config = get_memory().config
 
     text = agent_reply
+    if transition:
+        text=config.agent_name+": "+text
+
   
     if config.reply_start_type=="prefix":
         text= config.reply_start+" "+text
     
     return text
+
 
 
 def set_input(user_reply,instruction,transition):
@@ -80,7 +84,7 @@ def set_input(user_reply,instruction,transition):
 
 
     if not(user_reply) is None and len(user_reply)>0:
-        if config.reply_start_type=="none":
+        if config.reply_start_type=="none" and not transition:
             last_reply = user_reply+ "\n\n"
         else:
             last_reply=config.user_name+": "+user_reply+ "\n\n"
@@ -173,7 +177,7 @@ def make_prompt(turns,max_turns=None,transition=False):
             #calls node from previous turn to determine what text should go in input text for turn
             input_i = input_0+set_past_input(user_reply,retain_instruction,instruction,transition=transition)
             if len(input_i)==0:
-                input_i="[No reply here, ignore]"
+                input_i="[No user reply here, agent replies next]"
 
             inputs.append(input_i)
 
@@ -190,15 +194,147 @@ def make_prompt(turns,max_turns=None,transition=False):
     input_i=input_0+input_i
     inputs.append(input_i)
 
+    import pdb;pdb.set_trace()
+
     if not max_turns is None and max_turns>0:
         inputs = inputs[-max_turns:]
         outputs = outputs[-max_turns:]
 
     
 
-
-    return inputs,outputs,reply_prefix_text
     
+    return inputs,outputs,reply_prefix_text
+
+
+def make_prompt_single(turns,instruction=None,max_turns=None,transition=False):
+
+
+    if not max_turns is None:
+
+        user_replies_found = 0
+        min_index = 0
+        for i in reversed(range(len(turns))):
+            if turns[i]['role']=="user":
+                user_replies_found +=1
+            if turns[i]['role']=="agent" and user_replies_found==max_turns:
+                min_index =i
+        turns=turns[min_index:]
+
+
+    if not transition:
+        message = "The information below may contain replies given by the user,  replies given by you (the agent), instructions given by the system to you for internal reasoning, and answers to those system instructions given by you the agent. Be sure to consider the entire conversation history, paying special attention to the user and agent replies.\n\n"
+    else:
+        message =  "The information below may contain replies given by the agent, instructions given by the system to the agent for internal reasoning, and answers to those system instructions given by the agent. You will need to answer a question based on this information.\n\n"
+    for turn in turns:
+        #iterates over past turns
+        if turn['role']=="user":
+            message+="User: " +  turn['content']+"\n\n"
+        if turn['role']=="agent":
+            message+="Agent: " +  turn['content']+"\n\n"
+
+        if turn['role']=="system_instruction":
+            message+="System Instruction: " +  turn['content']+"\n\n"
+
+        if turn['role']=="system_answer":
+            message+="Agent Answer: " +  turn['content']+"\n\n"
+
+
+        
+        
+    if not instruction is None:
+        message+=f"\n\nFollow the instruction in **bold** for your next reply: **{instruction}**"
+    return message
+
+
+def make_prompt(turns,instruction=None,max_turns=None,transition=False):
+
+
+    if not max_turns is None:
+
+        user_replies_found = 0
+        min_index = 0
+        for i in reversed(range(len(turns))):
+            if turns[i]['role']=="user":
+                user_replies_found +=1
+            if turns[i]['role']=="agent" and user_replies_found==max_turns:
+                min_index =i
+        turns=turns[min_index:]
+
+
+    
+    input_turns = []
+    output_turns = []
+    user_turn = False
+    user_sub_messages = []
+    system_sub_messages = []
+    for turn in turns:
+        #iterates over past turns
+   
+        if turn['role']=="agent":
+            input_message =""
+            if len(system_sub_messages)+len(user_sub_messages)==0:
+
+                input_message="INSTRUCTION: Reply to the user."
+            else:
+                if len(system_sub_messages)>1:
+                    
+
+                    for turn in system_sub_messages:
+                        if turn['role']=="system_instruction":
+                            input_turns.append(f"Instruction: {turn['content']}")
+                        if turn['role']=="system_answer":
+                            output_turns.append(turn['content'])
+                
+                input_message=""
+
+                for message in user_sub_messages:
+                    input_message+="User: "+ message['content']
+                    input_message+="\n\nINSTRUCTION: Reply to the user."
+
+            input_turns.append(input_message)
+            output_turns.append(turn['content'])
+            user_sub_messages = []
+            system_sub_messages = []
+        elif turn['role']=="user":
+            user_sub_messages.append(turn)
+        else:
+            system_sub_messages.append(turn)
+
+
+
+    if len(system_sub_messages)>1:
+        
+
+        for turn in system_sub_messages:
+            if turn['role']=="system_instruction":
+                input_turns.append(f"INSTRUCTION: {turn['content']}")
+            if turn['role']=="system_answer":
+                output_turns.append(turn['content'])
+    
+    input_message=""
+
+    for message in user_sub_messages:
+        input_message+="User: "+ message['content']
+    if transition:
+        input_message+=f"\n\nQUESTION: {instruction}"
+    else:
+        input_message+=f"\n\nINSTRUCTION: {instruction}"
+
+    input_turns.append(input_message)
+    
+
+
+
+    return input_turns,output_turns
+
+
+
+
+
+
+
+
+
 
 def make_decision_prompt(turns,transition_question,answers,max_turns):
     """
@@ -215,40 +351,20 @@ def make_decision_prompt(turns,transition_question,answers,max_turns):
         choices -- possible outputs of the model. should each map to a single token in the models tokenization
 
     """
-    if len(turns)>0:
-        inputs,outputs,_ = make_prompt(turns,max_turns=max_turns,transition=True)
-    else:
-        inputs,outputs=[],[]
 
 
-    if len(answers)==0:
+
+    if len(answers)==1:
         return answers[0]
 
 
     abcde = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[:len(answers)]
 
-    content ="\n\n"
-    if len(inputs)>0:
 
 
-        
-        for i in range(len(inputs)):
-            if len(outputs)==len(inputs):
-      
-                content +=outputs[i]+"\n\n"
+    
 
-            else:
-                if i>0:
-                    content +=outputs[i-1]+"\n\n"
-
-            content +=inputs[i]+"\n\n"
-
-
-        
-
-
-
-    content+=transition_question+"\n"
+    content=transition_question+"\n\n"
     
 
 
@@ -259,7 +375,7 @@ def make_decision_prompt(turns,transition_question,answers,max_turns):
         yes or no questions have special treatment. Model predicts yes or no token. This makes the ordering of yes and no arbitrary for the classifier.
         """
         
-        content+=" (Yes or No)"
+        content+=" (Yes or No)?"
 
         if answers[0].lower()=="no":
             answers[0]="No"
@@ -279,13 +395,21 @@ def make_decision_prompt(turns,transition_question,answers,max_turns):
         """
         
         for i in range(len(answers)):
+
             content+=abcde[i] + ". " +  answers[i] +"\n"
 
         choices=abcde
 
+    if len(turns)>0 and max_turns>0:
+        input_turns,output_turns = make_prompt(turns,instruction=content,max_turns=max_turns,transition = True)
+    else:
+        input_turns=["INSTRUCTION: "+content]
+        output_turns=[]
+    
+
   #  class_id,success=apply_classifier(classifier,content,choices=choices,memory_object=memory_object,state=node_name,transition_probs=transition_probs)  
  
-    return content,choices
+    return input_turns,output_turns,choices
 
 
 def apply_template(starts,fins,texts,instruction_template):

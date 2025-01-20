@@ -40,9 +40,9 @@ def main():
     if args.config_file is None:
         if args.example_name == "autograms_seed_agent":
             chatbot_generation_args={"temperature":0.4}
-            autogram_config = AutogramConfig(chatbot_path = args.model_name,chatbot_max_input_len=40000,classifier_max_input_len=40000,classifier_path = args.model_name,max_response_len=4096,chatbot_generation_args=chatbot_generation_args,exclude_classifier_system_prompt=True,chatbot_type = args.model_type,chatbot_proxy_port=args.proxy_port,embedding_proxy_port = args.embedding_proxy_port,embedding_type=args.embedding_model_type,embedding_path=args.embedding_model_name)
+            autogram_config = AutogramConfig(chatbot_path = args.model_name,chatbot_max_input_len=40000,classifier_max_input_len=40000,classifier_path = args.model_name,max_response_len=4096,chatbot_generation_args=chatbot_generation_args,exclude_classifier_system_prompt=True,chatbot_type = args.model_type,chatbot_proxy_port=args.proxy_port,embedding_proxy_port = args.embedding_proxy_port,embedding_type=args.embedding_model_type,embedding_path=args.embedding_model_name,reply_start_type='none')
         else:
-            autogram_config = AutogramConfig(chatbot_path = args.model_name,classifier_path = args.model_name,chatbot_type = args.model_type,chatbot_proxy_port=args.proxy_port,embedding_proxy_port = args.embedding_proxy_port,embedding_type=args.embedding_model_type,embedding_path=args.embedding_model_name)
+            autogram_config = AutogramConfig(chatbot_path = args.model_name,classifier_path = args.model_name,chatbot_type = args.model_type,chatbot_proxy_port=args.proxy_port,embedding_proxy_port = args.embedding_proxy_port,embedding_type=args.embedding_model_type,embedding_path=args.embedding_model_name,reply_start_type='none')
     else:
         initial_args = {}
         with open(args.config_file) as fid:
@@ -56,6 +56,10 @@ def main():
         # Load chatbot example based on the provided example_name
         if args.example_name == "autograms_seed_agent":
             from examples.autograms_seed_agent import chatbot
+        elif args.example_name == "doc_search":
+            from examples.autograms_doc_search import chatbot, init_chatbot
+            with use_config(autogram_config):
+                init_chatbot()
         elif args.example_name == "simple_example":
             from examples.simple_example import chatbot
         elif args.example_name == "fraction_tutor":
@@ -102,6 +106,15 @@ def main():
 
         # Prompt user for their reply
         user_reply = input("user reply: ")
+
+        if user_reply=="exit":
+            break
+        if user_reply=="debug":
+            #print(memory_object.memory_dict['model_turns'])
+            print(f"Local variables in autogram:\n{memory_object.memory_dict['stack'][-1]['locals']}")
+            import pdb;pdb.set_trace()
+        
+            user_reply = input("user reply: ")
 
         # Save the user's reply to memory for later reloads if a save/load file is provided
         if not args.saveload_file is None:

@@ -24,6 +24,7 @@ def init_api(api_key=None,proxy_address=None,embedding_proxy_address=None):
     else:
         client = OpenAI(base_url=proxy_address,api_key="default")
         #client = OpenAI(base_url=proxy_address)
+    
 
 
     if embedding_proxy_address is None or embedding_proxy_address==proxy_address:
@@ -43,6 +44,7 @@ def init_api(api_key=None,proxy_address=None,embedding_proxy_address=None):
 
 
 def get_batch_embeddings(texts, model=None,**kwargs):
+
 
    data = embedding_client.embeddings.create(input = texts, model=model,**kwargs).data
    results = [x.embedding for x in data]
@@ -133,6 +135,88 @@ def get_tokenizer(model):
 
     stored_tokenizers[model]=tokenizer
     return tokenizer
+
+def get_chatbot_messages_single(text,system_prompt=None,truncate=True,model=None,system_prompt_in_turns=False,multi_modal_inputs=None):
+    memory = get_memory()
+    config = memory.config
+    if model is None:
+        model = config.chatbot_path
+
+    tokenizer=get_tokenizer(model)
+
+    if truncate:
+        max_len=config.chatbot_max_input_len
+
+        if not system_prompt is None:
+            system_tokens = tokenizer.encode(system_prompt)
+            if len(system_tokens)>max_len:
+                print(f"warning system prompt is too long({len(system_tokens)} tokens). It is only allowed to be half of config.chatbot_max_input_len, which is set to {config.classifier_max_input_len} tokens. truncating system prompt.")
+                system_prompt = tokenizer.decode(system_tokens[:int(max_len/2)])+"..."
+
+            max_len = max_len-len(tokenizer.encode(system_prompt))
+
+
+        tokens = tokenizer.encode(text)
+        if len(tokens)>max_len:
+            new_tokens = tokens[-max_len:]
+            text=tokenizer.decode(new_tokens)
+    messages=[]
+    if not system_prompt is None:
+        if not system_prompt_in_turns:
+            messages.append({"role":"system", "content":[{"type": "text", "text":system_prompt}] })
+        else:
+            text=system_prompt+"\n\n"+text
+        
+    messages.append({"role":"user", "content": [{"type": "text", "text":text}]})
+
+    if not multi_modal_inputs is None:
+        for turn in multi_modal_inputs:
+            messages[-1]['content'].append(turn)
+
+    return messages
+def get_classifier_messages(input_turns,output_turns,system_prompt,system_prompt_in_turns=False,truncate_input=False,model=None,multi_modal_inputs=None):
+    memory = get_memory()
+    config=memory.config
+
+    if model is None:
+        model = config.classifier_path
+
+    tokenizer=get_tokenizer(model)
+
+
+    if truncate_input:
+        max_input_length = config.classifier_max_input_len
+        system_tokens = tokenizer.encode(system_prompt)
+        if len(system_tokens)>max_input_length/2:
+            print(f"warning system prompt is too long({len(system_tokens)} tokens). It is only allowed to be half of config.chatbot_max_input_len, which is set to {config.chatbot_max_input_len} tokens. truncating system prompt.")
+            system_prompt = tokenizer.decode(system_tokens[:int(max_input_length/2)])+"..."
+
+        max_input_length = max_input_length-len(tokenizer.encode(system_prompt))
+
+
+        input_turns,output_turns=truncate_turn_input(input_turns,output_turns,tokenizer,max_input_length)
+
+
+
+    
+    messages=[]
+    if not system_prompt is None:
+    
+        if system_prompt_in_turns:
+             input_turns[0] = system_prompt+"\n\n"+input_turns[0]
+        else:
+            messages.append({"role":"system", "content": [{"type": "text", "text":system_prompt}]})
+    for i in range(len(output_turns)):
+        messages.append({"role":"user", "content": [{"type": "text", "text":input_turns[i]}]})
+        messages.append({"role":"assistant", "content": [{"type": "text", "text":output_turns[i]}]})
+
+    messages.append({"role":"user", "content": [{"type": "text", "text":input_turns[-1]}]})
+    if not multi_modal_inputs is None:
+        for turn in multi_modal_inputs:
+            messages[-1]['content'].append(turn)
+
+    return messages
+
 def get_chatbot_messages(input_turns,output_turns,system_prompt,system_prompt_in_turns=False,truncate_input=False,model=None,multi_modal_inputs=None):
     memory = get_memory()
     config=memory.config
@@ -424,7 +508,7 @@ def refusal_args(response,tokenizer,generation_args):
 #         **input_args
 #     )
 
-def get_classifier_messages(text,truncate=True,model=None,system_prompt=None,system_prompt_in_turns=False,multi_modal_inputs=None):
+def orig_get_classifier_messages(text,truncate=True,model=None,system_prompt=None,system_prompt_in_turns=False,multi_modal_inputs=None):
     memory = get_memory()
     config = memory.config
     if model is None:

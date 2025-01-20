@@ -105,7 +105,7 @@ class AutogramConfig():
             post_process_response=True,
             classifier_type=None,
             classifier_path=None,
-            classifier_mode='json',
+            classifier_mode=None,
             embedding_type=None,
             embedding_path="text-embedding-3-small",
             instruction_template=None,
@@ -192,6 +192,16 @@ class AutogramConfig():
 
         if classifier_path is None:
             classifier_path=chatbot_path
+
+
+        if classifier_mode is None:
+            if classifier_type=="openai" or "openai" in classifier_path:
+                classifier_mode="logit"
+            else:
+                print(f"Unclear if {classifier_path} supports logit bias, setting classifier mode to 'json'")
+                classifier_mode="json"
+
+
 
         if not classifier_mode in ["logit","json"]:
             raise Exception("classifier_mode is not valid, must be either `logit` or `json`") 

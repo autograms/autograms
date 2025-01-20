@@ -216,6 +216,9 @@ def multiple_choice_logits(question,choices,max_turns=1,**kwargs):
     """
     memory_object = get_memory()
 
+    if len(choices)>26:
+        raise Exception("To many choices for multiple choice, maximum is 26")
+
     if not memory_object.config.classifier_mode=="logit":
         raise Exception(f"multiple_choice_logits not allowed for classifier mode: {memory_object.config.classifier_mode}, must set classifier mode to logit for this.") 
     turns,system_prompt = memory_object.get_turns_for_model()
@@ -223,10 +226,10 @@ def multiple_choice_logits(question,choices,max_turns=1,**kwargs):
         system_prompt=None
 
 
-    content,choices = make_decision_prompt(turns,question,choices,max_turns)
+    input_turns,output_turns,choices = make_decision_prompt(turns,question,choices,max_turns)
     
     
-    logits,success = call_classifier(content,choices,return_logits = True,system_prompt=system_prompt,**kwargs)
+    logits,success = call_classifier(input_turns,output_turns,choices,return_logits = True,system_prompt=system_prompt,**kwargs)
     return logits
 
 
@@ -246,14 +249,16 @@ def multiple_choice(question,choices,max_turns=1,**kwargs):
     Returns:
     - int: Index of the selected choice.
     """
+    if len(choices)>26:
+        raise Exception("To many choices for multiple choice, maximum is 26")
     memory_object = get_memory()
     turns,system_prompt = memory_object.get_turns_for_model()
-    content,choices = make_decision_prompt(turns,question,choices,max_turns)
+    input_turns,output_turns,choices = make_decision_prompt(turns,question,choices,max_turns)
     choices = [c for c in choices]
     
     if memory_object.config.exclude_classifier_system_prompt:
         system_prompt=None
-    answer,success = call_classifier(content,choices,system_prompt=system_prompt,**kwargs)
+    answer,success = call_classifier(input_turns,output_turns,choices,system_prompt=system_prompt,**kwargs)
 
 
     if not(type(answer)==str):
@@ -280,10 +285,10 @@ def yes_or_no(question,max_turns=1,**kwargs):
     """
     memory_object = get_memory()
     turns,system_prompt = memory_object.get_turns_for_model()
-    content,choices = make_decision_prompt(turns,question,answers=["Yes","No"],max_turns=max_turns)
+    input_turns,output_turns,choices = make_decision_prompt(turns,question,answers=["Yes","No"],max_turns=max_turns)
     if memory_object.config.exclude_classifier_system_prompt:
         system_prompt=None
-    answer,success = call_classifier(content,choices,system_prompt=system_prompt,**kwargs)
+    answer,success = call_classifier(input_turns,output_turns,choices,system_prompt=system_prompt,**kwargs)
 
 
     if success and answer in choices:
@@ -302,7 +307,12 @@ def call_conv_model(instruction,**kwargs):
     Returns:
     - str: The model's response.
     """
-    input_turns,output_turns,system_prompt = get_turn_history(instruction=instruction)
+    if "max_turns" in kwargs:
+        max_turns = kwargs['max_turns']
+        del kwargs['max_turns']
+    else:
+        max_turns = None
+    input_turns,output_turns,system_prompt = get_turn_history(instruction=instruction,max_turns=max_turns)
     memory_object = get_memory()
     if not memory_object.test_mode:
         result,success = call_model(input_turns,output_turns,system_prompt,system_prompt_in_turns=memory_object.config.system_prompt_in_turns,**kwargs)
@@ -311,7 +321,7 @@ def call_conv_model(instruction,**kwargs):
         return "test mode, no response enabled"
 
 
-def call_classifier(input_str,answer_choices,system_prompt=None,model_type=None,model=None,multi_modal_inputs=None,**kwargs):
+def call_classifier(input_turns,output_turns,answer_choices,system_prompt=None,model_type=None,model=None,multi_modal_inputs=None,**kwargs):
     """
     Calls a classifier model to determine the best choice from given options.
 
@@ -347,7 +357,7 @@ def call_classifier(input_str,answer_choices,system_prompt=None,model_type=None,
 
 
 
-    messages = preprocess_func(input_str,system_prompt=system_prompt,system_prompt_in_turns=memory_object.config.system_prompt_in_turns,model=model,multi_modal_inputs=multi_modal_inputs)
+    messages = preprocess_func(input_turns,output_turns,system_prompt=system_prompt,system_prompt_in_turns=memory_object.config.system_prompt_in_turns,model=model,multi_modal_inputs=multi_modal_inputs)
 
     if memory_object.config.classifier_mode=="logit":
 
@@ -383,7 +393,7 @@ def call_classifier(input_str,answer_choices,system_prompt=None,model_type=None,
             return random.choice(answer_choices),True
    
 
-    memory_object.log_classifier_turn(raw_result,input_str,answer_choices,system_prompt=system_prompt,usage_log=usage_log)
+    memory_object.log_classifier_turn(raw_result,input_turns,output_turns,answer_choices,system_prompt=system_prompt,usage_log=usage_log)
     success = not(usage_log['model']=='failed')
     return result,success
 def make_decision_regex(choices):
@@ -508,7 +518,7 @@ def make_decision_schema_json(choices, name="decision_schema"):
     }
     return schema
 
-def get_batch_embedding(texts,default_size=1536,**kwargs):
+def get_batch_embeddings(texts,default_size=4,**kwargs):
     """
     Gets embeddings for a batch of texts.
 
@@ -520,7 +530,7 @@ def get_batch_embedding(texts,default_size=1536,**kwargs):
     - list: Embeddings for the input texts.
     """
     #if model_type=='openai':
-    func = apis.openai_models.get_batch_embedding
+    func = apis.openai_models.get_batch_embeddings
     memory_object = get_memory()
 
     if not "model" in kwargs:
@@ -771,8 +781,8 @@ def thought_decision_chain(instruction,chain_structure,fixed_type = None,**kwarg
  
 
 
-            prompt,values =make_decision_prompt(turns=[],transition_question=question,answers=choices,max_turns=0)
-            prompt=prompt.replace("\n"," ")
+            input_turns,output_turns,values =make_decision_prompt(turns=[],transition_question=question,answers=choices,max_turns=0)
+            prompt=input_turns[0].replace("\n"," ")
             all_prompts.append(prompt)
             all_decision_values.append(values)
             if prompt in properties:
@@ -1079,7 +1089,13 @@ def generate_object(instruction,obj_structure,**kwargs):
     Returns:
     - obj_structure: An instance of the specified object structure with generated values.
     """
-    input_turns,output_turns,system_prompt = get_turn_history(instruction=instruction)
+    if "max_turns" in kwargs:
+        max_turns = kwargs['max_turns']
+        del kwargs['max_turns']
+    else:
+        max_turns = None
+
+    input_turns,output_turns,system_prompt = get_turn_history(instruction=instruction,max_turns=max_turns)
     memory_object = get_memory()
     if not memory_object.test_mode:
 
@@ -1288,7 +1304,7 @@ def append_system_prompt(text):
 
 
     
-def get_turn_history(instruction="",max_turns=-1,conv_only=False):
+def get_turn_history(instruction="",max_turns=None,conv_only=False):
     """
     Retrieves the conversation history, formatted for the model.
 
@@ -1304,7 +1320,7 @@ def get_turn_history(instruction="",max_turns=-1,conv_only=False):
     memory_object = get_memory()
     turns,system_prompt = memory_object.get_turns_for_model(instruction)
 
-    inputs,outputs,_= make_prompt(turns,max_turns=max_turns,transition=False)
+    inputs,outputs= make_prompt(turns,instruction,max_turns=max_turns,transition=False)
    
 
     return inputs,outputs,system_prompt

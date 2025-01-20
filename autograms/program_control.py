@@ -6,6 +6,7 @@ from functools import wraps
 
 from .autogram_utils.code_utils import convert_for_to_while, jump_start_function, remove_decorators, get_address_book,adjust_line_numbers,declare_globals, SKIP_FLAG_PREFIX,CONDITION_FLAG_PREFIX
 from .memory import get_memory
+import time
 
 
 debug=False
@@ -518,10 +519,17 @@ class AutogramsFunction:
 
       
             else:
+               
+                try:
+                    function_tree = jump_start_function(self.processed_def,target_line,code_locals.keys(),include_line,globals_to_declare=self.globals_to_declare)
+  
+                except Exception as e:
+                    
+                    raise type(e)(f"'{str(e)}'\nRestart Failed for @autogram_function() `{self.func_name}`. One common reason for this is if a MemoryObject created with an earlier version of an autograms module was reloaded into a new version of the module with modified code, and ADDRESS locations were not set up properly to be able to map from the original code to the new code.").with_traceback(e.__traceback__) from e
 
-                function_tree = jump_start_function(self.processed_def,target_line,code_locals.keys(),include_line,globals_to_declare=self.globals_to_declare)
      
                 function_obj = generate_function_from_ast(function_tree,self.func,self.file_name)
+              
                 #line_mapping_full = merge_line_mapping(line_mapping,self.line_mapping)
                 args =[]
                 kwargs = code_locals

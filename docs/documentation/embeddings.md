@@ -14,8 +14,8 @@ Fetches a single embedding for the given text.
 - **Returns**:
   - `list[float]`: A vector representation of the input text.
 
-#### **get_batch_embedding(texts,`**kwargs`)**
-`autograms.functional.get_batch_embedding`
+#### **get_batch_embeddings(texts,`**kwargs`)**
+`autograms.functional.get_batch_embeddings`
 Fetches embeddings for a batch of texts.
 
 - **Parameters**:
