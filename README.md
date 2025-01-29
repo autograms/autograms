@@ -5,7 +5,7 @@
 
 To get started, you can chat with the **AutoGRAMS Seed Agent** (Asa)--an AutoGRAMS chatbot that runs in the terminal and codes AutoGRAMS chatbots for you 🔥 It can also answer questions about the code it writes or about AutoGRAMS in general. To run **Asa**, follow the **Quick Start** instructions below.
 
-**Update**: DeepSeek integration for autograms is (now available)[#deepseek-with-autograms-using-vllm].
+**Update**: DeepSeek integration for autograms is [now available](#deepseek-with-autograms-using-vllm).
 
 
 
