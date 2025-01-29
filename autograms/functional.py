@@ -1,5 +1,5 @@
-from .memory import get_memory, set_memory
-from .program_control import ReplyExit,GoTo,ReturnTo, FunctionExit
+from .memory import get_memory, set_memory, SimpleMemory
+from .program_control import ReplyExit,GoTo,ReturnTo, FunctionExit,find_decorated_frame
 from . import apis
 import numpy as np
 from .autogram_utils.prompt_utils import make_prompt,make_decision_prompt
@@ -19,6 +19,7 @@ import re
 import dill
 
 from .program_control import AutogramsReturn
+from .supervisors import supervisable
 
 
 from concurrent.futures import ProcessPoolExecutor
@@ -26,7 +27,6 @@ from concurrent.futures import ProcessPoolExecutor
 import subprocess
 import tempfile
 import os
-
 
 
 def reply(text,data=None,ADDRESS=None):    
@@ -45,6 +45,7 @@ def reply(text,data=None,ADDRESS=None):
     log_chat_turn(text,line_number = exc.line_number,function_name = exc.function_name)
     raise exc
 
+@supervisable(function_type="reply")
 def reply_instruction(instruction,data=None,ADDRESS=None,**kwargs):
     """
     Generates a reply based on the given instruction and logs it.
@@ -56,10 +57,12 @@ def reply_instruction(instruction,data=None,ADDRESS=None,**kwargs):
     Raises:
     - ReplyExit: Exception to handle the reply in the program control flow.
     """
+
     response= call_conv_model(instruction,**kwargs)
 
     reply(response,data=data,ADDRESS=ADDRESS)
 
+@supervisable(function_type="reply")
 def reply_suffix(instruction,data=None,ADDRESS=None):
     """
     Appends specific text to a chatbot reply and logs it.
@@ -168,7 +171,7 @@ def local_thought(instruction,system_prompt="",**kwargs):
 
 
 
-
+@supervisable(function_type='generation')
 def silent_thought(instruction,**kwargs):
     """
     Executes a thought (internal reasoning) instruction without logging.
@@ -183,6 +186,7 @@ def silent_thought(instruction,**kwargs):
 
     return response
 
+@supervisable(function_type='generation')
 def thought(instruction,**kwargs):
     """
     Executes a thought (internal reasoning) instruction and logs the response.
@@ -235,7 +239,7 @@ def multiple_choice_logits(question,choices,max_turns=1,**kwargs):
 
     
 
-
+@supervisable(function_type='selection')
 def multiple_choice(question,choices,max_turns=1,**kwargs):
     """
     Presents a multiple-choice question to the agent and returns its selection, used for decision making
@@ -253,8 +257,14 @@ def multiple_choice(question,choices,max_turns=1,**kwargs):
         raise Exception("To many choices for multiple choice, maximum is 26")
     memory_object = get_memory()
     turns,system_prompt = memory_object.get_turns_for_model()
+
     input_turns,output_turns,choices = make_decision_prompt(turns,question,choices,max_turns)
-    choices = [c for c in choices]
+
+    if memory_object.config.classifier_type=="json":
+        input_turns[-1]+= " (Respond as a json with format {\"answer\":answer})"
+
+    if len(choices)==1:
+        return 0
     
     if memory_object.config.exclude_classifier_system_prompt:
         system_prompt=None
@@ -269,7 +279,7 @@ def multiple_choice(question,choices,max_turns=1,**kwargs):
     else:
         return 0
 
-
+@supervisable(function_type='binary')
 def yes_or_no(question,max_turns=1,**kwargs):
 
     """
@@ -314,6 +324,9 @@ def call_conv_model(instruction,**kwargs):
         max_turns = None
     input_turns,output_turns,system_prompt = get_turn_history(instruction=instruction,max_turns=max_turns)
     memory_object = get_memory()
+    if "_forced_output" in kwargs:
+        return  kwargs['result']
+        
     if not memory_object.test_mode:
         result,success = call_model(input_turns,output_turns,system_prompt,system_prompt_in_turns=memory_object.config.system_prompt_in_turns,**kwargs)
         return result[0]
@@ -356,44 +369,54 @@ def call_classifier(input_turns,output_turns,answer_choices,system_prompt=None,m
   
 
 
+    function_name = "call_classifier"
+    function_inputs = {"input_turns":input_turns,"output_turns":output_turns,"answer_choices":answer_choices,"system_prompt":system_prompt,"multi_modal_inputs":multi_modal_inputs}
+    
 
     messages = preprocess_func(input_turns,output_turns,system_prompt=system_prompt,system_prompt_in_turns=memory_object.config.system_prompt_in_turns,model=model,multi_modal_inputs=multi_modal_inputs)
-
-    if memory_object.config.classifier_mode=="logit":
-
-        result,usage_log = func(messages,answer_choices,**kwargs)
-        raw_result = result
+    if "_forced_output" in kwargs:
+        result = kwargs['result']
+        raw_result = kwargs['result']
+        success=True
     else:
+        if memory_object.config.classifier_mode=="logit":
 
-        
-        schema = make_decision_schema_json(answer_choices)
-        if memory_object.config.classifier_type=="huggingface_tgi":
-
-            schema = convert_openai_json_schema(schema)
-        
-        memory_object = get_memory()
-        if not memory_object.test_mode:
-            func = apis.openai_models.call_openai_chat_formatted
-            kwargs['temperature']=0
-            raw_result,_,usage_log = func(messages,model=model,obj_structure = schema,**kwargs)
-            success = not(raw_result is None)
-            try:
-                result_dict = json.loads(raw_result)
-                result = result_dict["answer"]
-            except:
-                success=False
-
-
-            if not success:
-                return answer_choices[0],False
-
-            
+            result,usage_log = func(messages,answer_choices,**kwargs)
+            raw_result = result
         else:
-            
-            return random.choice(answer_choices),True
-   
 
-    memory_object.log_classifier_turn(raw_result,input_turns,output_turns,answer_choices,system_prompt=system_prompt,usage_log=usage_log)
+            
+            schema = make_decision_schema_json(answer_choices)
+            if memory_object.config.classifier_type=="huggingface_tgi":
+
+                schema = convert_openai_json_schema(schema)
+            
+            memory_object = get_memory()
+
+            if not memory_object.test_mode:
+                func = apis.openai_models.call_openai_chat_formatted
+                kwargs['temperature']=0
+                raw_result,_,usage_log = func(messages,model=model,obj_structure = schema,**kwargs)
+                success = not(raw_result is None)
+                try:
+                    result_dict = json.loads(raw_result)
+                    result = result_dict["answer"]
+                except:
+                    success=False
+
+
+                if not success:
+                    return answer_choices[0],False
+
+                
+            else:
+                
+                return random.choice(answer_choices),True
+    if isinstance(memory_object,SimpleMemory):
+        code_position=None
+    else:
+        code_position = get_code_position()
+    memory_object.log_model_turn(raw_result,function_name,function_inputs,code_position=code_position,usage_log=usage_log)
     success = not(usage_log['model']=='failed')
     return result,success
 def make_decision_regex(choices):
@@ -539,7 +562,7 @@ def get_batch_embeddings(texts,default_size=4,**kwargs):
 
 
     if memory_object.test_mode:
-        results = [np.random.randn(default_size).tolist()]*default_size
+        results = [np.random.randn(default_size).tolist()]*len(texts)
 
     else:
         results = func(texts,**kwargs)
@@ -604,14 +627,26 @@ def call_model(input_turns,output_turns,system_prompt,system_prompt_in_turns=Fal
 
 
     preprocess_func =apis.openai_models.get_chatbot_messages
+    
         
     messages = preprocess_func(input_turns,output_turns,system_prompt,system_prompt_in_turns=system_prompt_in_turns,truncate_input=True,model=model,multi_modal_inputs=multi_modal_inputs)
+    if "_forced_output" in kwargs:
+        usage_log=None
+        result =  kwargs['_forced_output']['result']
 
-    result,usage_log = func(messages,model=model,**kwargs)
+    else:
+        result,usage_log = func(messages,model=model,**kwargs)
+        success=not(usage_log['model']=='failed')
 
-
-    memory_object.log_chatbot_turn(result,input_turns,output_turns,system_prompt,usage_log=usage_log)
-    success=not(usage_log['model']=='failed')
+    function_name = "call_model"
+    function_inputs = {"input_turns":input_turns,"output_turns":output_turns,"system_prompt":system_prompt,"multi_modal_inputs":multi_modal_inputs}
+    
+    if isinstance(memory_object,SimpleMemory):
+        code_position=None
+    else:
+        code_position = get_code_position()
+    memory_object.log_model_turn(result,function_name,function_inputs,code_position=code_position,usage_log=usage_log)
+    
     return result,success
 
 def generate_json_schema(questions_with_answers):
@@ -646,7 +681,7 @@ def convert_openai_json_schema(schema):
     new_schema = {"type":"json","value":schema["json_schema"]["schema"]}
     return new_schema
 
-
+@supervisable(function_type='json')
 def generate_list_of_dicts(instruction,keys,**kwargs):
     """
     Generates a JSON Schema for a list of dictionaries.
@@ -878,7 +913,7 @@ def thought_decision_chain(instruction,chain_structure,fixed_type = None,**kwarg
 
 #     )
 
-
+@supervisable(function_type='json')
 def generate_list(instruction,**kwargs):
     """
     Generates a list based on the given instruction using a predefined list structure.
@@ -926,8 +961,60 @@ def generate_list(instruction,**kwargs):
 
 
     
-    return result
+    return result['data']
+    
+@supervisable(function_type='json')
+def generate_list_of_choices(instruction,choices,**kwargs):
+    """
+    Generates a list based on the given instruction using a predefined list structure.
 
+    Parameters:
+    - instruction (str): The instruction for generating the list.
+    - **kwargs: Additional arguments for model configuration.
+
+    Returns:
+    - list[str]: A list of generated items.
+    """
+    memory_object = get_memory()
+    config = memory_object.config
+
+    schema = {
+        "type": "json_schema",
+        "json_schema": {
+            "name": "list_of_strings",
+            "strict": True,
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "data": {  # The key under which the array is nested
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "enum": choices
+                        },
+                        "additionalItems": False  # Disallow extra items in the array
+                    }
+                },
+                "required": ["data"],  # Ensure the "data" key is present
+                "additionalProperties": False  # Disallow extra keys in the root object
+            }
+        }
+    }
+        
+
+    result = generate_object(instruction,schema,**kwargs)
+
+
+    try:
+        result=json.loads(result)
+    except:
+        result = initialize_with_defaults_json(schema)
+
+
+    
+    return result['data']
+
+@supervisable(function_type='json')
 def generate_fixed_dict(instruction, keys, **kwargs):
     """
     Generates a dictionary with fixed keys based on the given instruction.
@@ -965,6 +1052,7 @@ def generate_fixed_dict(instruction, keys, **kwargs):
 
     return result
 
+@supervisable(function_type='json')
 def generate_fixed_list(instruction,num_items,**kwargs):
     """
     Generates a list of a fixed number of items based on the given instruction.
@@ -1158,18 +1246,27 @@ def call_object_model(input_turns,output_turns,system_prompt,system_prompt_in_tu
         
     messages = preprocess_func(input_turns,output_turns,system_prompt,system_prompt_in_turns=system_prompt_in_turns,truncate_input=True,model=model,multi_modal_inputs=multi_modal_inputs)
 
-  
-    result,raw_str,usage_log = func(messages,model=model,obj_structure = obj_structure,**kwargs)
+    if "_forced_output" in kwargs:
+        result = kwargs['result']
+        raw_str = kwargs['result']
+        usage_log=None
+    else:
+        result,raw_str,usage_log = func(messages,model=model,obj_structure = obj_structure,**kwargs)
 
 
-    
+    function_name = "call_object_model"
+    function_inputs = {"input_turns":input_turns,"output_turns":output_turns,"system_prompt":system_prompt,"multi_modal_inputs":multi_modal_inputs,'obj_structure':obj_structure}
+    if isinstance(memory_object,SimpleMemory):
+        code_position=None
+    else:
+        code_position = get_code_position()
     if usage_log['model']=='failed':
         if isinstance(obj_structure, dict):
             result = initialize_with_defaults_json(obj_structure)
         else:
             result = initialize_with_defaults(obj_structure)
     else:
-        memory_object.log_chatbot_turn(raw_str,input_turns,output_turns,system_prompt,usage_log=usage_log)
+        memory_object.log_model_turn(raw_str,function_name,function_inputs,code_position=code_position,usage_log=usage_log)
     return result
 
 
@@ -1319,6 +1416,7 @@ def get_turn_history(instruction="",max_turns=None,conv_only=False):
 
     memory_object = get_memory()
     turns,system_prompt = memory_object.get_turns_for_model(instruction)
+    
 
     inputs,outputs= make_prompt(turns,instruction,max_turns=max_turns,transition=False)
    
@@ -1524,6 +1622,16 @@ def process_task(function_pkl, args, shared_object_encoding=None):
 
    
     return result
+
+
+def get_code_position():
+    frame_info = find_decorated_frame()
+
+
+    line_number = frame_info.lineno  # Absolute line number in the file
+    function_name = frame_info.function
+
+    return {"line_number":line_number,"function_name":function_name,"file_name":frame_info.filename}
 
 
 

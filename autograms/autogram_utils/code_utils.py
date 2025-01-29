@@ -2,12 +2,15 @@ import ast
 #import astor  # Install via pip install astor
 import re
 import copy
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 
 SKIP_FLAG_PREFIX= "_AUTO_SKIP_FLAG"
 CONDITION_FLAG_PREFIX = "_AUTO_CONDITION_FLAG"
 ITERATOR_PREFIX = "_AUTO_ITERATOR"
 ITERABLE_PREFIX = "_AUTO_ITERABLE"
+
+SYSTEM_KWARGS_NAME="_AUTO_SYSTEM_KWARGS"
+SYSTEM_OBJ_NAME="_AUTO_SYSTEM_OBJ"
 
 
 
@@ -438,6 +441,7 @@ class ForToWhileTransformer(ast.NodeTransformer):
         )
        # iterable_assign.lineno = node.lineno
         set_line_col(iterable_assign, node.lineno, node.col_offset)
+        iterable_assign._skip_stateful = True
 
         # Assignment for the iterator
         iterator_assign = ast.Assign(
@@ -448,6 +452,7 @@ class ForToWhileTransformer(ast.NodeTransformer):
                 keywords=[]
             )
         )
+        iterator_assign._skip_stateful = True
         set_line_col(iterator_assign, node.lineno, node.col_offset)
 
         # New while loop condition: while True (we'll break when iterator is exhausted)
@@ -469,7 +474,7 @@ class ForToWhileTransformer(ast.NodeTransformer):
                 keywords=[]
             )
 )
-
+        loop_variable_check._skip_stateful = True
         set_line_col(loop_variable_check, node.lineno, node.col_offset)
 
 
@@ -482,6 +487,8 @@ class ForToWhileTransformer(ast.NodeTransformer):
             body=[ast.Break()],  # Break if sentinel is encountered
             orelse=[]
         )
+        if_check._skip_stateful = True
+
         set_line_col(if_check, node.lineno, node.col_offset)
         
 
@@ -490,6 +497,8 @@ class ForToWhileTransformer(ast.NodeTransformer):
             value=ast.Name(id=TEMP_ITERATOR, ctx=ast.Load())
 )
         set_line_col(loop_variable_assign, node.lineno, node.col_offset)
+
+        loop_variable_assign._skip_stateful=True
 
 
         # Visit nested nodes if any exist in the while loop body
@@ -977,5 +986,497 @@ def map_line_numbers(original_node, modified_node):
     return mapping
 
 
+######################################
+######################################
+"""This will be the new autograms code for stateful functions
+It requires only compiling the function at the start rather than recompiling each time.
+
+
+"""
+class LocalsInjector(ast.NodeTransformer):
+    """
+    Inserts:
+        if 'var_name' in kwargs:
+            var_name = kwargs['var_name']
+    at the top of a function's body,
+    for each var_name in some list of local/closure names.
+    """
+    def __init__(self, local_names):
+        super().__init__()
+        self.local_names = sorted(local_names)
+
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> ast.FunctionDef:
+        # Build a small list of if statements
+        preamble = []
+        for var in self.local_names:
+            # if 'var' in kwargs:
+            if_stmt = ast.If(
+                test=ast.Compare(
+                    left=ast.Constant(var),
+                    ops=[ast.In()],
+                    comparators=[ast.Name(id=SYSTEM_KWARGS_NAME, ctx=ast.Load())]
+                ),
+                body=[
+                    ast.Assign(
+                        targets=[ast.Name(id=var, ctx=ast.Store())],
+                        value=ast.Subscript(
+                            value=ast.Name(id=SYSTEM_KWARGS_NAME, ctx=ast.Load()),
+                            slice=ast.Constant(var),
+                            ctx=ast.Load()
+                        )
+                    )
+                ],
+                orelse=[]
+            )
+            # Keep line numbers consistent
+            if_stmt.lineno = node.lineno
+            if_stmt.col_offset = node.col_offset
+            set_line_col(if_stmt)
+            preamble.append(if_stmt)
+
+        # Insert these at the top of the body
+        node.body = preamble + node.body
+        return node
+
+
+# def build_ancestry_map(func_def: ast.FunctionDef) -> dict[int, set[int]]:
+#     """
+#     Returns a dictionary: ancestry_map[line_no] = { line_no, plus all ancestor lines }.
+#     We do a DFS, passing along the set of current ancestors.
+#     """
+#     ancestry_map = defaultdict(set)
+
+#     def dfs(node, ancestor_lines: set[int]):
+#         # If node has a lineno, incorporate it
+#         if hasattr(node, 'lineno'):
+#             # Merge with parent's ancestors
+#             new_ancestors = ancestor_lines | {node.lineno}
+            
+#             # Merge that into ancestry_map for node.lineno
+#             ancestry_map[node.lineno]=(new_ancestors)
+#         else:
+#             new_ancestors = ancestor_lines
+
+#         # Recurse into children
+#         for child in ast.iter_child_nodes(node):
+#             dfs(child, new_ancestors)
+
+#     dfs(func_def, set())
+#     return dict(ancestry_map)
+from collections import defaultdict
+import ast
+
+def build_condition_ancestry_map(func_def: ast.FunctionDef):
+    """
+    Returns a dictionary: cond_ancestry_map[line_no] = set of ancestor line numbers (including line_no),
+    but we handle 'if' statements so that lines in the 'else' branch do NOT inherit the 'if' line number.
+    Similarly for 'while' or 'for' else blocks.
+    """
+    cond_ancestry_map = defaultdict(set)
+
+    def dfs(node, ancestors: set[int]):
+        if getattr(node, '_skip_stateful', False):
+            return  # skip auto-generated or special nodes
+
+        # For normal nodes, we add node.lineno to the ancestry
+        # by default, then descend. We'll override if node is If/While/For with an else.
+        this_lineno = getattr(node, 'lineno', None)
+
+        # If node has a line number, union it in
+        if this_lineno is not None:
+            new_ancestors = ancestors | {this_lineno}
+            # Record the ancestry for this line
+            cond_ancestry_map[this_lineno] = new_ancestors
+        else:
+            new_ancestors = ancestors
+
+        # Special handling for If/While/For with else
+        # 1) Record the body as including the line_no
+        # 2) Record the else branch as excluding the line_no
+        if isinstance(node, ast.If):
+            # The node itself has a line number -> new_ancestors
+            # so the if's own line is already included in new_ancestors.
+
+            # 1) Body children get new_ancestors
+            for child in node.body:
+                dfs(child, new_ancestors)
+
+            # 2) Else children do NOT add this lineno
+            # so they just get the old 'ancestors' without node.lineno
+            for child in node.orelse:
+                dfs(child, ancestors)
+
+        elif isinstance(node, ast.While):
+            # Similarly, the while line_no is included for the body
+            for child in node.body:
+                dfs(child, new_ancestors)
+
+            # The else block is only executed if the while loop isn't 'broken' out
+            # so let's skip the while line for the else block as well:
+            for child in node.orelse:
+                dfs(child, ancestors)
+
+        elif isinstance(node, ast.For):
+            # If your code still has For nodes before they get converted,
+            # do the same logic: body gets new_ancestors, else gets ancestors
+            for child in node.body:
+                dfs(child, new_ancestors)
+            for child in node.orelse:
+                dfs(child, ancestors)
+
+        else:
+            # generic node: just recurse normally
+            for child in ast.iter_child_nodes(node):
+                dfs(child, new_ancestors)
+
+    dfs(func_def, set())
+    return dict(cond_ancestry_map)
+
+def build_ancestry_map(func_def: ast.FunctionDef) -> dict[int, set[int]]:
+    ancestry_map = defaultdict(set)
+
+    def dfs(node, ancestor_lines: set[int]):
+        # If node is marked skip, do nothing
+        if getattr(node, '_skip_stateful', False):
+            return
+
+        if hasattr(node, 'lineno'):
+            new_ancestors = ancestor_lines | {node.lineno}
+            ancestry_map[node.lineno] = new_ancestors
+        else:
+            new_ancestors = ancestor_lines
+
+        for child in ast.iter_child_nodes(node):
+            dfs(child, new_ancestors)
+
+    dfs(func_def, set())
+    return dict(ancestry_map)
+
+class SystemObject:
+    def __init__(self, func_def):
+  
+        self.ancestry_map = build_ancestry_map(func_def)
+        self.condition_ancestry_map = build_condition_ancestry_map(func_def)
+        
+        # If None => no "jump"; run everything normally
+        self.target_line: int | None = None  
+        self.include_line = False
+
+        # Once we've done the jump, we mark a reset and run everything normally
+        self._reset_done = True
+
+    def set_line_number(self, line_number: int, include_line: bool=False):
+        """
+        'Jump' to line_number. If include_line=True, 
+        then we begin executing *at* that line. Otherwise we skip that line.
+        """
+        if not line_number in self.ancestry_map:
+            raise Exception("Invalid line number passed to system object")
+        self.target_line = line_number
+        self.include_line = include_line
+        self._reset_done = False
+
+    def is_reset(self):
+        return self._reset_done
+
+    def check_state_flag(self, line_no: int) -> bool:
+        """
+        Called for every statement in the AST, wrapped as:
+            if _system_obj.check_state_flag(line_no):
+                <original statement>
+        """
+        # print("state")
+        # print(self.target_line)
+        # print(f"Line number {line_no}")
+        # print(f"reset done {self._reset_done}")
+        # print(line_no not in self.ancestry_map.get(self.target_line, set()))
+ 
+        # If no target line => run normally
+        if self.target_line is None:
+            return True
+        
+        # If we've already reset => run normally
+        if self._reset_done:
+            return True
+        
+        # If line_no not in ancestry of target_line => skip
+        if line_no not in self.ancestry_map.get(self.target_line, set()):
+            return False
+
+        # If line_no == target_line => handle include_line logic
+        if line_no == self.target_line:
+            if self.include_line:
+                # We DO execute this line, then from now on run normally
+                self._reset_done = True
+                return True
+            else:
+                # We skip this line, then from now on run normally
+                self._reset_done = True
+                return False
+
+        # Otherwise it's in the ancestry, but not the target line => run
+        return True
+
+    def check_condition_flag(self, line_no: int) -> bool:
+        """
+        Called in each if/while condition as:
+            if (ORIG_COND) or _system_obj.check_condition_flag(line_no):
+                ...
+        
+        Typically, if we are 'forcing' execution of that if/while, we return True
+        if line_no is in the ancestry of target_line. Once we reset, revert to normal logic => return False.
+        """
+        # print("condition")
+        # print(self.target_line)
+        # print(f"Line number {line_no}")
+        # print(f"reset done {self._reset_done}")
+        # print(line_no not in self.condition_ancestry_map.get(self.target_line, set()))
+        # If no jump or we've reset => let original condition decide => return False
+        if self.target_line is None or self._reset_done:
+            return False
+        
+        # If line_no not in ancestry => skip => return False
+        if line_no not in self.condition_ancestry_map.get(self.target_line, set()):
+            return False
+        
+        # If line_no == target_line => forcibly True
+        if line_no == self.target_line:
+            return True
+
+        # Otherwise line_no is in ancestry => forcibly True
+        return True
+
+
+class StatefulTransformer(ast.NodeTransformer):
+    """
+    1) Change signature to: def func(_system_obj, **kwargs)
+    2) For each if/while test => (old_test) or _system_obj.check_condition_flag(LINENO)
+    3) For each statement => wrap in 'if _auto_system_obj.check_state_flag(LINENO):'
+    """
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> ast.FunctionDef:
+        # 1) Rewrite signature
+        node.args.args = [ast.arg(arg=SYSTEM_OBJ_NAME, annotation=None)]
+        node.args.vararg = None
+        node.args.kwonlyargs = []
+        node.args.kw_defaults = []
+        node.args.kwarg = ast.arg(arg=SYSTEM_KWARGS_NAME, annotation=None)
+        node.args.defaults = []
+
+        # 2) Recursively visit the body
+        new_body = []
+        for stmt in node.body:
+            new_body.append(self.visit(stmt))
+        node.body = new_body
+
+        # Make sure line/col info is consistent on the entire FunctionDef node
+        # (so the function definition itself has valid positions)
+        set_line_col(node, node.lineno, node.col_offset)
+
+        return node
+    def visit_If(self, node: ast.If) -> ast.AST:
+        # If node is marked skip, do your special logic
+        if getattr(node, '_skip_stateful', False):
+            return self._wrap_in_is_reset_guard(node)
+
+        line_no = getattr(node, 'lineno', 0)
+        col_offset = getattr(node, 'col_offset', 0)
+
+        # 1) Build an AST call for _system_obj.is_reset()
+        is_reset_call = ast.Call(
+            func=ast.Attribute(
+                value=ast.Name(id=SYSTEM_OBJ_NAME, ctx=ast.Load()),
+                attr='is_reset',
+                ctx=ast.Load()
+            ),
+            args=[],
+            keywords=[]
+        )
+        set_line_col(is_reset_call, line_no, col_offset)
+
+        # 2) Build an AST call for _system_obj.check_condition_flag(line_no)
+        check_cond_call = ast.Call(
+            func=ast.Attribute(
+                value=ast.Name(id=SYSTEM_OBJ_NAME, ctx=ast.Load()),
+                attr='check_condition_flag',
+                ctx=ast.Load()
+            ),
+            args=[ast.Constant(value=line_no)],
+            keywords=[]
+        )
+        set_line_col(check_cond_call, line_no, col_offset)
+
+        # 3) Make an AST node for (orig_cond AND _system_obj.is_reset())
+        left_subexpr = ast.BoolOp(
+            op=ast.And(),
+            values=[node.test, is_reset_call]
+        )
+        set_line_col(left_subexpr, line_no, col_offset)
+
+        # 4) Make an AST node for (check_condition_flag(line_no) AND NOT is_reset())
+        not_is_reset = ast.UnaryOp(
+            op=ast.Not(),
+            operand=is_reset_call  # re-use or create a second call if you want separate objects
+        )
+        set_line_col(not_is_reset, line_no, col_offset)
+
+        right_subexpr = ast.BoolOp(
+            op=ast.And(),
+            values=[check_cond_call, not_is_reset]
+        )
+        set_line_col(right_subexpr, line_no, col_offset)
+
+        # 5) Combine with OR => (left_subexpr) OR (right_subexpr)
+        # => ( (orig_cond AND is_reset()) OR (check_condition_flag(...) AND NOT is_reset()) )
+        new_test = ast.BoolOp(
+            op=ast.Or(),
+            values=[left_subexpr, right_subexpr]
+        )
+        set_line_col(new_test, line_no, col_offset)
+
+        # 6) Replace node.test with the new compound expression
+        node.test = new_test
+
+        # Recurse into body & orelse
+        node.body = [self.visit(s) for s in node.body]
+        node.orelse = [self.visit(s) for s in node.orelse]
+
+        # Optionally wrap the entire If node in a state guard
+        wrapped_if = self._wrap_in_state_guard(node)
+        return wrapped_if
+    # def visit_If(self, node: ast.If) -> ast.AST:
+    #     if getattr(node, '_skip_stateful', False):
+    #         # If you do want it wrapped in _system_obj.is_reset() => do that here:
+    #         return self._wrap_in_is_reset_guard(node)
+    #     # The line_no for the 'if' statement is stored on the node
+    #     line_no = getattr(node, 'lineno', 0)
+    #     col_offset = getattr(node, 'col_offset', 0)
+
+    #     # Create the condition_call (OR part)
+    #     condition_call = ast.Call(
+    #         func=ast.Attribute(
+    #             value=ast.Name(id=SYSTEM_OBJ_NAME, ctx=ast.Load()),
+    #             attr='check_condition_flag',
+    #             ctx=ast.Load()
+    #         ),
+    #         args=[ast.Constant(value=line_no)],
+    #         keywords=[]
+    #     )
+    #     # Ensure condition_call has the same line/col
+    #     set_line_col(condition_call, line_no, col_offset)
+
+    #     # Build the new test: (original_test) or condition_call
+    #     new_test = ast.BoolOp(op=ast.Or(), values=[node.test, condition_call])
+    #     set_line_col(new_test, line_no, col_offset)
+    #     node.test = new_test
+
+    #     # Recurse into body & orelse
+    #     node.body = [self.visit(s) for s in node.body]
+    #     node.orelse = [self.visit(s) for s in node.orelse]
+
+    #     # Now wrap the entire If node
+    #     wrapped_if = self._wrap_in_state_guard(node)
+    #     return wrapped_if
+
+    def visit_While(self, node: ast.While) -> ast.AST:
+        line_no = getattr(node, 'lineno', 0)
+        col_offset = getattr(node, 'col_offset', 0)
+
+        condition_call = ast.Call(
+            func=ast.Attribute(
+                value=ast.Name(id=SYSTEM_OBJ_NAME, ctx=ast.Load()),
+                attr='check_condition_flag',
+                ctx=ast.Load()
+            ),
+            args=[ast.Constant(value=line_no)],
+            keywords=[]
+        )
+        set_line_col(condition_call, line_no, col_offset)
+
+        new_test = ast.BoolOp(op=ast.Or(), values=[node.test, condition_call])
+        set_line_col(new_test, line_no, col_offset)
+        node.test = new_test
+
+        # Recurse
+        node.body = [self.visit(s) for s in node.body]
+        node.orelse = [self.visit(s) for s in node.orelse]
+
+        wrapped_while = self._wrap_in_state_guard(node)
+        return wrapped_while
+
+    def generic_visit(self, node: ast.AST) -> ast.AST:
+        if getattr(node, '_skip_stateful', False):
+            # wrap in if _system_obj.is_reset():
+            return self._wrap_in_is_reset_guard(node)
+        
+
+        else:
+            return self._wrap_in_state_guard(node)
+
+    def _wrap_in_is_reset_guard(self, stmt: ast.stmt) -> ast.stmt:
+        line_no = getattr(stmt, 'lineno', 0)
+        col_offset = getattr(stmt, 'col_offset', 0)
+
+        check_call = ast.Call(
+            func=ast.Attribute(
+                value=ast.Name(id=SYSTEM_OBJ_NAME, ctx=ast.Load()),
+                attr='is_reset',
+                ctx=ast.Load()
+            ),
+            args=[],
+            keywords=[]
+        )
+        set_line_col(check_call, line_no, col_offset)
+
+        new_if = ast.If(
+            test=check_call,
+            body=[stmt],
+            orelse=[]
+        )
+        set_line_col(new_if, line_no, col_offset)
+        return new_if
+
+    def _wrap_in_state_guard(self, stmt: ast.stmt) -> ast.stmt:
+        """
+        Wrap <stmt> in:
+            if _system_obj.check_state_flag(stmt.lineno):
+                <stmt>
+        preserving line numbers
+        """
+        line_no = getattr(stmt, 'lineno', 0)
+        col_offset = getattr(stmt, 'col_offset', 0)
+
+        check_call = ast.Call(
+            func=ast.Attribute(
+                value=ast.Name(id=SYSTEM_OBJ_NAME, ctx=ast.Load()),
+                attr='check_state_flag',
+                ctx=ast.Load()
+            ),
+            args=[ast.Constant(value=line_no)],
+            keywords=[]
+        )
+        # set line info for call
+        set_line_col(check_call, line_no, col_offset)
+
+        new_if = ast.If(
+            test=check_call,
+            body=[stmt],
+            orelse=[]
+        )
+        # set line info for the newly created If node + its children
+        set_line_col(new_if, line_no, col_offset)
+
+        return new_if
+
+
+def convert_function_to_stateful(func_def_node: ast.FunctionDef):
+    """
+    Transforms the function definition node to a 'stateful' version that references _system_obj
+    in conditions, and wraps statements with if _system_obj.check_state_flag(...).
+    """
+    transformer = StatefulTransformer()
+    new_func_def = transformer.visit(func_def_node)
+    # Optionally do a final fix-up if you prefer
+    # set_line_col(new_func_def, new_func_def.lineno, new_func_def.col_offset)
+    return new_func_def
 
 

@@ -5,8 +5,11 @@
 
 To get started, you can chat with the **AutoGRAMS Seed Agent** (Asa)--an AutoGRAMS chatbot that runs in the terminal and codes AutoGRAMS chatbots for you 🔥 It can also answer questions about the code it writes or about AutoGRAMS in general. To run **Asa**, follow the **Quick Start** instructions below.
 
+**Update**: DeepSeek integration for autograms is (now available)[#deepseek-with-autograms-using-vllm].
 
-As of the latest version, Autograms can be configured with [Local AI](https://github.com/mudler/LocalAI) and [Huggingface Text Generation](https://github.com/huggingface/text-generation-inference) interface for efficiently running open source LLMs locally, and [Lite LLM](https://github.com/BerriAI/litellm) for connecting to a large set of model APIs. 
+
+
+<!-- As of the latest version, Autograms can be configured with [Local AI](https://github.com/mudler/LocalAI) and [Huggingface Text Generation](https://github.com/huggingface/text-generation-inference) interface for efficiently running open source LLMs locally, and [Lite LLM](https://github.com/BerriAI/litellm) for connecting to a large set of model APIs.  -->
 
 The full documentation and tutorials are available in our [web docs](https://autograms.github.io/autograms). 
 
@@ -156,21 +159,51 @@ in `run_autogram.py`. This list contains logging information for the whole conve
 
 Autograms can also be run with other models besides openai by setting up proxy servers. Autograms has been tested with:
 
-[Local AI](https://github.com/mudler/LocalAI)--simple CPU or GPU inference with open source models, supports both text generation and embeddings.
+
+[vllm](https://github.com/vllm-project/vllm) -- Professional grade inference that supports both text generation and embeddings
+
 
 [Lite llm](https://github.com/BerriAI/litellm)--Allows other model APIs for text generation and embeddings to be called, and can give more controls over model calls such as rate limits
 
+[Local AI](https://github.com/mudler/LocalAI)--simple CPU or GPU inference with open source models, supports both text generation and embeddings.
+
+
 [Huggingface text generation interface](https://github.com/huggingface/text-generation-inference) -- Professional grade GPU text generation, does not support embeddings
+
+[ollama](https://github.com/ollama/ollama)
 
 
 
 Autograms will most likely work with other openai compatible proxy servers too, so long as structured outputs are handled correctly.
 
+### DeepSeek with autograms using vllm
 
-### Quick Example: Running Llama on CPU with Local AI
+
+DeepSeek is a new open source language model with especially impressive reasoning results. As of January 2025 it is likely the most powerful way to run autograms locally without dependence on external APIS. This will give you a tutorial on how to integrate it. 
 
 
-Local AI is useful if you want to run autograms locally, and supports both text generation and embeddings. It's also feasible to run it completely on the CPU if you don't have access to a GPU. Local AI can be set up with [docker](https://www.docker.com/), or installed from source with instructions on the [Local AI github](https://github.com/mudler/LocalAI).
+Note: you will likely need GPUs to run this. This setup was tested using 2 48GB A6000 GPUs
+
+A Deep Seek proxy can be launched using
+
+pip install vllm
+
+python -m vllm.entrypoints.openai.api_server --model deepseek-ai/DeepSeek-R1-Distill-Qwen-3
+2B --tensor-parallel-size 2 --max-model-len 32000 --guided-decoding-backend lm-format-enforcer
+
+You can also substitute any of the DeepSeek [R1 models](https://huggingface.co/deepseek-ai/DeepSeek-R1)
+
+python run_autogram.py --example_name recruiter --model_type proxy --proxy_port 8000 --model_name deepseek-ai/DeepSeek-R1-Distill-Qwen-32B
+
+This will launch an interactive terminal to talk to an autograms recruiter agent running deep seek. You'll be able to see the model's thoughts as well as its final response.  
+
+
+
+
+### Running Llama on CPU with Local AI
+
+
+Local AI is another useful tool if you want to run autograms locally, and supports both text generation and embeddings. It's also feasible to run it completely on the CPU if you don't have access to a GPU. Local AI can be set up with [docker](https://www.docker.com/), or installed from source with instructions on the [Local AI github](https://github.com/mudler/LocalAI).
 
 
 Note: If you do not have docker installed, are using ubuntu, and want a quick solution, you can run `bash proxy_apis/install_docker.sh` (tested in ubuntu 20.04)
@@ -222,7 +255,7 @@ Huggingface TGI allows for professional grade GPU inference of text generation m
 
 You can run huggingface TGI on the GPU using docker with with:
 
-`bash proxy_apis/run_huggingface.sh tiiuae/falcon-7b-instruct`
+`bash proxy_apis/run_huggingface_gpu.sh tiiuae/falcon-7b-instruct`
 
 You can change the model and inference settings by changing the shell script.
 

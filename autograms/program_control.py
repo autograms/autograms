@@ -4,9 +4,10 @@ import inspect
 import types
 from functools import wraps
 
-from .autogram_utils.code_utils import convert_for_to_while, jump_start_function, remove_decorators, get_address_book,adjust_line_numbers,declare_globals, SKIP_FLAG_PREFIX,CONDITION_FLAG_PREFIX
+from .autogram_utils.code_utils import convert_for_to_while, jump_start_function, remove_decorators, get_address_book,adjust_line_numbers,declare_globals, SKIP_FLAG_PREFIX,CONDITION_FLAG_PREFIX, SystemObject,convert_function_to_stateful, LocalsInjector, SYSTEM_OBJ_NAME
 from .memory import get_memory
 import time
+import copy
 
 
 debug=False
@@ -362,13 +363,18 @@ class AutogramsFunction:
     - processed_function (function): The function after AST processing.
     """
 
-    def __init__(self, func, chatbot=False,conv_scope="global",globals_to_declare={}):
+    def __init__(self, func, chatbot=False,conv_scope="global",recompile_at_restart=True,globals_to_declare={}):
         
         self.globals = func.__globals__
         self.func = func
        
         self.nonlocals = extract_nonlocals(func)
         self.globals_to_declare=globals_to_declare
+        self.recompile_at_restart=recompile_at_restart
+        if len(globals_to_declare)>0:
+            print("WARNING: globals to declare is deprecated and will be removed in later versions. Use user_globals for modifiable globals")
+            self.recompile_at_restart=True
+       # self.recompile_at_restart=True
 
         self.chatbot=chatbot
         self.conv_scope=conv_scope
@@ -415,12 +421,27 @@ class AutogramsFunction:
         self.addresses = get_address_book(self.processed_def,func.__globals__)
 
         self.processed_function = generate_function_from_ast(while_tree,self.func,self.file_name)
-        
+
+        self.local_names = self.processed_function.__code__.co_varnames
+
+        copied_def = copy.deepcopy(self.processed_def)
+
+        self.system_obj = SystemObject(stripped_tree)
+
+        locals_injector = LocalsInjector(self.local_names)
+
+
+        self.stateful_def= locals_injector.visit(convert_function_to_stateful(copied_def))
+
+        self.stateful_function = generate_function_from_ast(self.stateful_def,self.func,self.file_name)
+
+
 
 
         
 
     def __call__(self, *args, **kwargs):
+        time0 = time.time()
         """
         Executes the decorated function, managing control flow and memory.
 
@@ -511,33 +532,51 @@ class AutogramsFunction:
             
             
             if target_line is None:
-                if len(self.globals_to_declare)==0:
-                    function_obj = self.processed_function
+                if self.recompile_at_restart:
+                    if len(self.globals_to_declare)==0:
+                        function_obj = self.processed_function
+                    else:
+                        function_tree = declare_globals(self.processed_def,self.globals_to_declare)
+                        function_obj = generate_function_from_ast(function_tree,self.func,self.file_name)
                 else:
-                    function_tree = declare_globals(self.processed_def,self.globals_to_declare)
-                    function_obj = generate_function_from_ast(function_tree,self.func,self.file_name)
+                    function_obj = self.processed_function
 
       
             else:
                
-                try:
-                    function_tree = jump_start_function(self.processed_def,target_line,code_locals.keys(),include_line,globals_to_declare=self.globals_to_declare)
-  
-                except Exception as e:
+                
+                if self.recompile_at_restart:
+                    try:
+                        function_tree = jump_start_function(self.processed_def,target_line,code_locals.keys(),include_line,globals_to_declare=self.globals_to_declare)
+                        
+                    except Exception as e:
+                        
+                        raise type(e)(f"'{str(e)}'\nRestart Failed for @autogram_function() `{self.func_name}`. One common reason for this is if a MemoryObject created with an earlier version of an autograms module was reloaded into a new version of the module with modified code, and ADDRESS locations were not set up properly to be able to map from the original code to the new code.").with_traceback(e.__traceback__) from e
+                    function_obj = generate_function_from_ast(function_tree,self.func,self.file_name)
+                    args =[]
+                    kwargs = code_locals
+                else:
+
+                    try:
+                        self.system_obj.set_line_number(target_line,include_line)
+                    except Exception as e:
+                        
+                        raise type(e)(f"'{str(e)}'\nRestart Failed for @autogram_function() `{self.func_name}`. One common reason for this is if a MemoryObject created with an earlier version of an autograms module was reloaded into a new version of the module with modified code, and ADDRESS locations were not set up properly to be able to map from the original code to the new code.").with_traceback(e.__traceback__) from e
+
+                    function_obj =self.stateful_function
+                    args =[]
+                    kwargs = code_locals
+                    kwargs[SYSTEM_OBJ_NAME]=self.system_obj
                     
-                    raise type(e)(f"'{str(e)}'\nRestart Failed for @autogram_function() `{self.func_name}`. One common reason for this is if a MemoryObject created with an earlier version of an autograms module was reloaded into a new version of the module with modified code, and ADDRESS locations were not set up properly to be able to map from the original code to the new code.").with_traceback(e.__traceback__) from e
+                  
+                
 
-     
-                function_obj = generate_function_from_ast(function_tree,self.func,self.file_name)
-              
-                #line_mapping_full = merge_line_mapping(line_mapping,self.line_mapping)
-                args =[]
-                kwargs = code_locals
-
+                    
 
             try:
-      
+   
                 result =  function_obj(*args, **kwargs)
+  
 
                 done=True
 
@@ -598,8 +637,11 @@ class AutogramsFunction:
                 else:
                    
                     raise Exception("Error caused by invalid transition to unknown address: "+jump_exc.destination)
+            except Exception as e:
+                raise type(e)(f"{str(e)}").with_traceback(e.__traceback__) from e
                 
         memory.process_return()
+        print(time.time()-time0)
         if root_call:
             memory=get_memory()
             return AutogramsReturn(func_return=result,memory=memory,data={"reply":None})
@@ -667,7 +709,7 @@ class AutogramsReturn():
 
 def autograms_external():
     """
-    Decorator for defining an Autograms extenral function, meant to be part of same module as chatbot but called from outside of chatbot to set or manipulate variables
+    Decorator for defining an Autograms external function, meant to be part of same module as chatbot but called from outside of chatbot to set or manipulate variables
 
     """
     def decorator(func):
@@ -675,16 +717,17 @@ def autograms_external():
     
     return decorator
 
-def autograms_function(conv_scope="global",globals_to_declare={}):
+def autograms_function(conv_scope="global",globals_to_declare={},recompile_at_restart=True):
     """
     Decorator for defining an Autograms function.
 
     Parameters:
     - conv_scope (str): Conversation scope for the function.
-    - globals_to_declare (dict): Global variables to declare in the function.
+    - globals_to_declare (dict): Global variables to declare in the function. This is deprecated, it is better to use user_globals for globals that need to change
+    - recompile_at_restart (bool) @autograms_functions currently has 2 function reloading methods--either recompiling every time the chatbot is called (recompile_at_restart=True), or compiling a more complex representation at definition only and passing the restart information at each call(recompile_at_restart=False).  The expected behavior of both is equivalent in terms of code result, but recompile_at_restart=True has been more thoroughly tested.
     """
     def decorator(func):
-        return AutogramsFunction(func,conv_scope=conv_scope,globals_to_declare=globals_to_declare)
+        return AutogramsFunction(func,conv_scope=conv_scope,recompile_at_restart=recompile_at_restart,globals_to_declare=globals_to_declare)
     
     return decorator
 

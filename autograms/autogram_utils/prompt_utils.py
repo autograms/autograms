@@ -136,7 +136,7 @@ def set_input(user_reply,instruction,transition):
 
     return text, prefix
 
-def make_prompt(turns,max_turns=None,transition=False):
+def make_prompt_old(turns,max_turns=None,transition=False):
     """
     process prompt for chatbot
     arguments:
@@ -248,7 +248,7 @@ def make_prompt_single(turns,instruction=None,max_turns=None,transition=False):
 
 def make_prompt(turns,instruction=None,max_turns=None,transition=False):
 
-
+    
     if not max_turns is None:
 
         user_replies_found = 0
@@ -269,6 +269,7 @@ def make_prompt(turns,instruction=None,max_turns=None,transition=False):
     system_sub_messages = []
     for turn in turns:
         #iterates over past turns
+
    
         if turn['role']=="agent":
             input_message =""
@@ -354,9 +355,6 @@ def make_decision_prompt(turns,transition_question,answers,max_turns):
 
 
 
-    if len(answers)==1:
-        return answers[0]
-
 
     abcde = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[:len(answers)]
 
@@ -369,7 +367,7 @@ def make_decision_prompt(turns,transition_question,answers,max_turns):
 
 
 
-    if len(answers)==2 and (answers[0].lower()=="yes" or answers[1].lower()=="no") or (answers[1].lower()=="yes" or answers[0].lower()=="no"):
+    if len(answers)==2 and ((answers[0].lower()=="yes" or answers[1].lower()=="no") or (answers[1].lower()=="yes" or answers[0].lower()=="no")):
         
         """
         yes or no questions have special treatment. Model predicts yes or no token. This makes the ordering of yes and no arbitrary for the classifier.

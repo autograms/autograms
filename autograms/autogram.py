@@ -71,12 +71,14 @@ def load_autogram(filepath):
 #     return chatbot_func, init_func
 
 @contextmanager
-def use_config(config,test_mode=False):
+def use_config(config=None,test_mode=False,supervisor_mode=False):
     """
     A simple way to set the config 
     """
+    if config is None:
+        config = AutogramConfig()
 
-
+  
     if config.chatbot_type == 'openai':
             
         new_api_keys=dict()
@@ -93,6 +95,7 @@ def use_config(config,test_mode=False):
     token= set_memory(memory_object)
 
     memory_object.set_test_mode(test_mode=test_mode)
+    memory_object.set_supervisor_mode(supervisor_mode=supervisor_mode)
 
 
     try:
@@ -107,7 +110,7 @@ class Autogram():
     This class acts as a wrapper around the root AutogramsFunction, handling memory management,
     serialization, and interaction logic for chatbot responses.
     """
-    def __init__(self,root_function=None,autogram_config=None,api_keys=None,test_mode=False):
+    def __init__(self,root_function=None,autogram_config=None,api_keys=None,test_mode=False,supervisor_mode=False):
         """
         Initializes the Autogram object with a root function and configuration.
 
@@ -129,6 +132,7 @@ class Autogram():
         else:
             load_from_env=False
 
+
         for key in api_keys:
             if not(key=="load_from_env"):
                 if load_from_env:
@@ -143,6 +147,7 @@ class Autogram():
 
         self.api_keys = new_api_keys
         self.test_mode=test_mode
+        self.supervisor_mode=False
 
 
 
@@ -181,6 +186,7 @@ class Autogram():
         token=set_memory(memory_object)
 
         memory_object.set_test_mode(self.test_mode)
+        memory_object.set_supervisor_mode(self.supervisor_mode)
 
 
         try:
@@ -214,6 +220,7 @@ class Autogram():
       
         
         memory_object.set_test_mode(self.test_mode)
+        memory_object.set_supervisor_mode(self.supervisor_mode)
         if isinstance(memory_object,SerializableMemory):
             
          #   import pdb;pdb.set_trace()

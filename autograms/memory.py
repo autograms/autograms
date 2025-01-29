@@ -7,9 +7,10 @@ import dill
 import threading
 import types
 import inspect
-from contextlib import contextmanager
+
 from datetime import datetime
 debug = False
+from .autogram_utils.code_utils import SYSTEM_OBJ_NAME,SYSTEM_KWARGS_NAME
 
 
 from contextvars import ContextVar
@@ -335,7 +336,9 @@ class SerializableMemory():
 
                 line_number= frame.frame.f_code.co_firstlineno + frame.frame.f_lineno - 1
                 function_name = frame.frame.f_code.co_name
-                code_locals = frame.frame.f_locals.copy()  
+                code_locals = frame.frame.f_locals.copy()
+                code_locals.pop(SYSTEM_OBJ_NAME, None)
+                code_locals.pop(SYSTEM_KWARGS_NAME, None)
           
 
 
@@ -470,8 +473,11 @@ class MemoryObject(SerializableMemory):
 
         self.root_function = root_function
         self.test_mode=False
+        self.supervisor_mode=False
+        self.supervisor_active = False
         self.config=config
         self.last_node=None
+        self.last_info=None
 
         if memory_dict is None:
             self.memory_dict=dict()
@@ -541,6 +547,9 @@ class MemoryObject(SerializableMemory):
         - test_mode (bool): If True, enables test mode.
         """
         self.test_mode=test_mode
+    def set_supervisor_mode(self,supervisor_mode):
+
+        self.supervisor_mode=supervisor_mode
 
 
     @contextmanager
@@ -602,7 +611,7 @@ class MemoryObject(SerializableMemory):
             self.memory_dict['turn_stack'].append({"scope":conv_scope,"turns":[],"system_prompt":system_prompt})
            
         if self.unused_user_reply:
-            self.memory_dict['turn_stack'][-1]["turns"].append(self.memory_dict['cached_user_reply'])
+            self.memory_dict['turn_stack'][-1]["turns"].append({"role":"user","content":self.memory_dict['cached_user_reply']})
 
             self.unused_user_reply=False
 
@@ -740,12 +749,12 @@ class MemoryObject(SerializableMemory):
 
 
 
-
             if scope=="local":
                 break
 
        # turns.append({"user_reply":cached_user_reply, "instruction":instruction})
         system_prompt = self.memory_dict['turn_stack'][-1]['system_prompt']
+
         
 
         return turns,system_prompt
@@ -859,8 +868,26 @@ class MemoryObject(SerializableMemory):
         self.memory_dict['model_turns'].append({"output":result,"entry_type":"chatbot","input_turns":input_turns,"output_turns":output_turns,"system_prompt":system_prompt,"usage_log":usage_log,"last_node":self.last_node,"timestamp":get_timestamp()})
        
 
+    def log_model_turn(self,result,function_name,function_inputs,code_position=None,usage_log=None):
+        """
+        Logs a chatbot turn with model input/output.
+
+        Parameters:
+        - result (str): Chatbot output.
+        - content(str): conversation history
+        - system_prompt (str): System prompt.
+        - model_type (str): Type of model used.
+        """
+  
         
 
+  
+        self.memory_dict['model_turns'].append({"output":result,"entry_type":"model","function_name":function_name,"function_inputs":function_inputs,"code_position":code_position,"usage_log":usage_log,"supervisor":self.supervisor_active,"info":self.last_info,"timestamp":get_timestamp()})
+        if not self.supervisor_active:
+            self.last_info=None
+       
+
+    
     
 
 class SimpleMemory():
@@ -875,6 +902,9 @@ class SimpleMemory():
     def __init__(self,config,memory_dict=None):
         self.config=config
         self.test_mode=False
+        self.supervisor_mode=False
+        self.supervisor_active=False
+        self.last_info=None
         if memory_dict is None:
             self.memory_dict= {"model_turns":[],"turns":[],"system_prompt":self.config.default_prompt,"cached_user_reply":None}
 
@@ -887,6 +917,10 @@ class SimpleMemory():
         - text (str): The system prompt text.
         """
         self.memory_dict["system_prompt"]=text
+    def set_supervisor_mode(self,supervisor_mode):
+
+        self.supervisor_mode=supervisor_mode
+
     def set_test_mode(self,test_mode):
 
         """
@@ -897,10 +931,9 @@ class SimpleMemory():
         """
         self.test_mode=test_mode
 
-
     def log_chat_turn(self,reply,instruction=None,retain_instruction=False,line_number=None,function_name=None):
         """
-        Logs a chatbot turn for SimpleMemory.
+        Logs a chatbot turn with user and agent interactions.
 
         Parameters:
         - reply (str): Chatbot's reply.
@@ -916,13 +949,13 @@ class SimpleMemory():
             user_reply = self.memory_dict['cached_user_reply']
             self.memory_dict['cached_user_reply']=None
 
-        self.memory_dict['turns'].append({"user_reply":user_reply,"agent_reply":reply,"instruction":instruction,"retain_instruction":retain_instruction})
-       # self.memory_dict['model_turns'].append({"reply":reply,"entry_type":"agent_reply","last_node":self.last_node,"line_number":line_number,"function_name":function_name,"timestamp":get_timestamp()})
+        self.memory_dict['turns'].append({"role":"agent","content":reply})
+        self.memory_dict['model_turns'].append({"reply":reply,"entry_type":"agent_reply","last_node":self.last_node,"line_number":line_number,"function_name":function_name,"timestamp":get_timestamp()})
 
     def log_thought_turn(self,reply,instruction,retain_instruction=True):
 
         """
-        Logs a thought turn for SimpleMemory.
+        Logs a thought turn (internal reasoning).
 
         Parameters:
         - reply (str): Thought output.
@@ -932,39 +965,50 @@ class SimpleMemory():
 
         user_reply = None
 
-        self.memory_dict['turn_stack'][-1]['turns'].append({"user_reply":user_reply,"agent_reply":reply,"instruction":instruction,"retain_instruction":retain_instruction})
-    
+        self.memory_dict['turns'].append({"role":"system_instruction","content":instruction})
+        self.memory_dict['turns'].append({"role":"system_answer","content":reply})
 
-    def log_classifier_turn(self,result,input_turns,output_turns,answer_choices,model_type):
+    def log_classifier_turn(self,result,input_turns,output_turns,answer_choices,usage_log=None,system_prompt=None):
         """
-        Logs a classifier turn for SimpleMemory.
+        Logs a classifier turn.
 
         Parameters:
-        - result (str): output of classifier
-        - input_turns (list): input turns 
-        - output_turns (list): output from previous chatbot turns chatbot 
+        - result (str): Classifier output.
+        - input_str (str): Input string for the classifier.
         - answer_choices (list): Possible answers.
         - model_type (str): Type of model used.
         """
-        
-        self.memory_dict['model_turns'].append({"output":result,"entry_type":"classifier","input_turns":input_turns,"output_turns":output_turns,"answer_choices":answer_choices,"model_type":model_type,"last_node":None,"timestamp":get_timestamp()})
+        self.memory_dict['model_turns'].append({"output":result,"entry_type":"classifier","input_turns":input_turns,"output_turns":output_turns,"answer_choices":answer_choices,"system_prompt":system_prompt,"usage_log":usage_log,"last_node":None,"timestamp":get_timestamp()})
 
 
     def log_chatbot_turn(self,result,input_turns,output_turns,system_prompt="",usage_log=None):
         """
-        Logs a chatbot turn for SimpleMemory.
+        Logs a chatbot turn with model input/output.
 
         Parameters:
         - result (str): Chatbot output.
-        - input_turns (list): input turns chatbot 
-        - output_turns (list): output from previous chatbot turns chatbot 
+        - content(str): conversation history
         - system_prompt (str): System prompt.
         - model_type (str): Type of model used.
         """
-        
+
+
         self.memory_dict['model_turns'].append({"output":result,"entry_type":"chatbot","input_turns":input_turns,"output_turns":output_turns,"system_prompt":system_prompt,"usage_log":usage_log,"last_node":None,"timestamp":get_timestamp()})
        
+    def log_model_turn(self,result,function_name,function_inputs,code_position=None, usage_log=None):
+        """
+        Logs a chatbot turn with model input/output.
 
+        Parameters:
+        - result (str): Chatbot output.
+        - content(str): conversation history
+        - system_prompt (str): System prompt.
+        - model_type (str): Type of model used.
+        """
+
+        self.memory_dict['model_turns'].append({"output":result,"entry_type":"model","function_name":function_name,"function_inputs":function_inputs,"usage_log":usage_log,"supervisor_active":self.supervisor_active,"info":self.last_info,"timestamp":get_timestamp()})
+        if not self.supervisor_active:
+            self.last_info=None
     def add_user_reply(self,user_reply):
         """
         Logs a user's reply in the conversation.
@@ -972,10 +1016,14 @@ class SimpleMemory():
         Parameters:
         - user_reply (str): The user's reply.
         """
+        self.memory_dict['model_turns'].append({"user_reply":user_reply,"entry_type":"user_reply","timestamp":get_timestamp()})
 
-     #   self.memory_dict['model_turns'].append({"user_reply":user_reply,"entry_type":"user_reply","timestamp":get_timestamp()})
+        if not user_reply is None and len(user_reply)>0:
+           
+            self.memory_dict['turns'].append({"role":"user","content":user_reply})
 
-        self.memory_dict["cached_user_reply"]=user_reply
+
+            self.memory_dict["cached_user_reply"]=user_reply
     
     def get_turns_for_model(self,instruction=None):
         """
@@ -994,7 +1042,7 @@ class SimpleMemory():
 
 
 
-        turns.append({"user_reply":cached_user_reply, "instruction":instruction})
+        #turns.append({"user_reply":cached_user_reply, "instruction":instruction})
         system_prompt = self.memory_dict['system_prompt']
         
 

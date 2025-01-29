@@ -16,10 +16,12 @@ stored_tokenizers=dict()
 
 
 
-def init_api(api_key=None,proxy_address=None,embedding_proxy_address=None):
+def init_api(api_key,proxy_address=None,embedding_proxy_address=None):
     global client
     global embedding_client
+    
     if proxy_address is None:
+
         client = OpenAI(api_key=api_key)
     else:
         client = OpenAI(base_url=proxy_address,api_key="default")
@@ -45,10 +47,11 @@ def init_api(api_key=None,proxy_address=None,embedding_proxy_address=None):
 
 def get_batch_embeddings(texts, model=None,**kwargs):
 
+  
+    data = embedding_client.embeddings.create(input = texts, model=model,**kwargs).data
 
-   data = embedding_client.embeddings.create(input = texts, model=model,**kwargs).data
-   results = [x.embedding for x in data]
-   return results
+    results = [x.embedding for x in data]
+    return results
 
 def get_single_embedding(text, model=None,**kwargs):
 
