@@ -6,4 +6,4 @@ from .program_control import autograms_function,autograms_external, autograms_no
 
 
 from .autogram_utils import code_utils,prompt_utils,post_process_utils
-__version__ = "0.5.4"
+__version__ = "0.6.0"
