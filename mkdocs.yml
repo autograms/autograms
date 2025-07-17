@@ -23,7 +23,7 @@ nav:
       - Embedding functions: documentation/embeddings.md
       - Logging functions: documentation/logging_functions.md
       - Code utility functions: documentation/helper.md
-
+      - Simulation and finetuning: documentation/simulation_finetuning.md
 
 
 

@@ -1480,3 +1480,170 @@ def convert_function_to_stateful(func_def_node: ast.FunctionDef):
     return new_func_def
 
 
+
+import ast
+
+class ApplyAsSchemaTransformer(ast.NodeTransformer):
+    """
+    Scans the entire function/code for `with apply_as_schema(...)` blocks.
+    When found, we pass the block body to a sub-transformer that applies
+    schema-specific rules (banning else, flattening conditionals, etc.).
+    """
+
+    def __init__(self):
+        super().__init__()
+        # Possibly store configuration or references here if needed
+
+    def visit_With(self, node: ast.With):
+        """
+        Called for every 'with' node. We check if it's 'apply_as_schema(...)'.
+        If yes, transform the body with the schema block logic.
+        """
+        # 1) Is this a call to apply_as_schema(...)?
+        if self.is_apply_as_schema_call(node):
+            # 2) The schema block is node.body
+            # We'll run another transformer on this body
+            schema_transformer = SchemaBlockTransformer()
+            new_body = []
+            for stmt in node.body:
+                new_stmt = schema_transformer.visit(stmt)
+                if new_stmt:
+                    if isinstance(new_stmt, list):
+                        new_body.extend(new_stmt)
+                    else:
+                        new_body.append(new_stmt)
+            node.body = new_body
+
+            # Optionally, you might rewrite the 'with' itself or remove it.
+            # For example, if you want a two-phase code, you might inject placeholders.
+            # Or you can just keep the 'with' as is (with a changed body).
+
+            return node  # or something else
+
+        # If it's not apply_as_schema, just recurse normally
+        return self.generic_visit(node)
+
+    def is_apply_as_schema_call(self, node: ast.With) -> bool:
+        """
+        Check if with statement is `with apply_as_schema(...):`.
+        e.g. node.items[0].context_expr should be a Call to name='apply_as_schema'
+        """
+        if not node.items:
+            return False
+        context_expr = node.items[0].context_expr
+        if isinstance(context_expr, ast.Call):
+            func_name = self.get_func_name(context_expr.func)
+            return (func_name == "apply_as_schema")
+        return False
+
+    def get_func_name(self, func_expr):
+        # If func_expr is ast.Name or ast.Attribute
+        if isinstance(func_expr, ast.Name):
+            return func_expr.id
+        elif isinstance(func_expr, ast.Attribute):
+            # e.g. apply_as_schema could be module.apply_as_schema
+            return func_expr.attr
+        return None
+class SchemaBlockTransformer(ast.NodeTransformer):
+    """
+    Enforces schema rules inside an apply_as_schema block:
+      - No plain else (must be if/elif).
+      - Possibly handle loops in special ways.
+      - Insert schema-building logic or placeholders.
+    """
+
+    def visit_If(self, node: ast.If):
+        """
+        Called for each If statement. We can flatten out elif or ban else blocks.
+        """
+        # 1) Check if node.orelse is not empty
+        if node.orelse:
+            # Is it exactly one statement that is itself an If? => that's an elif
+            if len(node.orelse) == 1 and isinstance(node.orelse[0], ast.If):
+                # This is effectively an 'elif' (just a nested If).
+                # We can flatten this if we want or keep it.
+                # e.g. turn "if cond: body else: if cond2: body2 else: ..." into a chain
+                # We'll do a special flatten method
+                return self.flatten_if_elif_chain(node)
+
+            else:
+                # It's either multiple statements or not an If => plain else block => ban
+                raise BannedElseError("Else blocks are forbidden in schema code (must use 'if/elif' only).")
+
+        # If there's no orelse, or it's an accepted pattern, we can just descend
+        node.test = self.visit(node.test)
+        node.body = [self.visit(stmt) for stmt in node.body if stmt is not None]
+        # node.orelse is empty or handled => do not revisit
+        return node
+
+    def flatten_if_elif_chain(self, node: ast.If):
+        """
+        Example logic to flatten "if cond: body else: if cond2: body2 else: ..."
+        into a single chain. This is up to you how you structure it.
+        """
+        # We'll do a quick pattern: if cond, body => elif cond2 => ...
+        # For a simple example, we'll just keep it as is, or we might do a new structure
+        # Pseudocode below; actual flattening is more detailed.
+
+        # node.orelse[0] is an ast.If => an 'elif' effectively
+        elif_node = node.orelse[0]
+        node.orelse = []
+        # We'll create a chain: node.orelse => [elif_node] but flatten
+        # or we can rewrite node as a list of nodes. There's many ways to handle it.
+
+        # For demonstration, let's create a new list of If statements in a row
+        new_nodes = [node]
+
+        while isinstance(elif_node, ast.If):
+            # attach elif_node as a chain
+            new_nodes.append(elif_node)
+            if len(elif_node.orelse) == 1 and isinstance(elif_node.orelse[0], ast.If):
+                elif_node = elif_node.orelse[0]
+            else:
+                # if there's a final else, we might raise an error or attach
+                if elif_node.orelse:
+                    raise BannedElseError("No raw else allowed in schema code.")
+                break
+
+        # Now we have a list of If's. Return them as a single list of statements if you like
+        return new_nodes
+
+    def visit_For(self, node: ast.For):
+        """
+        Possibly do something special with loops. 
+        e.g. enforce only 'for i in range(...)' or rewrite to produce sub-schemas.
+        """
+        # Example: We might check the iteration. If it's not 'range', ban it.
+        if not self.is_range_loop(node):
+            raise BannedLoopError("Only for i in range(...) is allowed in schema code.")
+        # Then we transform node.body
+        node.body = [self.visit(stmt) for stmt in node.body if stmt is not None]
+        # node.orelse => often unused in Python, but if present, maybe ban it
+        if node.orelse:
+            raise BannedElseError("For-else blocks not allowed in schema code.")
+        return node
+
+    def is_range_loop(self, node: ast.For) -> bool:
+        """
+        Check if for node is of the form: for i in range(...):
+        """
+        # Pseudocode, for a real check you'd do more robust logic
+        if isinstance(node.iter, ast.Call):
+            func_name = self.get_func_name(node.iter.func)
+            return (func_name == "range")
+        return False
+
+    def get_func_name(self, func_expr):
+        if isinstance(func_expr, ast.Name):
+            return func_expr.id
+        elif isinstance(func_expr, ast.Attribute):
+            return func_expr.attr
+        return None
+
+# Example exceptions
+class BannedElseError(Exception):
+    pass
+
+class BannedLoopError(Exception):
+    pass
+

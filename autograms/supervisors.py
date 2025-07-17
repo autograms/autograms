@@ -8,40 +8,64 @@ import json
 
 import functools
 
-def score_result(score):
-    memory = get_memory()
-    memory.last_info = {"score":score}
+# def score_result(score):
+#     memory = get_memory()
+#     memory.last_info = {"score":score}
 
 class SupervisorReturn():
-    def __init__(self,output,output_score = None,rejected_output=None):
+    def __init__(self,output,score = None,rejected_output=None,tags=None):
         self.output = output
-        self.output_score = output_score
+        self.score = score
         self.rejected_output = rejected_output
+        if tags is None:
+            self.tags = []
+        else:
+            self.tags = tags
+  
 
 
 
 def supervisable(function_type):
 
     def _decorator(base_function):
+        
 
-        @functools.wraps(base_function)
+       # @functools.wraps(base_function)
         def wrapper(*args, **kwargs):
             # Extract supervisor from kwargs if it exists
+     
             supervisor = kwargs.pop('supervisor', None)
             supervisor_kwargs = kwargs.pop('supervisor_kwargs', {})
 
+
             memory = get_memory()
+            result=None
             
             if memory.supervisor_mode and not(supervisor is None):
                 memory.supervisor_active=True
 
                 memory.process_external_call()
-                result=None
+               # result=None
                 supervisor_call_kwargs = {**kwargs, **supervisor_kwargs}
                 try:
-                    function_output = supervisor(*args, **supervisor_call_kwargs)
+                    initial_output = supervisor(*args, **supervisor_call_kwargs)
+                    if initial_output is None:
+                        raise Exception("no result returned by supervisor")
+                    
+                    if isinstance(initial_output,SupervisorReturn):
+                        function_output = initial_output.output
+                        rejected=initial_output.rejected_output
+                        score = initial_output.score
+                        tags = initial_output.tags
+                    else:
+                        function_output = initial_output
+                        score=None
+                        rejected=None
+                        tags = None
+
                     if type(function_output)==str:
                         result = function_output
+
                     elif function_type =='json':
                         
                         try:
@@ -73,20 +97,20 @@ def supervisable(function_type):
 
                             if not type(result)==str:
                                 raise Exception("invalid option passed for choices argument")
+                    
 
-                    if result is None:
 
-                        for turn in reversed(memory.memory_dict['model_turns']):
-                            if turn['entry_type']=="model":
-                                result = turn['output']
+                        # for turn in reversed(memory.memory_dict['model_turns']):
+                        #     if turn['entry_type']=="model":
+                        #         result = turn['output']
 
                     
 
                 except ReplyExit as reply_exc:
                     memory.supervisor_active=False
                     memory.process_external_return()
-               
-                    raise Exception("ReplyExit not allowed in supervisor. To supervise a reply_instruction() call just have the supervisor return a string")  
+            
+                    raise Exception("ReplyExit not allowed in supervisor. To supervise a reply_instruction(), just have the supervisor return a string")  
                         
                 
                 except FunctionExit as exc_cont:
@@ -118,22 +142,13 @@ def supervisable(function_type):
                 memory.process_external_return()
                 if result is None:
                     raise Exception(f"Unable to parse output of @supervisor function to match output of base function: {base_function}")
-                # Execute the custom function
+            # Execute the custom function
+            
 
-                if isinstance(result,SupervisorReturn):
 
+                kwargs["_forced_output"]= result
+                kwargs["_supervisor_info"]={"score":score,"rejected_output":rejected,"tags":tags}
 
-                    kwargs["_force_output"]= {"result":result.output}
-                    last_info = dict()
-                    if not result.score is None:
-                        last_info["score"] = result.score
-                    if not result.rejected_output is None:
-                        last_info["rejected_output"] = result.rejected_output
-
-                    if len(last_info)>0:
-                        memory.last_info = last_info
-                else:
-                    kwargs["_force_output"]= result
                     
 
 
@@ -144,7 +159,7 @@ def supervisable(function_type):
                 return base_function(*args, **kwargs)
 
 
-
+        
         return wrapper
     return _decorator
 

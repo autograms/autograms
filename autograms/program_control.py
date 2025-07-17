@@ -641,7 +641,7 @@ class AutogramsFunction:
                 raise type(e)(f"{str(e)}").with_traceback(e.__traceback__) from e
                 
         memory.process_return()
-        print(time.time()-time0)
+        #print(time.time()-time0)
         if root_call:
             memory=get_memory()
             return AutogramsReturn(func_return=result,memory=memory,data={"reply":None})
@@ -773,4 +773,54 @@ def autograms_node(func):
     return wrapper
 
 
+import ast
+import types
+import inspect
+from .autogram_utils.code_utils import remove_decorators
 
+
+def autograms_schema():
+    """
+    Decorator for a function that compiles down to a single schema-based usage,
+    without multi-turn or control-flow exceptions.
+    Example usage:
+        @autograms_schema()
+        def my_function(...):
+            ...
+    """
+    def decorator(func):
+        # 1) Extract the source code & file info
+        source_code = inspect.getsource(func)
+        file_name = inspect.getfile(func)
+        src_lines, starting_lineno = inspect.getsourcelines(func)
+
+        # Dedent the source if needed
+        dedented_source = get_dedented_source(source_code)
+
+        # 2) Parse the source into an AST
+        module_ast = ast.parse(dedented_source)
+        func_def_node = module_ast.body[0]  # The 'FunctionDef' node for 'func'
+
+        # 3) Adjust line numbers to match original code
+        if starting_lineno is not None:
+            adjust_line_numbers(func_def_node, starting_lineno)
+
+        # 4) Remove *only* the innermost decorator (i.e. @autograms_schema),
+        #    so it won't re-trigger on the recompiled code.
+        #    If your remove_decorators(...) automatically strips all,
+        #    you might need a specialized version. For example:
+        #        remove_decorators(func_def_node, remove_only_innermost=True)
+        remove_decorators(func_def_node)
+
+        # 5) (Optional) Transform special blocks like `with apply_as_schema(): ...`
+        #    e.g. custom_transformer = MySchemaBlockTransformer()
+        #    func_def_node = custom_transformer.visit(func_def_node)
+        #    ast.fix_missing_locations(func_def_node)
+
+        # 6) Finally compile an actual function object
+        new_func = generate_function_from_ast(func_def_node, func, file_name)
+
+        # Return that recompiled function as the final decorated object
+        return new_func
+
+    return decorator

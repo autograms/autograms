@@ -248,7 +248,7 @@ def make_prompt_single(turns,instruction=None,max_turns=None,transition=False):
 
 def make_prompt(turns,instruction=None,max_turns=None,transition=False):
 
-    
+
     if not max_turns is None:
 
         user_replies_found = 0
@@ -259,6 +259,7 @@ def make_prompt(turns,instruction=None,max_turns=None,transition=False):
             if turns[i]['role']=="agent" and user_replies_found==max_turns:
                 min_index =i
         turns=turns[min_index:]
+
 
 
     
@@ -396,13 +397,15 @@ def make_decision_prompt(turns,transition_question,answers,max_turns):
 
             content+=abcde[i] + ". " +  answers[i] +"\n"
 
-        choices=abcde
+        choices=list(abcde)
 
-    if len(turns)>0 and max_turns>0:
+    if  len(turns)>0 and not(max_turns==0):
         input_turns,output_turns = make_prompt(turns,instruction=content,max_turns=max_turns,transition = True)
     else:
         input_turns=["INSTRUCTION: "+content]
         output_turns=[]
+
+
     
 
   #  class_id,success=apply_classifier(classifier,content,choices=choices,memory_object=memory_object,state=node_name,transition_probs=transition_probs)  

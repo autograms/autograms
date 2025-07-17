@@ -40,9 +40,14 @@ def main():
     if args.config_file is None:
         if args.example_name == "autograms_seed_agent":
             chatbot_generation_args={"temperature":0.4}
+            if not "gpt" in args.model_name: 
+                chatbot_generation_args["frequency_penalty"]=0.5
             autogram_config = AutogramConfig(chatbot_path = args.model_name,chatbot_max_input_len=40000,classifier_max_input_len=40000,classifier_path = args.model_name,max_response_len=4096,chatbot_generation_args=chatbot_generation_args,exclude_classifier_system_prompt=True,chatbot_type = args.model_type,chatbot_proxy_port=args.proxy_port,embedding_proxy_port = args.embedding_proxy_port,embedding_type=args.embedding_model_type,embedding_path=args.embedding_model_name,reply_start_type='none')
         else:
-            autogram_config = AutogramConfig(chatbot_path = args.model_name,classifier_path = args.model_name,chatbot_type = args.model_type,chatbot_proxy_port=args.proxy_port,embedding_proxy_port = args.embedding_proxy_port,embedding_type=args.embedding_model_type,embedding_path=args.embedding_model_name,reply_start_type='none')
+            chatbot_generation_args={"temperature":0.7}
+            if not "gpt" in args.model_name: 
+                chatbot_generation_args["frequency_penalty"]=0.5
+            autogram_config = AutogramConfig(chatbot_path = args.model_name,classifier_path = args.model_name,chatbot_type = args.model_type,chatbot_proxy_port=args.proxy_port,embedding_proxy_port = args.embedding_proxy_port,embedding_type=args.embedding_model_type,embedding_path=args.embedding_model_name,reply_start_type='none',chatbot_generation_args=chatbot_generation_args)
     else:
         initial_args = {}
         with open(args.config_file) as fid:

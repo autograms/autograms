@@ -147,8 +147,9 @@ class Autogram():
 
         self.api_keys = new_api_keys
         self.test_mode=test_mode
-        self.supervisor_mode=False
+        self.supervisor_mode=supervisor_mode
 
+        
 
 
         if self.config.chatbot_type == 'openai':

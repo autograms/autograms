@@ -150,6 +150,8 @@ def clear_memory():
     _memory_var.set(None)
 
 
+   
+
 
 class UserGlobals():
     def __init__(self):
@@ -207,6 +209,59 @@ class UserGlobals():
         # Convert the underlying dictionary to a normal dict so it prints nicely
         thread_dict = self._get_thread_dict()
         return f"UserGlobals({thread_dict})"
+    # def __getattr__(self, name):
+    #     """
+    #     Called when 'user_globals.name' is accessed and 'name' 
+    #     isn't found among normal attributes.
+    #     We try to get it from the thread dict.
+    #     """
+    #     # We want to skip the standard __getattribute__ logic for special 
+    #     # attributes like __dict__, __class__, etc. So only 
+    #     # unknown names proceed here.
+    #     thread_dict = self._get_thread_dict()
+    #     if name in thread_dict:
+    #         return thread_dict[name]
+    #     else:
+    #         raise AttributeError(
+    #             f"'UserGlobals' object has no attribute '{name}'"
+    #         )
+
+    # def __setattr__(self, name, value):
+    #     """
+    #     Called for 'user_globals.name = value'.
+    #     If the attribute 'name' is recognized as a normal class attribute 
+    #     (like 'init_dict'), set it normally. Otherwise, store in the thread dict.
+    #     """
+    #     # We must detect whether 'name' is a normal attribute 
+    #     # or something that belongs in the thread dict
+    #     # Typically you'd do something like:
+    #     if name in ("init_dict", "_get_thread_dict", "items", "keys", 
+    #                 "values", "get", "clear", "__repr__",
+    #                 "__getattr__", "__setattr__", "__getitem__", 
+    #                 "__setitem__", "__delitem__", "__contains__"):
+    #         if name in ("items", "keys", "values", "clear", "get"):
+    #             raise AttributeError(
+    #                 f"Cannot overshadow the built-in method '{name}' with attribute assignment"
+    #             )
+    #         # It's a real class attribute or method; store normally
+    #         super().__setattr__(name, value)
+    #     else:
+    #         # store in the thread dict
+    #         thread_dict = self._get_thread_dict()
+    #         thread_dict[name] = value
+
+    # def __delattr__(self, name):
+    #     """
+    #     If we do 'del user_globals.x', we try removing from the 
+    #     thread dict. If not found, we do normal del.
+    #     """
+    #     # We want to see if 'name' is in the per-thread dictionary
+    #     thread_dict = self._get_thread_dict()
+    #     if name in thread_dict:
+    #         del thread_dict[name]
+    #     else:
+    #         # it might be a real class-level attribute
+    #         super().__delattr__(name)
 
 user_global_modules = dict()
 def init_user_globals():
@@ -474,10 +529,10 @@ class MemoryObject(SerializableMemory):
         self.root_function = root_function
         self.test_mode=False
         self.supervisor_mode=False
-        self.supervisor_active = False
+     #   self.supervisor_active = False
         self.config=config
         self.last_node=None
-        self.last_info=None
+    #   self.last_info=None
 
         if memory_dict is None:
             self.memory_dict=dict()
@@ -776,7 +831,7 @@ class MemoryObject(SerializableMemory):
         out_str=""
         turns = self.extract_full_conv_history()
         for turn in turns:
-            out_str+=f"{turn['role']}: {turn['content']}"
+            out_str+=f"{turn['role']}: {turn['content']}\n\n"
         return out_str
 
 
@@ -868,7 +923,7 @@ class MemoryObject(SerializableMemory):
         self.memory_dict['model_turns'].append({"output":result,"entry_type":"chatbot","input_turns":input_turns,"output_turns":output_turns,"system_prompt":system_prompt,"usage_log":usage_log,"last_node":self.last_node,"timestamp":get_timestamp()})
        
 
-    def log_model_turn(self,result,function_name,function_inputs,code_position=None,usage_log=None):
+    def log_model_turn(self,result,function_name,function_inputs,code_position=None,supervisor_info=None,usage_log=None):
         """
         Logs a chatbot turn with model input/output.
 
@@ -882,9 +937,9 @@ class MemoryObject(SerializableMemory):
         
 
   
-        self.memory_dict['model_turns'].append({"output":result,"entry_type":"model","function_name":function_name,"function_inputs":function_inputs,"code_position":code_position,"usage_log":usage_log,"supervisor":self.supervisor_active,"info":self.last_info,"timestamp":get_timestamp()})
-        if not self.supervisor_active:
-            self.last_info=None
+        self.memory_dict['model_turns'].append({"output":result,"entry_type":"model","function_name":function_name,"function_inputs":function_inputs,"code_position":code_position,"usage_log":usage_log,"supervisor_info":supervisor_info,"timestamp":get_timestamp()})
+        # if not self.supervisor_active:
+        #     self.last_info=None
        
 
     
@@ -903,8 +958,8 @@ class SimpleMemory():
         self.config=config
         self.test_mode=False
         self.supervisor_mode=False
-        self.supervisor_active=False
-        self.last_info=None
+  #      self.supervisor_active=False
+     #   self.last_info=None
         if memory_dict is None:
             self.memory_dict= {"model_turns":[],"turns":[],"system_prompt":self.config.default_prompt,"cached_user_reply":None}
 
@@ -995,7 +1050,7 @@ class SimpleMemory():
 
         self.memory_dict['model_turns'].append({"output":result,"entry_type":"chatbot","input_turns":input_turns,"output_turns":output_turns,"system_prompt":system_prompt,"usage_log":usage_log,"last_node":None,"timestamp":get_timestamp()})
        
-    def log_model_turn(self,result,function_name,function_inputs,code_position=None, usage_log=None):
+    def log_model_turn(self,result,function_name,function_inputs,code_position=None, supervisor_info=None,usage_log=None):
         """
         Logs a chatbot turn with model input/output.
 
@@ -1006,9 +1061,9 @@ class SimpleMemory():
         - model_type (str): Type of model used.
         """
 
-        self.memory_dict['model_turns'].append({"output":result,"entry_type":"model","function_name":function_name,"function_inputs":function_inputs,"usage_log":usage_log,"supervisor_active":self.supervisor_active,"info":self.last_info,"timestamp":get_timestamp()})
-        if not self.supervisor_active:
-            self.last_info=None
+        self.memory_dict['model_turns'].append({"output":result,"entry_type":"model","function_name":function_name,"function_inputs":function_inputs,"usage_log":usage_log,"supervisor_info":supervisor_info,"timestamp":get_timestamp()})
+        # if not self.supervisor_active:
+        #     self.last_info=None
     def add_user_reply(self,user_reply):
         """
         Logs a user's reply in the conversation.

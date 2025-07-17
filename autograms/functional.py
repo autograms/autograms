@@ -4,6 +4,7 @@ from . import apis
 import numpy as np
 from .autogram_utils.prompt_utils import make_prompt,make_decision_prompt
 import random
+import copy
 
 
 from .autogram_utils.post_process_utils import process_node_id, post_process_responses
@@ -324,12 +325,12 @@ def call_conv_model(instruction,**kwargs):
         max_turns = None
     input_turns,output_turns,system_prompt = get_turn_history(instruction=instruction,max_turns=max_turns)
     memory_object = get_memory()
-    if "_forced_output" in kwargs:
-        return  kwargs['result']
+    # if "_forced_output" in kwargs:
+    #     return  kwargs["_forced_output"]
         
     if not memory_object.test_mode:
         result,success = call_model(input_turns,output_turns,system_prompt,system_prompt_in_turns=memory_object.config.system_prompt_in_turns,**kwargs)
-        return result[0]
+        return result
     else:
         return "test mode, no response enabled"
 
@@ -354,6 +355,7 @@ def call_classifier(input_turns,output_turns,answer_choices,system_prompt=None,m
     Returns:
     - tuple: (selected_answer, success_flag)
     """
+
     memory_object = get_memory()
 
     if model_type is None:
@@ -367,24 +369,27 @@ def call_classifier(input_turns,output_turns,answer_choices,system_prompt=None,m
     if not memory_object.config.classifier_mode=="logit" and "class_biases" in kwargs and not kwargs["class_biases"] is None:
         raise Exception(f"class_biases not allowed for classifier_mode: {memory_object.config.classifier_mode},must set classifier mode to logit for this.")
   
-
+    
 
     function_name = "call_classifier"
     function_inputs = {"input_turns":input_turns,"output_turns":output_turns,"answer_choices":answer_choices,"system_prompt":system_prompt,"multi_modal_inputs":multi_modal_inputs}
     
-
     messages = preprocess_func(input_turns,output_turns,system_prompt=system_prompt,system_prompt_in_turns=memory_object.config.system_prompt_in_turns,model=model,multi_modal_inputs=multi_modal_inputs)
     if "_forced_output" in kwargs:
-        result = kwargs['result']
-        raw_result = kwargs['result']
+        result = kwargs["_forced_output"]
+        raw_result = kwargs["_forced_output"]
+        supervisor_info = kwargs["_supervisor_info"]
+
         success=True
     else:
+        supervisor_info=None
         if memory_object.config.classifier_mode=="logit":
 
             result,usage_log = func(messages,answer_choices,**kwargs)
             raw_result = result
         else:
-
+            
+          
             
             schema = make_decision_schema_json(answer_choices)
             if memory_object.config.classifier_type=="huggingface_tgi":
@@ -392,6 +397,10 @@ def call_classifier(input_turns,output_turns,answer_choices,system_prompt=None,m
                 schema = convert_openai_json_schema(schema)
             
             memory_object = get_memory()
+
+
+
+            
 
             if not memory_object.test_mode:
                 func = apis.openai_models.call_openai_chat_formatted
@@ -404,21 +413,23 @@ def call_classifier(input_turns,output_turns,answer_choices,system_prompt=None,m
                 except:
                     success=False
 
-
                 if not success:
                     return answer_choices[0],False
-
                 
             else:
                 
                 return random.choice(answer_choices),True
+
+
     if isinstance(memory_object,SimpleMemory):
         code_position=None
     else:
         code_position = get_code_position()
-    memory_object.log_model_turn(raw_result,function_name,function_inputs,code_position=code_position,usage_log=usage_log)
+        
+    memory_object.log_model_turn(raw_result,function_name,function_inputs,code_position=code_position,usage_log=usage_log,supervisor_info=supervisor_info)
     success = not(usage_log['model']=='failed')
     return result,success
+
 def make_decision_regex(choices):
     """
     Create a minimal TGI response_format using a regex that restricts
@@ -592,6 +603,159 @@ def get_single_embedding(text,default_size=1536,**kwargs):
         
 
     return result
+# @supervisable(function_type='generation')
+# def call_chat_completion(messages,model=None,**kwargs):
+
+#     func = apis.openai_models.call_openai_chatbot
+
+#     memory_object = get_memory()
+#     config = memory_object.config
+
+#     if "_forced_output" in kwargs:
+#         usage_log=None
+#         result =  kwargs['_forced_output']
+
+#     else:
+#         result,usage_log = func(messages=messages,model=model,**kwargs)
+#         success=not(usage_log['model']=='failed')
+
+#     function_name = "call_chat_completion"
+
+#     function_inputs = {"messages":messages}
+    
+#     if isinstance(memory_object,SimpleMemory):
+#         code_position=None
+#     else:
+#         code_position = get_code_position()
+#     memory_object.log_model_turn(result,function_name,function_inputs,code_position=code_position,usage_log=usage_log)
+    
+#     return result,success
+
+
+@supervisable(function_type='generation')
+def call_completion(prompt,model=None,**kwargs):
+    func = apis.openai_models.call_openai_completion
+
+    memory_object = get_memory()
+    config = memory_object.config
+
+    if "_forced_output" in kwargs:
+        usage_log=None
+        result =  kwargs['_forced_output']
+        supervisor_info= kwargs['_supervisor_info']
+        success=True
+
+    else:
+        result,usage_log = func(prompt=prompt,model=model,**kwargs)
+        success=not(usage_log['model']=='failed')
+        supervisor_info=None
+    function_name = "call_completion"
+
+    function_inputs = {"prompt":prompt}
+    
+    if isinstance(memory_object,SimpleMemory):
+        code_position=None
+    else:
+        code_position = get_code_position()
+    memory_object.log_model_turn(result,function_name,function_inputs,code_position=code_position,usage_log=usage_log,supervisor_info=supervisor_info)
+    
+    return result,success
+
+
+def completions_classifier(allowed_tokens, prompt=None,messages=None,model=None,**kwargs):
+    func = apis.openai_models.completions_classifier
+
+
+    memory_object = get_memory()
+    config = memory_object.config
+
+    supervisor_info=None
+    result,usage_log = func(allowed_tokens=allowed_tokens,messages=messages,prompt=prompt,model=model,**kwargs)
+    success=not(usage_log['model']=='failed')
+
+    function_name = "completions_classifier"
+
+    function_inputs = {"messages":messages}
+    
+    if isinstance(memory_object,SimpleMemory):
+        code_position=None
+    else:
+        code_position = get_code_position()
+    memory_object.log_model_turn(result,function_name,function_inputs,code_position=code_position,usage_log=usage_log,supervisor_info=supervisor_info)
+    
+    return result
+
+def completions_logits(allowed_tokens, prompt=None,messages=None,model=None,**kwargs):
+    func = apis.openai_models.logit_completions
+
+
+    memory_object = get_memory()
+    config = memory_object.config
+
+    supervisor_info=None
+    result,usage_log = func(allowed_tokens=allowed_tokens,messages=messages,prompt=prompt,give_logits=True,model=model,**kwargs)
+    success=not(usage_log['model']=='failed')
+
+    function_name = "completions_logits"
+
+    function_inputs = {"messages":messages}
+    
+    if isinstance(memory_object,SimpleMemory):
+        code_position=None
+    else:
+        code_position = get_code_position()
+    memory_object.log_model_turn(result,function_name,function_inputs,code_position=code_position,usage_log=usage_log,supervisor_info=supervisor_info)
+    
+    return result
+@supervisable(function_type='generation')
+def call_chat_completion(messages,model=None,**kwargs):
+
+    func = apis.openai_models. call_openai_chatbot
+
+    memory_object = get_memory()
+    config = memory_object.config
+
+    if "_forced_output" in kwargs:
+        usage_log=None
+        result =  kwargs['_forced_output']
+        supervisor_info= kwargs['_supervisor_info']
+        success=True
+
+    else:
+        supervisor_info=None
+        result,usage_log = func(messages=messages,model=model,**kwargs)
+        success=not(usage_log['model']=='failed')
+
+    function_name = "call_chat_completion"
+
+    function_inputs = {"messages":messages}
+    
+    if isinstance(memory_object,SimpleMemory):
+        code_position=None
+    else:
+        code_position = get_code_position()
+    memory_object.log_model_turn(result,function_name,function_inputs,code_position=code_position,usage_log=usage_log,supervisor_info=supervisor_info)
+    
+    return result,success
+
+@supervisable(function_type='generation')
+def call_llm(prompt,call_type="chat_completion",model=None,**kwargs):
+
+
+    prompt=apis.openai_models.truncate_prompt(prompt)
+    if call_type=="chat_completion":
+
+        result,success=call_chat_completion(messages=[{"role":"user","content":prompt}],model=model,**kwargs)
+    elif call_type=="completion":
+        result,success=call_completion(prompt=prompt,model=model,**kwargs)
+    else:
+        raise Exception(f"invalid call type {call_type}")
+    return result[0]
+
+    
+
+
+
 
 def call_model(input_turns,output_turns,system_prompt,system_prompt_in_turns=False,model_type=None,model=None,multi_modal_inputs=None,**kwargs):
     """
@@ -622,30 +786,42 @@ def call_model(input_turns,output_turns,system_prompt,system_prompt_in_turns=Fal
         model_type=memory_object.config.chatbot_type
 
    # if model_type=='openai':
+    if "prefix" in kwargs:
+        func = apis.openai_models.call_openai_completions
+    else:
+        func = apis.openai_models.call_openai_chatbot
+        
     
-    func = apis.openai_models.call_openai_chatbot
 
 
     preprocess_func =apis.openai_models.get_chatbot_messages
     
         
     messages = preprocess_func(input_turns,output_turns,system_prompt,system_prompt_in_turns=system_prompt_in_turns,truncate_input=True,model=model,multi_modal_inputs=multi_modal_inputs)
+    
+
     if "_forced_output" in kwargs:
         usage_log=None
-        result =  kwargs['_forced_output']['result']
+        result =  kwargs['_forced_output']
+        supervisor_info = kwargs["_supervisor_info"]
+        success=True
 
     else:
-        result,usage_log = func(messages,model=model,**kwargs)
+        result,usage_log = func(messages=messages,model=model,**kwargs)
         success=not(usage_log['model']=='failed')
+        supervisor_info =None
 
     function_name = "call_model"
-    function_inputs = {"input_turns":input_turns,"output_turns":output_turns,"system_prompt":system_prompt,"multi_modal_inputs":multi_modal_inputs}
+    if "prefix" in kwargs:
+        function_inputs = {"input_turns":input_turns,"output_turns":output_turns,"prefix":kwargs["prefix"],"system_prompt":system_prompt,"multi_modal_inputs":multi_modal_inputs}
+    else:
+        function_inputs = {"input_turns":input_turns,"output_turns":output_turns,"system_prompt":system_prompt,"multi_modal_inputs":multi_modal_inputs}
     
     if isinstance(memory_object,SimpleMemory):
         code_position=None
     else:
         code_position = get_code_position()
-    memory_object.log_model_turn(result,function_name,function_inputs,code_position=code_position,usage_log=usage_log)
+    memory_object.log_model_turn(result,function_name,function_inputs,code_position=code_position,usage_log=usage_log,supervisor_info=supervisor_info)
     
     return result,success
 
@@ -818,6 +994,7 @@ def thought_decision_chain(instruction,chain_structure,fixed_type = None,**kwarg
 
             input_turns,output_turns,values =make_decision_prompt(turns=[],transition_question=question,answers=choices,max_turns=0)
             prompt=input_turns[0].replace("\n"," ")
+            prompt=prompt.replace("\"","'")
             all_prompts.append(prompt)
             all_decision_values.append(values)
             if prompt in properties:
@@ -837,10 +1014,12 @@ def thought_decision_chain(instruction,chain_structure,fixed_type = None,**kwarg
                 raise Exception("No duplicate prommpts allowed for thought_decision_chain")
             prompt = item['prompt']
             prompt=prompt.replace("\n"," ")
-            all_prompts.append(item['prompt'])
+            prompt=prompt.replace("\"","'")
+            all_prompts.append(prompt)
+            
             all_decision_values.append(None)
             #item_definitions[f"item{num_items}"]=create_prompt_object(item['prompt'])
-            properties[item['prompt']] = {
+            properties[prompt] = {
                 "type": "string",
 
             }
@@ -856,6 +1035,7 @@ def thought_decision_chain(instruction,chain_structure,fixed_type = None,**kwarg
     #         "required": list(properties.keys())
     #     }
     # }
+
     schema = {
         "type": "json_schema",
         "json_schema": {
@@ -1183,6 +1363,14 @@ def generate_object(instruction,obj_structure,**kwargs):
     else:
         max_turns = None
 
+    memory_object = get_memory()
+    config = memory_object.config
+    #obj_structure = convert_openai_json_schema(obj_structure)
+
+    if not config.chatbot_type=="openai":
+        instruction+=f"\nYour output must adhere to the following json schema: {obj_structure}"
+
+
     input_turns,output_turns,system_prompt = get_turn_history(instruction=instruction,max_turns=max_turns)
     memory_object = get_memory()
     if not memory_object.test_mode:
@@ -1220,6 +1408,9 @@ def call_object_model(input_turns,output_turns,system_prompt,system_prompt_in_tu
     Returns:
     - obj_structure: An instance of the specified object structure with generated values.
     """
+
+ 
+
     memory_object = get_memory()
     config = memory_object.config
 
@@ -1232,26 +1423,41 @@ def call_object_model(input_turns,output_turns,system_prompt,system_prompt_in_tu
 
     preprocess_func =apis.openai_models.get_chatbot_messages
 
-    if not config.chatbot_type=="openai":
+   
+
+    
+
+    
+    
+
+    
+
+    # if not config.chatbot_type=="openai":
         
-        if isinstance(obj_structure, dict):
+    #     if isinstance(obj_structure, dict):
             
-            obj_structure = convert_openai_json_schema(obj_structure)
-        else:
-            obj_structure=obj_structure.schema()
-            if obj_structure['type']=="object":
-                obj_structure['type']="json"
+    #         obj_structure = convert_openai_json_schema(obj_structure)
+    #     else:
+    #         obj_structure=obj_structure.schema()
+    #         if obj_structure['type']=="object":
+    #             obj_structure['type']="json"
 
 
         
     messages = preprocess_func(input_turns,output_turns,system_prompt,system_prompt_in_turns=system_prompt_in_turns,truncate_input=True,model=model,multi_modal_inputs=multi_modal_inputs)
 
     if "_forced_output" in kwargs:
-        result = kwargs['result']
-        raw_str = kwargs['result']
+        result = kwargs["_forced_output"]
+        raw_str = kwargs["_forced_output"]
+        supervisor_info = kwargs["_supervisor_info"]
+
         usage_log=None
     else:
         result,raw_str,usage_log = func(messages,model=model,obj_structure = obj_structure,**kwargs)
+        supervisor_info = None
+
+
+    
 
 
     function_name = "call_object_model"
@@ -1260,13 +1466,18 @@ def call_object_model(input_turns,output_turns,system_prompt,system_prompt_in_tu
         code_position=None
     else:
         code_position = get_code_position()
+
+
     if usage_log['model']=='failed':
         if isinstance(obj_structure, dict):
-            result = initialize_with_defaults_json(obj_structure)
+            if 'value' in obj_structure:
+                result = initialize_with_defaults_json(obj_structure['value'])
+            else:
+                result = initialize_with_defaults_json(obj_structure)
         else:
             result = initialize_with_defaults(obj_structure)
     else:
-        memory_object.log_model_turn(raw_str,function_name,function_inputs,code_position=code_position,usage_log=usage_log)
+        memory_object.log_model_turn(raw_str,function_name,function_inputs,code_position=code_position,usage_log=usage_log,supervisor_info=supervisor_info)
     return result
 
 
@@ -1281,6 +1492,10 @@ def initialize_with_defaults_json(schema):
     - dict: A dictionary with default values for all fields in the schema.
     """
     defaults = {}
+
+    if not 'json_schema' in schema:
+        schema = {'json_schema':{'schema':schema}}
+    
 
     # Iterate through properties in the schema
     for field_name, field_props in schema['json_schema']['schema'].get("properties", {}).items():
@@ -1475,12 +1690,87 @@ def log_thought_turn(reply,instruction):
 
 
 
+def extract_code(input_string, code_type='python', merge_blocks=True):
+    """
+    Extract code from fenced code blocks of a specified type in the input string,
+    ignoring any nested fences until the top-level block is closed.
+
+    Args:
+        input_string (str): The input string containing text and code blocks.
+        code_type (str): The type of code to extract (e.g., 'python', 'javascript').
+        merge_blocks (bool): If True, merge all extracted blocks into a single string
+                             separated by newlines. Otherwise, return a list of blocks.
+
+    Returns:
+        str or list: The extracted code. A single string if merge_blocks=True,
+                     otherwise a list of individual code block strings.
+    """
+    # We'll identify lines that start with the exact fence:
+    # - opening for the specified language: ```python (with optional trailing spaces)
+    # - any triple backticks (```...) to track nesting or closing
+    start_pattern = re.compile(rf'^```{re.escape(code_type)}\s*$')
+    any_fence_pattern = re.compile(r'^```\s*(\S+)?\s*$')  # captures language if present
+
+    lines = input_string.splitlines(keepends=True)
+    code_blocks = []
+    current_block_lines = []
+    
+    in_block = False
+    depth = 0
+
+    for line in lines:
+        if not in_block:
+            # Look for the start of a block with the given language
+            if start_pattern.match(line.strip()):
+                # We've found an opening fence of the correct language
+                in_block = True
+                depth = 1  # top-level open
+                # We don't add the fence line itself to the code
+            else:
+                # Outside of any block; do nothing
+                continue
+        else:
+            # We are inside a code block
+            fence_match = any_fence_pattern.match(line.strip())
+            if fence_match:
+                # This line is some form of ``` fence
+                language_found = fence_match.group(1)  # e.g. 'python', 'js', etc.
+
+                # Check if it's an opening fence for the same language
+                # or just a closing fence (``` with no language or different language)
+                if language_found == code_type:
+                    # Another nested opening
+                    depth += 1
+                    current_block_lines.append(line)  # Keep the fence in the code if desired
+                else:
+                    # This is presumably a closing fence for the current nesting level
+                    depth -= 1
+                    if depth == 0:
+                        # We've closed the top-level block
+                        # finalize the current block
+                        code_blocks.append(''.join(current_block_lines))
+                        current_block_lines = []
+                        in_block = False
+                    else:
+                        # It's a nested fence, but not the top-level close yet
+                        current_block_lines.append(line)
+            else:
+                # Just a normal line inside the code block
+                current_block_lines.append(line)
+
+    # If a block never got closed, you could optionally decide to include it:
+    # if in_block and current_block_lines:
+    #     code_blocks.append(''.join(current_block_lines))
+
+    if merge_blocks:
+        return "\n".join(code_blocks)
+    else:
+        return code_blocks
 
 
 
 
-
-def extract_code(input_string, code_type='python',merge_blocks=True):
+def extract_code_legacy(input_string, code_type='python',merge_blocks=True):
     """
     Extract and concatenate code from multiple code blocks of a specified type in the input string.
 
@@ -1626,6 +1916,8 @@ def process_task(function_pkl, args, shared_object_encoding=None):
 
 def get_code_position():
     frame_info = find_decorated_frame()
+    if frame_info is None:
+        return None
 
 
     line_number = frame_info.lineno  # Absolute line number in the file
