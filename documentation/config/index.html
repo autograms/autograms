@@ -1,0 +1,1243 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://autograms.github.io/autograms/documentation/config/">
+      
+      
+        <link rel="prev" href="../autogram/">
+      
+      
+        <link rel="next" href="../autograms_decorators/">
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.15">
+    
+    
+      
+        <title>Autogram Config - AutoGRAMS Docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.342714a4.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#autogramconfig-documentation" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="AutoGRAMS Docs" class="md-header__button md-logo" aria-label="AutoGRAMS Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AutoGRAMS Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Autogram Config
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../autogram/" class="md-tabs__link">
+          
+  
+  
+  Documentation
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="AutoGRAMS Docs" class="md-nav__button md-logo" aria-label="AutoGRAMS Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    AutoGRAMS Docs
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Documentation
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            Documentation
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../autogram/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Autogram class
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Autogram Config
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    Autogram Config
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#table-of-contents" class="md-nav__link">
+    <span class="md-ellipsis">
+      Table of Contents
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#class-definition" class="md-nav__link">
+    <span class="md-ellipsis">
+      Class Definition
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Parameters
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usage-patterns" class="md-nav__link">
+    <span class="md-ellipsis">
+      Usage Patterns
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#overriding-config-at-runtime" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overriding Config at Runtime
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../autograms_decorators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Autograms Decorators
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../memory/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Managing memory
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Nodes
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reply_functions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Reply functions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../decision_functions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Decision functions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../structured_generation_functions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Generation functions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../control_flow_functions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Control Flow functions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../prompt_functions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Prompt functions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../model_functions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Models calling functions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../embeddings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Embedding functions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../logging_functions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Logging functions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../helper/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Code utility functions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../simulation_finetuning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Simulation and finetuning
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#table-of-contents" class="md-nav__link">
+    <span class="md-ellipsis">
+      Table of Contents
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#class-definition" class="md-nav__link">
+    <span class="md-ellipsis">
+      Class Definition
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Parameters
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usage-patterns" class="md-nav__link">
+    <span class="md-ellipsis">
+      Usage Patterns
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#overriding-config-at-runtime" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overriding Config at Runtime
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="autogramconfig-documentation">AutogramConfig Documentation</h1>
+<p><code>AutogramConfig</code> is the main configuration class in AutoGRAMS. It consolidates all the settings for <strong>model and prompt settings</strong> in AutoGRAMS. This reference explains every parameter, how the config interacts with other parts of AutoGRAMS, and how users can take advantage of it to customize their chatbot experience.</p>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ul>
+<li><a href="#overview">Overview</a></li>
+<li><a href="#class-definition">Class Definition</a></li>
+<li><a href="#parameters">Parameters</a></li>
+<li><a href="#usage-patterns">Usage Patterns</a></li>
+<li><a href="#overriding-config-at-runtime">Overriding Config at Runtime</a></li>
+<li><a href="#examples">Examples</a></li>
+</ul>
+<hr />
+<h2 id="overview">Overview</h2>
+<p>In AutoGRAMS:</p>
+<ul>
+<li><strong>Chatbot modules</strong> and <strong>functions</strong> usually do not hardcode model details or generation arguments.</li>
+<li>
+<p>An <code>AutogramConfig</code> object is passed when an <code>Autogram</code> is initialized. This dictates which model endpoints to call, max generation lengths, how many retries to attempt, how prompts are structured, etc.</p>
+</li>
+<li>
+<p>when using the <code>run_autogram.py</code> script to run your autogram, you can also pass in the config as a json file with the desired arguments, for example:</p>
+<ul>
+<li><code>run_autogram.py --autogram_file path/to/autogram/file.py --config_file path/to/config/file.json</code></li>
+</ul>
+</li>
+</ul>
+<hr />
+<h2 id="class-definition">Class Definition</h2>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">AutogramConfig</span><span class="p">():</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">max_tokens</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span>
+        <span class="n">default_prompt</span><span class="o">=</span><span class="s2">&quot;You are an agent.&quot;</span><span class="p">,</span>
+        <span class="n">agent_name</span><span class="o">=</span><span class="s2">&quot;Agent&quot;</span><span class="p">,</span>
+        <span class="n">user_name</span><span class="o">=</span><span class="s2">&quot;User&quot;</span><span class="p">,</span>
+        <span class="n">instruction_name</span><span class="o">=</span><span class="s2">&quot;Instruction&quot;</span><span class="p">,</span>
+        <span class="n">chatbot_type</span><span class="o">=</span><span class="s2">&quot;openai&quot;</span><span class="p">,</span>
+        <span class="n">chatbot_path</span><span class="o">=</span><span class="s2">&quot;gpt-4o&quot;</span><span class="p">,</span>
+        <span class="n">system_prompt_in_turns</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">error_response</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">chatbot_generation_args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">chatbot_max_tries</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+        <span class="n">chatbot_wait_per_try</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+        <span class="n">chatbot_max_input_len</span><span class="o">=</span><span class="mi">3500</span><span class="p">,</span>
+        <span class="n">classifier_max_tries</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="n">classifier_wait_per_try</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+        <span class="n">classifier_max_input_len</span><span class="o">=</span><span class="mi">2048</span><span class="p">,</span>
+        <span class="n">exclude_classifier_system_prompt</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">banned_phrases</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">post_process_response</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">classifier_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">classifier_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">classifier_mode</span><span class="o">=</span><span class="s2">&quot;json&quot;</span><span class="p">,</span>
+        <span class="n">embedding_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">embedding_path</span><span class="o">=</span><span class="s2">&quot;text-embedding-3-small&quot;</span><span class="p">,</span>
+        <span class="n">instruction_template</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">reply_start_type</span><span class="o">=</span><span class="s2">&quot;suffix&quot;</span><span class="p">,</span>
+        <span class="n">default_reply_start_template</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">user_instruction_template</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">default_question_prompt</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">default_transition_context</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">reply_suffix_inst_conversion</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">chatbot_proxy_port</span><span class="o">=</span><span class="mi">8080</span><span class="p">,</span>
+        <span class="n">classifier_proxy_port</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">embedding_proxy_port</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+        <span class="o">...</span>
+</code></pre></div>
+<hr />
+<h2 id="parameters">Parameters</h2>
+<p>Below is a <strong>comprehensive list</strong> of the parameters that define an <code>AutogramConfig</code>. Some parameters have defaults and might not need explicit changes unless you want to customize certain behavior.</p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>max_tokens</strong></td>
+<td>int</td>
+<td><code>1024</code></td>
+<td>Maximum response length in tokens. Similar to OpenAI’s <code>max_tokens</code> or HuggingFace’s token limit.</td>
+</tr>
+<tr>
+<td><strong>default_prompt</strong></td>
+<td>str</td>
+<td><code>"You are an agent."</code></td>
+<td>Starting prompt for your chatbot or agent, used if no other system prompt is set.</td>
+</tr>
+<tr>
+<td><strong>agent_name</strong></td>
+<td>str</td>
+<td><code>"Agent"</code></td>
+<td>Name of the AI assistant, used in prompts and for generating structured replies.</td>
+</tr>
+<tr>
+<td><strong>user_name</strong></td>
+<td>str</td>
+<td><code>"User"</code></td>
+<td>Name of the user, used in conversation transcripts or for labeling user turns.</td>
+</tr>
+<tr>
+<td><strong>instruction_name</strong></td>
+<td>str</td>
+<td><code>"Instruction"</code></td>
+<td>Label for the instruction token in your conversation templates. Typically appended to the system prompt.</td>
+</tr>
+<tr>
+<td><strong>chatbot_type</strong></td>
+<td>str</td>
+<td><code>"openai"</code></td>
+<td>Specifies which underlying model or approach is used for the chatbot. Options might include <code>"openai"</code>, <code>"proxy"</code>, or <code>"huggingface_tgi"</code>.</td>
+</tr>
+<tr>
+<td><strong>chatbot_path</strong></td>
+<td>str</td>
+<td><code>"gpt-4o"</code></td>
+<td>Model path or endpoint for the chatbot. For <code>"openai"</code>, this might be a model name (e.g., <code>"gpt-3.5-turbo"</code>). For <code>"proxy"</code>, an endpoint or model identifier.</td>
+</tr>
+<tr>
+<td><strong>system_prompt_in_turns</strong></td>
+<td>bool</td>
+<td><code>False</code></td>
+<td>If <code>True</code>, the system prompt is embedded in the first user turn (for certain system behaviors). If <code>False</code>, it’s sent as a dedicated system message.</td>
+</tr>
+<tr>
+<td><strong>error_response</strong></td>
+<td>str</td>
+<td><code>None</code> → fallback to internal</td>
+<td>The fallback response if the chatbot encounters an error. If <code>None</code>, uses a default message.</td>
+</tr>
+<tr>
+<td><strong>chatbot_generation_args</strong></td>
+<td>dict</td>
+<td><code>{"temperature": 0.7}</code></td>
+<td>A dictionary of generation parameters akin to OpenAI or HF model arguments. E.g., <code>{"temperature":0.8,"top_p":0.9}</code>.</td>
+</tr>
+<tr>
+<td><strong>chatbot_max_tries</strong></td>
+<td>int</td>
+<td><code>3</code></td>
+<td>Maximum number of retries if the chatbot request fails.</td>
+</tr>
+<tr>
+<td><strong>chatbot_wait_per_try</strong></td>
+<td>int</td>
+<td><code>5</code></td>
+<td>Number of seconds to wait between retries for chatbot requests.</td>
+</tr>
+<tr>
+<td><strong>chatbot_max_input_len</strong></td>
+<td>int</td>
+<td><code>3500</code></td>
+<td>Maximum allowable input length in tokens for the chatbot prompt.</td>
+</tr>
+<tr>
+<td><strong>classifier_max_tries</strong></td>
+<td>int</td>
+<td><code>2</code></td>
+<td>Maximum number of retries for classification requests (e.g., yes/no or multiple-choice logic).</td>
+</tr>
+<tr>
+<td><strong>classifier_wait_per_try</strong></td>
+<td>int</td>
+<td><code>5</code></td>
+<td>Wait time between retries for classifier requests.</td>
+</tr>
+<tr>
+<td><strong>classifier_max_input_len</strong></td>
+<td>int</td>
+<td><code>2048</code></td>
+<td>Token limit for classifier prompts.</td>
+</tr>
+<tr>
+<td><strong>exclude_classifier_system_prompt</strong></td>
+<td>bool</td>
+<td><code>False</code></td>
+<td>If <code>True</code>, the system prompt is not appended for classification. Useful if you want classifier logic to be minimal.</td>
+</tr>
+<tr>
+<td><strong>banned_phrases</strong></td>
+<td>list[str]</td>
+<td><code>None</code> → fallback to a default</td>
+<td>A list of phrases the chatbot should avoid. If the chatbot produces any of these, a retry or a filtered response may be triggered.</td>
+</tr>
+<tr>
+<td><strong>post_process_response</strong></td>
+<td>bool</td>
+<td><code>True</code></td>
+<td>If <code>True</code>, the agent’s final response is post-processed (e.g., removing certain artifacts).</td>
+</tr>
+<tr>
+<td><strong>classifier_type</strong></td>
+<td>str</td>
+<td><code>None</code> → fallback to <code>chatbot_type</code></td>
+<td>The model type for classifier logic. If <code>None</code>, defaults to <code>chatbot_type</code>. Examples: <code>"openai"</code>, <code>"huggingface_tgi"</code>, or <code>"proxy"</code>.</td>
+</tr>
+<tr>
+<td><strong>classifier_path</strong></td>
+<td>str</td>
+<td><code>None</code> → fallback to <code>chatbot_path</code></td>
+<td>The model path or endpoint for classifier. If <code>None</code>, defaults to <code>chatbot_path</code>.</td>
+</tr>
+<tr>
+<td><strong>classifier_mode</strong></td>
+<td>str</td>
+<td><code>"json"</code></td>
+<td>How classification is performed: <code>"logit"</code> or <code>"json"</code>. If <code>"logit"</code>, the model must support logit bias or special classification logic.</td>
+</tr>
+<tr>
+<td><strong>embedding_type</strong></td>
+<td>str</td>
+<td><code>None</code> → <code>"proxy"/"openai"</code> logic</td>
+<td>Embedding model type, e.g., <code>"openai"</code>, <code>"proxy"</code>. If <code>None</code> and <code>chatbot_type == "proxy"</code>, we set <code>"proxy"</code>, else <code>"openai"</code>.</td>
+</tr>
+<tr>
+<td><strong>embedding_path</strong></td>
+<td>str</td>
+<td><code>"text-embedding-3-small"</code></td>
+<td>Model path/endpoint for the embedding model.</td>
+</tr>
+<tr>
+<td><strong>instruction_template</strong></td>
+<td>str</td>
+<td><code>None</code> → uses a default</td>
+<td>Template for how the instruction and user response are combined.</td>
+</tr>
+<tr>
+<td><strong>reply_start_type</strong></td>
+<td>str</td>
+<td><code>"suffix"</code></td>
+<td>How to format reply starts in the conversation. Must be one of <code>"suffix"</code>, <code>"prefix"</code>, or <code>"none"</code>.</td>
+</tr>
+<tr>
+<td><strong>default_reply_start_template</strong></td>
+<td>str</td>
+<td>Various default</td>
+<td>The base template for reply starts.</td>
+</tr>
+<tr>
+<td><strong>user_instruction_template</strong></td>
+<td>str</td>
+<td><code>None</code></td>
+<td>Template for user instructions if you simulate user messages.</td>
+</tr>
+<tr>
+<td><strong>default_question_prompt</strong></td>
+<td>str</td>
+<td><code>None</code> → fallback to default</td>
+<td>The default prompt text used for multiple-choice or yes/no questions.</td>
+</tr>
+<tr>
+<td><strong>default_transition_context</strong></td>
+<td>int</td>
+<td><code>1</code></td>
+<td>Number of conversation turns to include for context transitions.</td>
+</tr>
+<tr>
+<td><strong>reply_suffix_inst_conversion</strong></td>
+<td>str</td>
+<td><code>None</code> → fallback</td>
+<td>Template for instructing the chatbot how to handle <code>reply_suffix</code> nodes.</td>
+</tr>
+<tr>
+<td><strong>chatbot_proxy_port</strong></td>
+<td>int</td>
+<td><code>8080</code></td>
+<td>Port for chatbot proxies.</td>
+</tr>
+<tr>
+<td><strong>classifier_proxy_port</strong></td>
+<td>int</td>
+<td><code>None</code> → fallback to <code>chatbot_proxy_port</code></td>
+<td>Port for classifier proxies if different from chatbot.</td>
+</tr>
+<tr>
+<td><strong>embedding_proxy_port</strong></td>
+<td>int</td>
+<td><code>None</code> → fallback to <code>chatbot_proxy_port</code></td>
+<td>Port for embedding proxies if different.</td>
+</tr>
+<tr>
+<td><strong>**kwargs</strong></td>
+<td>dict</td>
+<td>N/A</td>
+<td>Additional arguments for <strong>deprecated fields</strong>. Raises error if not recognized.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="usage-patterns">Usage Patterns</h2>
+<ol>
+<li>
+<p><strong>Creating a Default Config</strong><br />
+   <div class="highlight"><pre><span></span><code><span class="n">config</span> <span class="o">=</span> <span class="n">AutogramConfig</span><span class="p">()</span>
+<span class="c1"># uses GPT-4o with temperature=0.7 (OpenAI style), 1024 max_tokens, etc.</span>
+</code></pre></div></p>
+</li>
+<li>
+<p><strong>Customizing</strong>  </p>
+</li>
+</ol>
+<div class="highlight"><pre><span></span><code><span class="n">config</span> <span class="o">=</span> <span class="n">AutogramConfig</span><span class="p">(</span>
+    <span class="n">chatbot_type</span><span class="o">=</span><span class="s2">&quot;proxy&quot;</span><span class="p">,</span>
+    <span class="n">chatbot_path</span><span class="o">=</span><span class="s2">&quot;http://localhost:8080/v1&quot;</span><span class="p">,</span>
+    <span class="n">max_tokens</span><span class="o">=</span><span class="mi">1500</span><span class="p">,</span>
+    <span class="n">chatbot_generation_args</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;temperature&quot;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">},</span>
+<span class="p">)</span>
+</code></pre></div>
+<hr />
+<h2 id="overriding-config-at-runtime">Overriding Config at Runtime</h2>
+<ul>
+<li>If do you want to override or hardcode certain behaviors (e.g., temperature, max_tokens, or a specific model path), you can do so in the config or by passing openai style arguments to model calling functions in <code>autograms.functional</code> <ul>
+<li>for example
+    <div class="highlight"><pre><span></span><code><span class="n">reply_instruction</span><span class="p">(</span><span class="n">instruction</span><span class="o">=</span><span class="s2">&quot;reply to the user&quot;</span><span class="p">,</span><span class="n">max_tokens</span><span class="o">=</span><span class="mi">2048</span><span class="p">)</span><span class="o">.</span>
+</code></pre></div></li>
+<li>if you want to reuse certain hardcoded behaviors that over ride the config, you could do something like
+    <div class="highlight"><pre><span></span><code><span class="n">model1_settings</span><span class="o">=</span> <span class="p">{</span><span class="s2">&quot;model&quot;</span><span class="p">:</span><span class="s2">&quot;gpt-3.5-turbo&quot;</span><span class="p">,</span><span class="s2">&quot;max_tokens&quot;</span><span class="p">:</span><span class="mi">2048</span><span class="p">}</span>
+<span class="n">reply_instruction</span><span class="p">(</span><span class="n">instruction</span><span class="o">=</span><span class="s2">&quot;reply to the user and ask a question&quot;</span><span class="p">,</span><span class="o">**</span><span class="n">model1_settings</span><span class="p">)</span><span class="o">.</span>
+<span class="n">reply_instruction</span><span class="p">(</span><span class="n">instruction</span><span class="o">=</span><span class="s2">&quot;reply to the user with a follow up question&quot;</span><span class="p">,</span><span class="o">**</span><span class="n">model1_settings</span><span class="p">)</span><span class="o">.</span>
+</code></pre></div></li>
+</ul>
+</li>
+<li>overriding max_tokens or other generation args for certain responses can be useful for specific <code>thought()</code> or <code>reply_instruction()</code> calls. However, overwriting the "model" argument probably isn't necessary for most applications, unless you want to use completely different models for different calls. The config already lets you set different models for LLM-based classification, generation, and embeddings, so often its best practice to set the model names in the config so they can be more easily changed and the autogram module can be model agnostic.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.instant", "navigation.tabs"], "search": "../../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.56ea9cef.min.js"></script>
+      
+        <script src="../../extra.js"></script>
+      
+    
+  </body>
+</html>

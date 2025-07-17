@@ -1,0 +1,1268 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://autograms.github.io/autograms/documentation/simulation_finetuning/">
+      
+      
+        <link rel="prev" href="../helper/">
+      
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.15">
+    
+    
+      
+        <title>Simulation and finetuning - AutoGRAMS Docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.342714a4.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#autograms-supervisors-simulation-finetuning-guide" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="AutoGRAMS Docs" class="md-header__button md-logo" aria-label="AutoGRAMS Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AutoGRAMS Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Simulation and finetuning
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../autogram/" class="md-tabs__link">
+          
+  
+  
+  Documentation
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="AutoGRAMS Docs" class="md-nav__button md-logo" aria-label="AutoGRAMS Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    AutoGRAMS Docs
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Documentation
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            Documentation
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../autogram/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Autogram class
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Autogram Config
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../autograms_decorators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Autograms Decorators
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../memory/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Managing memory
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Nodes
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reply_functions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Reply functions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../decision_functions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Decision functions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../structured_generation_functions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Generation functions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../control_flow_functions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Control Flow functions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../prompt_functions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Prompt functions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../model_functions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Models calling functions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../embeddings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Embedding functions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../logging_functions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Logging functions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../helper/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Code utility functions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Simulation and finetuning
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    Simulation and finetuning
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-simulate-conversations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Why Simulate Conversations?
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#simulating-with-run_simulationpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      Simulating with run_simulation.py
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Simulating with run_simulation.py">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#key-arguments" class="md-nav__link">
+    <span class="md-ellipsis">
+      Key Arguments
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-is-a-userbot" class="md-nav__link">
+    <span class="md-ellipsis">
+      What is a Userbot?
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#supervisor-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Supervisor Functions
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Supervisor Functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#example-supervisor-function" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example Supervisor Function
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dpo-training-with-supervisorreturn" class="md-nav__link">
+    <span class="md-ellipsis">
+      DPO Training with SupervisorReturn
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#custom-simulation-scenarios" class="md-nav__link">
+    <span class="md-ellipsis">
+      Custom Simulation Scenarios
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#finetuning-with-run_finetuningpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      Finetuning with run_finetuning.py
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Finetuning with run_finetuning.py">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#finetuning-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      Finetuning Options
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#output-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      Output Files
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#summary-components" class="md-nav__link">
+    <span class="md-ellipsis">
+      Summary: Components
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-simulate-conversations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Why Simulate Conversations?
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#simulating-with-run_simulationpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      Simulating with run_simulation.py
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Simulating with run_simulation.py">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#key-arguments" class="md-nav__link">
+    <span class="md-ellipsis">
+      Key Arguments
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-is-a-userbot" class="md-nav__link">
+    <span class="md-ellipsis">
+      What is a Userbot?
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#supervisor-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Supervisor Functions
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Supervisor Functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#example-supervisor-function" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example Supervisor Function
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dpo-training-with-supervisorreturn" class="md-nav__link">
+    <span class="md-ellipsis">
+      DPO Training with SupervisorReturn
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#custom-simulation-scenarios" class="md-nav__link">
+    <span class="md-ellipsis">
+      Custom Simulation Scenarios
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#finetuning-with-run_finetuningpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      Finetuning with run_finetuning.py
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Finetuning with run_finetuning.py">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#finetuning-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      Finetuning Options
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#output-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      Output Files
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#summary-components" class="md-nav__link">
+    <span class="md-ellipsis">
+      Summary: Components
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="autograms-supervisors-simulation-finetuning-guide">AutoGRAMS Supervisors: Simulation &amp; Finetuning Guide</h1>
+<h2 id="overview">Overview</h2>
+<p>AutoGRAMS provides tools to simulate conversations between agents and use the results to train or finetune models. This guide walks through:</p>
+<ul>
+<li>Setting up simulations between a model chatbot and a user chatbot</li>
+<li>Using supervisor functions to capture richer outputs</li>
+<li>Saving and transforming simulation data</li>
+<li>Running finetuning with OpenAI or Hugging Face models</li>
+</ul>
+<hr />
+<h2 id="why-simulate-conversations">Why Simulate Conversations?</h2>
+<p>Simulation helps generate data for two common scenarios:</p>
+<ol>
+<li><strong>LLM Distillation</strong> — simulate high-quality conversations using GPT-4 or a complex agent, then finetune a smaller model (e.g. GPT-3.5, Mistral, Qwen) to behave similarly.</li>
+<li><strong>Agent Distillation</strong> — convert a complex, multi-step AutoGRAM (with planning, thoughts, or tool use) into a simpler agent using direct primitives like <code>reply_instruction()</code> or <code>silent_thought()</code>.</li>
+</ol>
+<hr />
+<h2 id="simulating-with-run_simulationpy">Simulating with <code>run_simulation.py</code></h2>
+<p>Run simulated conversations using:</p>
+<div class="highlight"><pre><span></span><code>python<span class="w"> </span>run_simulation.py<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--autogram_file<span class="w"> </span>my_chatbot.py<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--userbot_file<span class="w"> </span>user_agent.py<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--num_turns<span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--num_examples<span class="w"> </span><span class="m">10</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--save_dir<span class="w"> </span>simulation_data
+</code></pre></div>
+<h3 id="key-arguments">Key Arguments</h3>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--autogram_file</code></td>
+<td>File with chatbot logic (must define <code>chatbot()</code> function)</td>
+</tr>
+<tr>
+<td><code>--userbot_file</code></td>
+<td>File defining the user agent logic</td>
+</tr>
+<tr>
+<td><code>--num_turns</code></td>
+<td>Number of turns per conversation</td>
+</tr>
+<tr>
+<td><code>--num_examples</code></td>
+<td>Number of conversations to simulate</td>
+</tr>
+<tr>
+<td><code>--simulation_list_file</code></td>
+<td>Optional: predefined list of scenarios</td>
+</tr>
+<tr>
+<td><code>--save_dir</code></td>
+<td>Where to save <code>.pkl</code> memory outputs</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="what-is-a-userbot">What is a Userbot?</h2>
+<p>A userbot can be:</p>
+<ul>
+<li>A simple echo agent:</li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="nd">@autograms_function</span><span class="p">()</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">chatbot</span><span class="p">(</span><span class="n">system_prompt</span><span class="p">):</span>
+    <span class="n">set_system_prompt</span><span class="p">(</span><span class="n">system_prompt</span><span class="p">)</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">reply_instruction</span><span class="p">(</span><span class="s2">&quot;Reply as the user following the system prompt&quot;</span><span class="p">)</span>
+</code></pre></div>
+<ul>
+<li>A fully autonomous AutoGRAM with memory and branching logic.</li>
+</ul>
+<hr />
+<h2 id="supervisor-functions">Supervisor Functions</h2>
+<p>Supervisor functions let you override primitive calls (e.g., <code>silent_thought</code>) with more sophisticated multi-step reasoning during simulation.</p>
+<p>When <code>supervisor_mode=True</code>, you can wrap calls like this:</p>
+<div class="highlight"><pre><span></span><code><span class="n">silent_thought</span><span class="p">(</span><span class="s2">&quot;Summarize the article&quot;</span><span class="p">,</span> <span class="n">supervisor</span><span class="o">=</span><span class="n">reasoned_summary</span><span class="p">,</span> <span class="n">article</span><span class="o">=</span><span class="n">article</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="example-supervisor-function">Example Supervisor Function</h3>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">autograms.supervisors</span><span class="w"> </span><span class="kn">import</span> <span class="n">SupervisorReturn</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">reasoned_summary</span><span class="p">(</span><span class="n">instruction</span><span class="p">,</span> <span class="n">article</span><span class="p">):</span>
+    <span class="n">findings</span> <span class="o">=</span> <span class="n">silent_thought</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">article</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">What are the key findings?&quot;</span><span class="p">,</span> <span class="n">article</span><span class="o">=</span><span class="n">article</span><span class="p">)</span>
+    <span class="n">rel</span> <span class="o">=</span> <span class="n">silent_thought</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">article</span><span class="si">}</span><span class="se">\n</span><span class="s2">Findings: </span><span class="si">{</span><span class="n">findings</span><span class="si">}</span><span class="se">\n</span><span class="s2">How are they relevant?&quot;</span><span class="p">,</span> <span class="n">article</span><span class="o">=</span><span class="n">article</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">silent_thought</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">article</span><span class="si">}</span><span class="se">\n</span><span class="s2">Final Summary: </span><span class="si">{</span><span class="n">findings</span><span class="si">}</span><span class="se">\n</span><span class="s2">Relevance: </span><span class="si">{</span><span class="n">rel</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">article</span><span class="o">=</span><span class="n">article</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">SupervisorReturn</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+</code></pre></div>
+<p>This logic only runs during simulation. During deployment, <code>silent_thought()</code> is used directly.</p>
+<hr />
+<h2 id="dpo-training-with-supervisorreturn">DPO Training with SupervisorReturn</h2>
+<p>You can also use supervisor functions to output <strong>preferred and rejected completions</strong>:</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">make_formal</span><span class="p">(</span><span class="n">instruction</span><span class="p">):</span>
+    <span class="n">formal</span> <span class="o">=</span> <span class="n">silent_thought</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">instruction</span><span class="si">}</span><span class="s2">. Make it formal.&quot;</span><span class="p">)</span>
+    <span class="n">informal</span> <span class="o">=</span> <span class="n">silent_thought</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">instruction</span><span class="si">}</span><span class="s2">. Make it casual.&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">SupervisorReturn</span><span class="p">(</span><span class="n">formal</span><span class="p">,</span> <span class="n">rejected_output</span><span class="o">=</span><span class="n">informal</span><span class="p">)</span>
+
+<span class="n">reply_instruction</span><span class="p">(</span><span class="s2">&quot;Respond to the user.&quot;</span><span class="p">,</span> <span class="n">supervisor</span><span class="o">=</span><span class="n">make_formal</span><span class="p">)</span>
+</code></pre></div>
+<hr />
+<h2 id="custom-simulation-scenarios">Custom Simulation Scenarios</h2>
+<p>You can define a JSON list of simulation cases:</p>
+<div class="highlight"><pre><span></span><code><span class="p">[</span>
+<span class="w">  </span><span class="p">{</span><span class="nt">&quot;num_turns&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;chatbot_kwargs&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;tag&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;A&quot;</span><span class="p">},</span><span class="w"> </span><span class="nt">&quot;user_kwargs&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{}},</span>
+<span class="w">  </span><span class="p">{</span><span class="nt">&quot;num_turns&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;chatbot_kwargs&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;tag&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;B&quot;</span><span class="p">},</span><span class="w"> </span><span class="nt">&quot;user_kwargs&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{}}</span>
+<span class="p">]</span>
+</code></pre></div>
+<p>Then use:</p>
+<div class="highlight"><pre><span></span><code>--simulation_list_file<span class="w"> </span>my_cases.json
+</code></pre></div>
+<hr />
+<h2 id="finetuning-with-run_finetuningpy">Finetuning with <code>run_finetuning.py</code></h2>
+<p>Once <code>.pkl</code> files are generated by the simulation, run:</p>
+<div class="highlight"><pre><span></span><code>python<span class="w"> </span>run_finetuning.py<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--save_dir<span class="w"> </span>simulation_data<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--model<span class="w"> </span>Qwen/Qwen2.5-32B-Instruct<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--model_type<span class="w"> </span>huggingface<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--finetuning_type<span class="w"> </span>dpo
+</code></pre></div>
+<h3 id="finetuning-options">Finetuning Options</h3>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Values</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--model_type</code></td>
+<td><code>huggingface</code>, <code>openai</code></td>
+<td>Backend to train on</td>
+</tr>
+<tr>
+<td><code>--finetuning_type</code></td>
+<td><code>normal</code>, <code>dpo</code></td>
+<td>Choose standard vs. preference training</td>
+</tr>
+<tr>
+<td><code>--prepare_data_only</code></td>
+<td>flag</td>
+<td>Export JSONL but skip training</td>
+</tr>
+</tbody>
+</table>
+<h3 id="output-files">Output Files</h3>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Contents</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>train.jsonl</code></td>
+<td>Instruction → output pairs</td>
+</tr>
+<tr>
+<td><code>train_dpo.jsonl</code></td>
+<td>DPO format: prompt, chosen, rejected</td>
+</tr>
+</tbody>
+</table>
+<p>These can be loaded into OpenAI’s finetuning CLI, Hugging Face’s <code>Trainer</code>, or any custom pipeline.</p>
+<hr />
+<h2 id="summary-components">Summary: Components</h2>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>run_simulation.py</code></td>
+<td>Simulates agent-user conversations, optionally with supervisors</td>
+</tr>
+<tr>
+<td>Supervisor functions</td>
+<td>Adds logic for complex reasoning or preference selection</td>
+</tr>
+<tr>
+<td><code>run_finetuning.py</code></td>
+<td>Extracts conversation data and calls finetuning APIs</td>
+</tr>
+</tbody>
+</table>
+<p>AutoGRAMS lets you simulate rich interaction traces — then distill them into powerful, streamlined agents.</p>
+<hr />
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.instant", "navigation.tabs"], "search": "../../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.56ea9cef.min.js"></script>
+      
+        <script src="../../extra.js"></script>
+      
+    
+  </body>
+</html>

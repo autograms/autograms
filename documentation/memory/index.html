@@ -1,0 +1,1384 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://autograms.github.io/autograms/documentation/memory/">
+      
+      
+        <link rel="prev" href="../autograms_decorators/">
+      
+      
+        <link rel="next" href="../nodes/">
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.15">
+    
+    
+      
+        <title>Managing memory - AutoGRAMS Docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.342714a4.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#memory-module-documentation" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="AutoGRAMS Docs" class="md-header__button md-logo" aria-label="AutoGRAMS Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AutoGRAMS Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Managing memory
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../autogram/" class="md-tabs__link">
+          
+  
+  
+  Documentation
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="AutoGRAMS Docs" class="md-nav__button md-logo" aria-label="AutoGRAMS Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    AutoGRAMS Docs
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Documentation
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            Documentation
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../autogram/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Autogram class
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Autogram Config
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../autograms_decorators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Autograms Decorators
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Managing memory
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    Managing memory
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#understanding-globals" class="md-nav__link">
+    <span class="md-ellipsis">
+      Understanding Globals
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#thread-safety" class="md-nav__link">
+    <span class="md-ellipsis">
+      Thread Safety
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#use_memorymemory_object" class="md-nav__link">
+    <span class="md-ellipsis">
+      use_memory(memory_object)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="use_memory(memory_object)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#usage-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      Usage Example
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#get_memory" class="md-nav__link">
+    <span class="md-ellipsis">
+      get_memory()
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#memoryobject" class="md-nav__link">
+    <span class="md-ellipsis">
+      MemoryObject
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="MemoryObject">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#__init__" class="md-nav__link">
+    <span class="md-ellipsis">
+      __init__(...)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#add_user_replyuser_reply" class="md-nav__link">
+    <span class="md-ellipsis">
+      add_user_reply(user_reply)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#serializeserialization_type" class="md-nav__link">
+    <span class="md-ellipsis">
+      serialize(serialization_type)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#savefile_name-serialization_type" class="md-nav__link">
+    <span class="md-ellipsis">
+      save(file_name, serialization_type)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#simplememory" class="md-nav__link">
+    <span class="md-ellipsis">
+      SimpleMemory
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="SimpleMemory">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#__init___1" class="md-nav__link">
+    <span class="md-ellipsis">
+      __init__(...)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#add_user_replyuser_reply_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      add_user_reply(user_reply)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#init_user_globals" class="md-nav__link">
+    <span class="md-ellipsis">
+      init_user_globals()
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="init_user_globals()">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#behavior-and-rationale" class="md-nav__link">
+    <span class="md-ellipsis">
+      Behavior and Rationale
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#userglobals" class="md-nav__link">
+    <span class="md-ellipsis">
+      UserGlobals
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="UserGlobals">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#implementation-details" class="md-nav__link">
+    <span class="md-ellipsis">
+      Implementation Details
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-using-userglobals" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example: Using UserGlobals
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#additional-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Additional Notes
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      Summary
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Nodes
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reply_functions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Reply functions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../decision_functions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Decision functions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../structured_generation_functions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Generation functions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../control_flow_functions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Control Flow functions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../prompt_functions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Prompt functions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../model_functions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Models calling functions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../embeddings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Embedding functions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../logging_functions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Logging functions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../helper/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Code utility functions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../simulation_finetuning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Simulation and finetuning
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#understanding-globals" class="md-nav__link">
+    <span class="md-ellipsis">
+      Understanding Globals
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#thread-safety" class="md-nav__link">
+    <span class="md-ellipsis">
+      Thread Safety
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#use_memorymemory_object" class="md-nav__link">
+    <span class="md-ellipsis">
+      use_memory(memory_object)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="use_memory(memory_object)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#usage-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      Usage Example
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#get_memory" class="md-nav__link">
+    <span class="md-ellipsis">
+      get_memory()
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#memoryobject" class="md-nav__link">
+    <span class="md-ellipsis">
+      MemoryObject
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="MemoryObject">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#__init__" class="md-nav__link">
+    <span class="md-ellipsis">
+      __init__(...)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#add_user_replyuser_reply" class="md-nav__link">
+    <span class="md-ellipsis">
+      add_user_reply(user_reply)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#serializeserialization_type" class="md-nav__link">
+    <span class="md-ellipsis">
+      serialize(serialization_type)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#savefile_name-serialization_type" class="md-nav__link">
+    <span class="md-ellipsis">
+      save(file_name, serialization_type)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#simplememory" class="md-nav__link">
+    <span class="md-ellipsis">
+      SimpleMemory
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="SimpleMemory">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#__init___1" class="md-nav__link">
+    <span class="md-ellipsis">
+      __init__(...)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#add_user_replyuser_reply_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      add_user_reply(user_reply)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#init_user_globals" class="md-nav__link">
+    <span class="md-ellipsis">
+      init_user_globals()
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="init_user_globals()">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#behavior-and-rationale" class="md-nav__link">
+    <span class="md-ellipsis">
+      Behavior and Rationale
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#userglobals" class="md-nav__link">
+    <span class="md-ellipsis">
+      UserGlobals
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="UserGlobals">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#implementation-details" class="md-nav__link">
+    <span class="md-ellipsis">
+      Implementation Details
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-using-userglobals" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example: Using UserGlobals
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#additional-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Additional Notes
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      Summary
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="memory-module-documentation">Memory Module Documentation</h1>
+<p>In the AutoGRAMS framework, chatbots act like continually running programs, which means that the program's memory represents a memory of a conversation with a user. This section documents the key classes, functions, and patterns used in AutoGRAMS memory management. the main class that represents a memory of a specific instance of the program (conversation) is <code>MemoryObject</code>. Instances of memory_object have a <code>memory_dict</code> attribute that represents the entire state of the chatbots program, allowing you to load and save the exact state of autograms chatbots in a way that can be serialized to the disk. This enables you to easily switch between users that are active in conversations--you load the program memory for that user, continue executing the instance of the program for that user's conversation, and then save the memory when you pause or give a reply.</p>
+<h2 id="understanding-globals">Understanding Globals</h2>
+<ul>
+<li>
+<p><strong>Module-Level Globals</strong>: Typically constants or system-wide resources, shared by all users. These are not managed by the memory object since they are not user specific. and are reinitialized every time you reload the module in python. You can define these as you normally would in python. After the Autogram class is initialized, module globals are serialized so they can't accidentally be changed in an interaction with a specific user.</p>
+</li>
+<li>
+<p><strong>User-Specific Globals</strong>: Tied to a specific user’s memory object, so each user’s conversation state remains isolated.  </p>
+</li>
+<li>Initialized via <strong><code>init_user_globals</code></strong>.  </li>
+<li>Accessed through a <strong><code>UserGlobals</code></strong> instance.</li>
+</ul>
+<h2 id="thread-safety">Thread Safety</h2>
+<p>AutoGRAMS relies on context vars storage to ensure each thread has the correct <strong><code>MemoryObject</code></strong>. In multi-user or multi-thread scenarios, each user’s memory context is separate and does not overwrite other users’ states. </p>
+<hr />
+<h2 id="use_memorymemory_object"><code>use_memory(memory_object)</code></h2>
+<p>A context manager for setting the memory in context vars storage within a <code>with</code> block. It ensures that the specified <code>memory_object</code> is active for the duration of the block and reset afterward.</p>
+<h3 id="usage-example"><strong>Usage Example</strong></h3>
+<div class="highlight"><pre><span></span><code><span class="k">with</span> <span class="n">use_memory</span><span class="p">(</span><span class="n">some_memory_object</span><span class="p">):</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">chatbot</span><span class="p">()</span>
+</code></pre></div>
+<ul>
+<li><strong>Where</strong> <code>chatbot</code> is an AutoGRAMS function decorated with <code>@autograms_function</code>.  </li>
+<li><strong>Purpose</strong>: Temporarily set the memory context for the thread, so any calls to <code>get_memory()</code> within the block return <code>some_memory_object</code>.</li>
+</ul>
+<hr />
+<h2 id="get_memory"><code>get_memory()</code></h2>
+<p>Retrieves the current memory object from thread-local storage.</p>
+<ul>
+<li><strong>Returns</strong>:  </li>
+<li>A <code>SerializableMemory</code> (or subclass) instance if active in this thread.  </li>
+<li><code>None</code> if no memory context is set.</li>
+</ul>
+<p>This function is widely used within AutoGRAMS functions (<code>@autograms_function</code>) to retrieve and manipulate the current conversation and stack state.</p>
+<hr />
+<h2 id="memoryobject"><code>MemoryObject</code></h2>
+<p>The main memory class for managing chatbot applications, extending <code>SerializableMemory</code> with:</p>
+<ul>
+<li><strong>Chatbot-Specific Functionality</strong>: Tracking conversation turns, stack frames, etc.  </li>
+<li><strong>Serialization</strong>: Enough data to recreate the state after giving/replying.</li>
+</ul>
+<h3 id="__init__"><strong><code>__init__(...)</code></strong></h3>
+<p>Initializes a <code>MemoryObject</code>.</p>
+<ul>
+<li><strong>Parameters</strong>:  </li>
+<li><code>config</code> (object): Configuration object (e.g., <code>AutogramConfig</code>) for memory.  </li>
+<li><code>root_function</code> (function, optional): Root function for this memory context.  </li>
+<li><code>memory_dict</code> (dict, optional): Initial dictionary for storing memory-related data.</li>
+</ul>
+<h3 id="add_user_replyuser_reply"><strong><code>add_user_reply(user_reply)</code></strong></h3>
+<p>Logs a user’s reply in the conversation. This typically happens automatically if you pass a <code>user_reply</code> argument to <code>autogram.reply</code> or <code>autogram.apply</code>.</p>
+<ul>
+<li><strong>Parameters</strong>:  </li>
+<li><code>user_reply</code> (str): The user’s latest reply or message.</li>
+</ul>
+<h3 id="serializeserialization_type"><strong><code>serialize(serialization_type)</code></strong></h3>
+<p>Serializes the memory object for storage or transmission.</p>
+<ul>
+<li><strong>Parameters</strong>:  </li>
+<li><code>serialization_type</code> (str): The serialization mode, such as <code>"full"</code>, <code>"partial"</code>, or <code>"json"</code>.</li>
+<li><strong>Returns</strong>: <code>str</code><br />
+  A serialized representation of this memory.</li>
+</ul>
+<h3 id="savefile_name-serialization_type"><strong><code>save(file_name, serialization_type)</code></strong></h3>
+<p>Saves the memory object to disk.</p>
+<ul>
+<li><strong>Parameters</strong>:  </li>
+<li><code>file_name</code> (str): Filename/path for storing the memory.  </li>
+<li><code>serialization_type</code> (str): Mode of serialization, e.g., <code>"full"</code>, <code>"partial"</code>, <code>"json"</code>.</li>
+</ul>
+<hr />
+<h2 id="simplememory"><code>SimpleMemory</code></h2>
+<p>A lightweight memory class for managing prompts in simpler chatbot scenarios, without full serialization logic.</p>
+<h3 id="__init___1"><strong><code>__init__(...)</code></strong></h3>
+<p>Creates a <code>SimpleMemory</code> instance:</p>
+<ul>
+<li><strong>Parameters</strong>:  </li>
+<li><code>config</code> (object): Configuration object.  </li>
+<li><code>memory_dict</code> (dict, optional): Optional initial dictionary for memory.</li>
+</ul>
+<h3 id="add_user_replyuser_reply_1"><strong><code>add_user_reply(user_reply)</code></strong></h3>
+<p>Logs a user’s reply in this simple memory context.</p>
+<ul>
+<li><strong>Parameters</strong>:  </li>
+<li><code>user_reply</code> (str): The user’s message.</li>
+</ul>
+<hr />
+<h2 id="init_user_globals"><code>init_user_globals()</code></h2>
+<p>Initializes a <strong>user-specific globals dictionary</strong> for the current Python module, ensuring each module can only create one set of user globals:</p>
+<ul>
+<li><strong>Usage</strong>:
+  <div class="highlight"><pre><span></span><code><span class="n">user_globals</span> <span class="o">=</span> <span class="n">init_user_globals</span><span class="p">()</span>
+<span class="n">user_globals</span><span class="p">[</span><span class="s2">&quot;my_variable&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">42</span>
+</code></pre></div></li>
+<li><strong>Thread/Memory Link</strong>:<br />
+  By using <code>UserGlobals</code>, any changes to <code>user_globals[...]</code> become tied to the user’s memory context (the current <code>MemoryObject</code>).  </li>
+<li><strong>Error Conditions</strong>:  </li>
+<li>Throws an exception if user globals were already initialized in this module. This prevents accidental re-initialization.</li>
+</ul>
+<h3 id="behavior-and-rationale"><strong>Behavior and Rationale</strong></h3>
+<ul>
+<li><strong>Module-Specific</strong>:<br />
+<code>init_user_globals()</code> inspects the calling module, creates a unique ID, and ensures only one <code>UserGlobals</code> instance per module.  </li>
+<li><strong>User-Specific</strong>:<br />
+  Values in <code>UserGlobals</code> are stored under the current user’s memory context. If a different user’s memory is set (via <code>use_memory</code>), they see a different dictionary.</li>
+</ul>
+<hr />
+<h2 id="userglobals"><code>UserGlobals</code></h2>
+<p>A special dictionary-like container for user-specific globals, ensuring each user’s memory remains isolated. If the memory is <code>None</code>, it falls back to a local <code>init_dict</code>.</p>
+<h3 id="implementation-details"><strong>Implementation Details</strong></h3>
+<ul>
+<li><strong>Thread/Memory Linking</strong>:</li>
+<li>
+<p>Internally, <code>UserGlobals</code> calls <code>get_memory()</code> to find the active <code>MemoryObject</code> in this thread.  </p>
+</li>
+<li>
+<p><strong>Isolation</strong>:</p>
+</li>
+<li>Each user (thread with a distinct memory) sees a different dictionary under <code>memory.memory_dict['user_globals']</code>.</li>
+</ul>
+<hr />
+<h3 id="example-using-userglobals">Example: Using <code>UserGlobals</code></h3>
+<p>Below is a typical usage pattern:</p>
+<div class="highlight"><pre><span></span><code><span class="n">user_globals</span> <span class="o">=</span> <span class="n">init_user_globals</span><span class="p">()</span>
+
+<span class="c1"># This initializes user_globals[&#39;name&#39;] to None for all new users</span>
+<span class="n">user_globals</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+<span class="nd">@autograms_function</span><span class="p">()</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">chatbot</span><span class="p">():</span>
+
+    <span class="n">reply</span><span class="p">(</span><span class="s2">&quot;Hi, can you tell me your name?&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">yes_or_no</span><span class="p">(</span><span class="s2">&quot;did the user provide their name?&quot;</span><span class="p">):</span>
+      <span class="c1">#note that this will only update the name for the active memory object, allowing it to be a user/instance specific variable</span>
+      <span class="n">user_globals</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">=</span><span class="n">thought_silent</span><span class="p">(</span><span class="s2">&quot;Write down the user&#39;s name and nothing else&quot;</span><span class="p">)</span> 
+</code></pre></div>
+<ul>
+<li><strong>Explanation</strong>:  </li>
+<li><code>init_user_globals()</code> returns a <code>UserGlobals</code> instance, storing data in the user’s memory.  </li>
+</ul>
+<hr />
+<h2 id="additional-notes">Additional Notes</h2>
+<ul>
+<li><strong><code>create_module_id(module_globals)</code></strong>: A helper function that generates a unique module ID from the file path or name, used internally by <code>init_user_globals()</code>.</li>
+<li><strong>Thread Safety</strong>:  </li>
+<li>Each user’s memory is separate via <code>use_memory(...)</code>, so concurrent calls in different threads do not overlap user-specific globals.  </li>
+<li>If no memory is set, <code>UserGlobals</code> uses a local <code>init_dict</code>.</li>
+</ul>
+<hr />
+<h2 id="summary">Summary</h2>
+<ul>
+<li><strong><code>init_user_globals()</code></strong>: Initializes the user-specific global dictionary once per module, throwing an error if re-initialized.  </li>
+<li><strong><code>UserGlobals</code></strong>: A dictionary-like interface for storing and retrieving <strong>user-specific</strong> variables, tied to the current memory context.  </li>
+<li><strong>Isolation</strong>: Ensures each user’s data is kept separate and persists only within their memory scope.  </li>
+<li><strong>Integration</strong>: Works seamlessly with <code>use_memory(...)</code> and <code>@autograms_function</code> to maintain consistent state across multi-user or single-user applications.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.instant", "navigation.tabs"], "search": "../../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.56ea9cef.min.js"></script>
+      
+        <script src="../../extra.js"></script>
+      
+    
+  </body>
+</html>
